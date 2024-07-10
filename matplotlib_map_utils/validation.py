@@ -1,3 +1,10 @@
+############################################################
+# validation.py contains all the main objects and functions
+# for checking inputs passed to class definitions
+############################################################
+
+### IMPORTING PACKAGES ###
+
 # Default packages
 import warnings
 # Math packages
@@ -8,13 +15,14 @@ import pyproj
 import matplotlib
 # matplotlib's useful validation functions
 import matplotlib.rcsetup
-# Finally, the types we use in this script
+# The types we use in this script
 from typing import Tuple, TypedDict, Literal, get_args
 
 ### TYPE HINTS ###
 # This section of the code is for defining structured dictionaries and lists
-# for the custom data structures we've created (such as the style dictionaries)
+# for the inputs necessary for object creation we've created (such as the style dictionaries)
 # so that intellisense can help with autocompletion
+
 class _TYPE_BASE(TypedDict, total=False):
     coords: numpy.array # must be 2D numpy array
     scale: float # between 0 and inf
@@ -64,7 +72,7 @@ class _TYPE_AOB(TypedDict, total=False):
     borderpad: float | int # between 0 and inf
     prop: str | float | int # any fontsize value for matplotlib
     frameon: bool # any bool
-    # bbox_to_anchor: None
+    # bbox_to_anchor: None # NOTE: currently unvalidated, use at your own risk!
     # bbox_transform: None
 
 class _TYPE_ROTATION(TypedDict, total=False):
@@ -73,8 +81,12 @@ class _TYPE_ROTATION(TypedDict, total=False):
     reference: Literal["axis", "data", "center"] # only required if degrees is None: should be either "axis" or "data" or "center"
     coords: Tuple[float | int, float | int] # only required if degrees is None: should be a tuple of coordinates in the relevant reference window
 
-### VALIDITY CHECKERS ###
+### VALIDITY CHECKS ###
 # Functions and variables used for validating inputs for classes
+# All have a similar form, taking in the name of the property (prop), the value (val)
+# some parameters to check against (min/max, list, type, etc.),
+# and whether or not None is acceptable value
+
 def _validate_list(prop, val, list, none_ok=False):
     if none_ok==False and val is None:
         raise ValueError(f"None is not a valid value for {prop}, please provide a value in this list: {list}")
@@ -173,7 +185,9 @@ def _validate_crs(prop, val, rotation_dict, none_ok=False):
             raise Exception(f"Invalid CRS supplied ({val}), please provide a valid CRS input for PyProj instead")
     return val
 
-## Set-up for each dictionary's specific validation rules
+### VALIDITY DICTS ###
+# These compile the functions above^, as well as matplotlib's built-in validity functions
+# into dictionaries that can be used to validate all the inputs to a dictionary at once
 
 _VALIDATE_BASE = {
     "coords":{"func":_validate_coords, "kwargs":{"numpy_type":numpy.ndarray, "dims":2}}, # must be 2D numpy array
@@ -252,7 +266,10 @@ _VALIDATE_ROTATION = {
     "coords":{"func":_validate_tuple, "kwargs":{"length":2, "types":[float, int], "none_ok":True}} # only required if degrees is None: should be a tuple of coordinates in the relevant reference window
 }
 
-# This function can process the _VALIDATE dictionaries we established above
+### MORE VALIDITY FUNCTIONS ###
+# These are more customized, and so are separated from the _validate_* functions above
+# Mainly, they can process the input dictionaries wholesale, as well as the individual functions in it
+
 def _validate_dict(input_dict, default_dict, functions, to_validate: list=None, return_clean=False, parse_false=True):
     if input_dict == False:
         if parse_false == True:

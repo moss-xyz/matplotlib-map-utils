@@ -1,3 +1,10 @@
+############################################################
+# north_arrow.py contains all the main objects and functions
+# for creating the north arrow artist rendered to plots
+############################################################
+
+### IMPORTING PACKAGES ###
+
 # Default packages
 import warnings
 import math
@@ -16,31 +23,37 @@ import matplotlib.patheffects
 import matplotlib.offsetbox
 # matplotlib's useful validation functions
 import matplotlib.rcsetup
-# Finally, the types we use in this script
-from typing import Tuple, TypedDict, Literal, get_args
-
-# Here, we also import the information contained in our helper scripts (validation and defaults)
+# The types we use in this script
+from typing import Literal
+# The information contained in our helper scripts (validation and defaults)
 import defaults
 import validation
 
-# Initially, this will set the defaults to the mediums ize
+### INITIALIZATION ###
+
+# Setting the defaults to the "medium" size, which is roughly optimized for A4/Letter paper
+# Making these as globals is important for the set_size() function to work later
 _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = defaults._DEFAULT_CONTAINER["md"]
 _DEFAULT_ROTATION = defaults._ROTATION_ALL
 
 ### CLASSES ###
-# Defining the main object model of the north arrow
-# Note that base, fancy, label, and shadow are actually all "child" classes
-# and are accessible through their _ names (self._base, self._shadow, etc.)
+
+# The main object model of the north arrow
+# Note that, except for location, all the components for the artist are dictionaries
+# These can be accessed and updated with dot notation (like NorthArrow.base)
 class NorthArrow(matplotlib.artist.Artist):
-    # Initialization upon first creation
+    
+    ## INITIALIZATION ##
     def __init__(self, location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center"]="upper right",
                        base: None | bool | validation._TYPE_BASE = None, fancy: None | bool | validation._TYPE_FANCY = None, 
                        label: None | bool | validation._TYPE_LABEL = None, shadow: None | bool | validation._TYPE_SHADOW = None, 
                        pack: None | validation._TYPE_PACK = None, aob: None | validation._TYPE_AOB = None, rotation: None | validation._TYPE_ROTATION = None):
-        # Starting up the artist object with the base properties
+        # Starting up the object with the base properties of a matplotlib Artist
         matplotlib.artist.Artist.__init__(self)
+        
         # If a dictionary is passed to any of the elements, validate that it is "correct", and then store the information
         # Note that we also merge the provided dict with the default style dict, so no keys are missing
+        # If a specific component is not desired, it should be set to False during initialization
 
         # Location is stored as just a string
         location =  validation._validate_list("location", location, ["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center"])
@@ -68,8 +81,8 @@ class NorthArrow(matplotlib.artist.Artist):
         self._rotation = rotation
     
     # We do set the zorder for our objects individually,
-    # but we ALSO set it for the entire artist, here, for some reason
-    # idk I just stole this from matplotlib-scalebar
+    # but we ALSO set it for the entire artist, here
+    # Thank you to matplotlib-scalebar for this tip
     zorder = 99
 
     ## INTERNAL PROPERTIES ##
@@ -177,6 +190,7 @@ class NorthArrow(matplotlib.artist.Artist):
     ## COPY FUNCTION ##
     # This is solely to get around matplotlib's restrictions around re-using an artist across multiple axes
     # Instead, you can use add_artist() like normal, but with add_artist(na.copy())
+    # Thank you to the cartopy team for helping fix a bug with this!
     def copy(self):
         return copy.deepcopy(self)
 
@@ -197,7 +211,7 @@ class NorthArrow(matplotlib.artist.Artist):
     
     ## SIZE FUNCTION ##
     # This function will update the default dictionaries used based on the size of map being created
-    # See defaults.py for more information
+    # See defaults.py for more information on the dictionaries used here
     def set_size(size: Literal["xs","xsmall","x-small",
                                "sm","small",
                                "md","medium",
@@ -220,8 +234,9 @@ class NorthArrow(matplotlib.artist.Artist):
             raise ValueError("Invalid value supplied, try one of ['xsmall', 'small', 'medium', 'large', 'xlarge'] instead")
 
 ### DRAWING FUNCTIONS ###
-# These functions take care of the actual drawing of the object!
-# You can use them independently of the class-based model
+
+# This function presents a way to draw the north arrow independent of the NorthArrow object model
+# and is actually used by the object model when draw() is called anyways
 def north_arrow(ax, draw=True,
                 location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center"]="upper right",
                 base: None | bool | validation._TYPE_BASE=None, 
@@ -232,9 +247,10 @@ def north_arrow(ax, draw=True,
                 aob: None | validation._TYPE_AOB=None, 
                 rotation: None | validation._TYPE_ROTATION=None):
     
-    # Setting the styles for each component
-    # The dict-concatenation ensures we always have SOMETHING available for each necessary attribute
-    # But it means any overrides (to color, size, font, etc.) have to be manually specified
+    # This works the same as it does with the NorthArrow object
+    # If a dictionary is passed to any of the elements, first validate that it is "correct"
+    # Note that we also merge the provided dict with the default style dict, so no keys are missing
+    # If a specific component is not desired, it should be set to False in the function call
     _base = validation._validate_dict(base, _DEFAULT_BASE, validation._VALIDATE_BASE, return_clean=True)
     _fancy = validation._validate_dict(fancy, _DEFAULT_FANCY, validation._VALIDATE_FANCY, return_clean=True)
     _label = validation._validate_dict(label, _DEFAULT_LABEL, validation._VALIDATE_LABEL, return_clean=True)
@@ -253,7 +269,10 @@ def north_arrow(ax, draw=True,
     ## BASE ARROW ##
     # Because everything is dependent on this component, it ALWAYS exists
     # However, if we don't want it (base=False), then we'll hide it
-    base_artist = matplotlib.patches.Polygon(_base["coords"] * _base["scale"], closed=True, visible=bool(_base), **_del_keys(_base, ["coords","scale"]))
+    if _base == False:
+        base_artist = matplotlib.patches.Polygon(_DEFAULT_BASE["coords"] * _DEFAULT_BASE["scale"], closed=True, visible=False, **_del_keys(_DEFAULT_BASE, ["coords","scale"]))
+    else:
+        base_artist = matplotlib.patches.Polygon(_base["coords"] * _base["scale"], closed=True, visible=True, **_del_keys(_base, ["coords","scale"]))
 
     ## ARROW SHADOW ##
     # This is not its own artist, but instead just something we modify about the base artist using a path effect
@@ -261,6 +280,8 @@ def north_arrow(ax, draw=True,
         base_artist.set_path_effects([matplotlib.patheffects.withSimplePatchShadow(**_shadow)])
     
     # With our base arrow "done", we can add it to scale_box
+    # which transforms our coordinates, multiplied by the scale factor, to inches
+    # so a line from (0,0) to (0,1) would be 1 inch long, and from (0,0) to (0,0.5) half an inch, etc.
     scale_box.add_artist(base_artist)
     
     ## FANCY ARROW ##
@@ -280,7 +301,7 @@ def north_arrow(ax, draw=True,
         if _label["stroke_width"] > 0:
             label_stroke = [matplotlib.patheffects.withStroke(linewidth=_label["stroke_width"], foreground=_label["stroke_color"])]
             text_props["path_effects"] = label_stroke
-        # This one is not added to the scale box, as that is handled on its own
+        # The label is not added to scale_box, it lives in its own TextArea artist instead
         # Also, the dictionary does not need to be unpacked, textprops does that for us
         label_box = matplotlib.offsetbox.TextArea(_label["text"], textprops=text_props)
 
@@ -298,12 +319,13 @@ def north_arrow(ax, draw=True,
         else:
             raise Exception("Invalid position applied, try one of 'top', 'bottom', 'left', 'right'")
     # If we only have the base, then that's the only thing we'll add to the box
+    # I keep this in a VPacker just so that the rest of the code is functional, and doesn't depend on a million if statements
     else:
         pack_box = matplotlib.offsetbox.VPacker(children=[scale_box], **_pack)
     
     ## CREATING THE OFFSET BOX ##
     # The AnchoredOffsetBox allows us to place the pack_box relative to our axes
-    # Note that the position string (upper left, lower right, center, etc.) comes from the base arrow
+    # Note that the position string (upper left, lower right, center, etc.) comes from the location variable
     aob_box = matplotlib.offsetbox.AnchoredOffsetbox(loc=location, child=pack_box, **_del_keys(_aob, ["facecolor","edgecolor","alpha"]))
     # Also setting the facecolor and transparency of the box
     if _aob["facecolor"] is not None:
@@ -329,11 +351,16 @@ def north_arrow(ax, draw=True,
     # If this option is set to true, we'll draw the final artists as desired
     if draw==True:
         ax.add_artist(aob_box)
-    # If not, we'll return the aob_box as an object
+    # If not, we'll return the aob_box as an artist object (the NorthArrow draw() function uses this)
     else:
         return aob_box
 
+### HELPING FUNTIONS ###
+# These are quick functions we use to help in other parts of this process
+
 # This function calculates the desired rotation of the arrow
+# It uses 3 pieces of information: the CRS, the reference frame, and the coordinates of the reference point
+# This code is 100% inspired by EOMaps, who also answered my questions about the inner workings of their equiavlent functions
 def _rotate_arrow(ax, rotate_dict) -> float | int:
     crs = rotate_dict["crs"]
     ref = rotate_dict["reference"]
@@ -384,20 +411,18 @@ def _rotate_arrow(ax, rotate_dict) -> float | int:
     # Returning the degree number
     return deg
 
-# Unfortunately, matplotlib doesn't allow AnchoredOffsetBoxes or V/HPackers to have a rotation transformation
+# Unfortunately, matplotlib doesn't allow AnchoredOffsetBoxes or V/HPackers to have a rotation transformation (why? No idea)
 # So, we have to set it on the individual child objects (namely the base arrow and fancy arrow patches)
 def _iterative_rotate(artist, deg):
     # Building the affine rotation transformation
     transform_rotation = matplotlib.transforms.Affine2D().rotate_deg(deg)
     artist.set_transform(transform_rotation + artist.get_transform())
+    # Repeating the process if there is a child component
     if artist.get_children():
         for child in artist.get_children():
             _iterative_rotate(child, deg)
 
-### HELPING FUNTIONS ###
-# These are quick functions we use to help in other parts of this process
-
 # This function will remove any keys we specify from a dictionary
-# This is useful if we need to unpack on certain values from a dictionary!
+# This is useful if we need to unpack on certain values from a dictionary, and is used in north_arrow()
 def _del_keys(dict, to_remove):
     return {key: val for key, val in dict.items() if key not in to_remove}

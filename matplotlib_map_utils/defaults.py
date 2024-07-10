@@ -1,9 +1,23 @@
+############################################################
+# defaults.py contains default values for the artists
+# at difference plot sizes (xsmall to xlarge)
+# see their corresponding sizes under each default heading
+############################################################
+
+# The main variables that update are the following:
+# base: scale, linewidth
+# fancy: coords (xsmall only)
+# label: fontsize, stroke_width 
+# shadow: offset
+# pack: sep
+# aob: pad, borderpad
+
+### IMPORTING PACKAGES ###
+
 # Math packages
 import numpy
 
-### DEFAULT VALUES ###
-# This section of the code is for storing default values 
-# that will be fed into the various classes upon creation
+### INDEPENDENT DEFAULT VALUES ###
 
 # Defaults for rotating the arrow to point towards True North (see _rotate_arrow for how it is used)
 # This default is the only one that is static: the rest can and should change depending on the size of your figure
