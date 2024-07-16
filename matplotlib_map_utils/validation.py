@@ -25,7 +25,6 @@ from typing import Tuple, TypedDict, Literal, get_args
 
 class _TYPE_BASE(TypedDict, total=False):
     coords: numpy.array # must be 2D numpy array
-    scale: float # between 0 and inf
     facecolor: str # any color value for matplotlib
     edgecolor: str # any color value for matplotlib
     linewidth: float | int # between 0 and inf
@@ -101,6 +100,8 @@ def _validate_range(prop, val, min, max, none_ok=False):
         raise ValueError(f"None is not a valid value for {prop}, please provide a value between {min} and {max}")
     elif none_ok==True and val is None:
         return val
+    elif type(val) != int and type(val) != float:
+        raise ValueError(f"The supplied type is not valid for {prop}, please provide a float or integer between {min} and {max}")
     elif max is not None:
         if not val >= min and not val <= max:
             raise ValueError(f"'{val}' is not a valid value for {prop}, please provide a value between {min} and {max}")
@@ -167,12 +168,12 @@ def _validate_crs(prop, val, rotation_dict, none_ok=False):
         else:
             if crs is None or reference is None or coords is None:
                 raise ValueError(f"If degrees is set to None, then crs, reference, and coords cannot be None: please provide a valid input for each of these variables instead")
-    elif (type(degrees)==int or type(degrees)==float) and (crs is None or reference is None or coords is None):
-            warnings.warn(f"A value for rotation was supplied; values for crs, reference, and coords will be ignored")
+    elif (type(degrees)==int or type(degrees)==float) and (crs is not None or reference is not None or coords is not None):
+            warnings.warn(f"A value for degrees was supplied; values for crs, reference, and coords will be ignored")
             return val
     else:
         if none_ok==False and val is None:
-            raise ValueError(f"If rotation is set to None, then {prop} cannot be None: please provide a valid CRS input for PyProj instead")
+            raise ValueError(f"If degrees is set to None, then {prop} cannot be None: please provide a valid CRS input for PyProj instead")
         elif none_ok==True and val is None:
             return val
     # This happens if (a) a value for CRS is supplied and (b) a value for degrees is NOT supplied
@@ -185,13 +186,21 @@ def _validate_crs(prop, val, rotation_dict, none_ok=False):
             raise Exception(f"Invalid CRS supplied ({val}), please provide a valid CRS input for PyProj instead")
     return val
 
+# This final one is used for keys that are not validated
+def _skip_validation(val, none_ok=False):
+    return val
+
 ### VALIDITY DICTS ###
 # These compile the functions above^, as well as matplotlib's built-in validity functions
 # into dictionaries that can be used to validate all the inputs to a dictionary at once
 
+_VALIDATE_PRIMARY = {
+    "location":{"func":_validate_list, "kwargs":{"list":["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]}},
+    "scale":{"func":_validate_range, "kwargs":{"min":0, "max":None, "none_ok":True}}, # between 0 and inf
+}
+
 _VALIDATE_BASE = {
     "coords":{"func":_validate_coords, "kwargs":{"numpy_type":numpy.ndarray, "dims":2}}, # must be 2D numpy array
-    "scale":{"func":_validate_range, "kwargs":{"min":0, "max":None}}, # between 0 and inf
     "facecolor":{"func":matplotlib.rcsetup.validate_color}, # any color value for matplotlib
     "edgecolor":{"func":matplotlib.rcsetup.validate_color}, # any color value for matplotlib
     "linewidth":{"func":_validate_range, "kwargs":{"min":0, "max":None}}, # between 0 and inf
@@ -253,8 +262,8 @@ _VALIDATE_AOB = {
     "borderpad":{"func":_validate_range, "kwargs":{"min":0, "max":None}}, # between 0 and inf
     "prop":{"func":matplotlib.rcsetup.validate_fontsize}, # any fontsize value for matplotlib
     "frameon":{"func":_validate_type, "kwargs":{"match":bool}}, # any bool
-    # "bbox_to_anchor":None, # TODO: Currently unvalidated! Make sure to remove from _validate_dict once updated!
-    # "bbox_transform":None # TODO: Currently unvalidated! Make sure to remove from _validate_dict once updated!
+    "bbox_to_anchor":{"func":_skip_validation}, # TODO: Currently unvalidated! Make sure to remove from _validate_dict once updated!
+    "bbox_transform":{"func":_skip_validation} # TODO: Currently unvalidated! Make sure to remove from _validate_dict once updated!
 }
 
 _VALID_ROTATION_REFERENCE = get_args(_TYPE_ROTATION.__annotations__["reference"])

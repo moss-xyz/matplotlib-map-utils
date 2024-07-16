@@ -33,7 +33,7 @@ import validation
 
 # Setting the defaults to the "medium" size, which is roughly optimized for A4/Letter paper
 # Making these as globals is important for the set_size() function to work later
-_DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = defaults._DEFAULT_CONTAINER["md"]
+_DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = defaults._DEFAULT_CONTAINER["md"]
 _DEFAULT_ROTATION = defaults._ROTATION_ALL
 
 ### CLASSES ###
@@ -44,7 +44,8 @@ _DEFAULT_ROTATION = defaults._ROTATION_ALL
 class NorthArrow(matplotlib.artist.Artist):
     
     ## INITIALIZATION ##
-    def __init__(self, location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center"]="upper right",
+    def __init__(self, location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="upper right",
+                       scale: None | float | int=None,
                        base: None | bool | validation._TYPE_BASE = None, fancy: None | bool | validation._TYPE_FANCY = None, 
                        label: None | bool | validation._TYPE_LABEL = None, shadow: None | bool | validation._TYPE_SHADOW = None, 
                        pack: None | validation._TYPE_PACK = None, aob: None | validation._TYPE_AOB = None, rotation: None | validation._TYPE_ROTATION = None):
@@ -56,8 +57,15 @@ class NorthArrow(matplotlib.artist.Artist):
         # If a specific component is not desired, it should be set to False during initialization
 
         # Location is stored as just a string
-        location =  validation._validate_list("location", location, ["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center"])
+        location =  validation._validate(validation._VALIDATE_PRIMARY, "location", location)
         self._location = location
+
+        # Scale will set to the default size if no value is passed
+        scale = validation._validate(validation._VALIDATE_PRIMARY, "scale", scale)
+        if scale is None:
+            self._scale = _DEFAULT_SCALE
+        else:
+            self._scale = scale
         
         # Main elements
         base = validation._validate_dict(base, _DEFAULT_BASE, validation._VALIDATE_BASE, return_clean=True, parse_false=False)
@@ -97,8 +105,8 @@ class NorthArrow(matplotlib.artist.Artist):
         return self._location
 
     @location.setter
-    def location(self, val: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center"]):
-        val = validation._validate_list("location", val, ["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center"])
+    def location(self, val: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]):
+        val = validation._validate(validation._VALIDATE_PRIMARY, "location", val)
         self._location = val
     
     @property
@@ -106,9 +114,22 @@ class NorthArrow(matplotlib.artist.Artist):
         return self._location
 
     @loc.setter
-    def loc(self, val: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center"]):
-        val = validation._validate_list("loc", val, ["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center"])
+    def loc(self, val: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]):
+        val = validation._validate(validation._VALIDATE_PRIMARY, "location", val)
         self._location = val
+
+    # scale
+    @property
+    def scale(self):
+        return self._scale
+
+    @scale.setter
+    def scale(self, val: None | float | int):
+        val = validation._validate(validation._VALIDATE_PRIMARY, "scale", val)
+        if val is None:
+            self._scale = _DEFAULT_SCALE
+        else:
+            self._scale = val
 
     # base
     @property
@@ -200,7 +221,7 @@ class NorthArrow(matplotlib.artist.Artist):
     # Note that we never specify the renderer - the axis takes care of it!
     def draw(self, renderer, *args, **kwargs):
         # Can re-use the drawing function we already established, but return the object instead
-        na_artist = north_arrow(ax=self.axes, location=self._location, draw=False,
+        na_artist = north_arrow(ax=self.axes, location=self._location, scale=self._scale, draw=False,
                                 base=self._base, fancy=self._fancy,
                                 label=self._label, shadow=self._shadow,
                                 pack=self._pack, aob=self._aob, rotation=self._rotation)
@@ -218,18 +239,18 @@ class NorthArrow(matplotlib.artist.Artist):
                                "lg","large",
                                "xl","xlarge","x-large"]):
         # Bringing in our global default values to update them
-        global _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB
+        global _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB
         # Changing the global default values as required
         if size.lower() in ["xs","xsmall","x-small"]:
-            _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = defaults._DEFAULT_CONTAINER["xs"]
+            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = defaults._DEFAULT_CONTAINER["xs"]
         elif size.lower() in ["sm","small"]:
-            _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = defaults._DEFAULT_CONTAINER["sm"]
+            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = defaults._DEFAULT_CONTAINER["sm"]
         elif size.lower() in ["md","medium"]:
-            _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = defaults._DEFAULT_CONTAINER["md"]
+            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = defaults._DEFAULT_CONTAINER["md"]
         elif size.lower() in ["lg","large"]:
-            _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = defaults._DEFAULT_CONTAINER["lg"]
+            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = defaults._DEFAULT_CONTAINER["lg"]
         elif size.lower() in ["xl","xlarge","x-large"]:
-            _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = defaults._DEFAULT_CONTAINER["xl"]
+            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = defaults._DEFAULT_CONTAINER["xl"]
         else:
             raise ValueError("Invalid value supplied, try one of ['xsmall', 'small', 'medium', 'large', 'xlarge'] instead")
 
@@ -238,7 +259,8 @@ class NorthArrow(matplotlib.artist.Artist):
 # This function presents a way to draw the north arrow independent of the NorthArrow object model
 # and is actually used by the object model when draw() is called anyways
 def north_arrow(ax, draw=True,
-                location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center"]="upper right",
+                location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="upper right",
+                scale: None | float | int=None,
                 base: None | bool | validation._TYPE_BASE=None, 
                 fancy: None | bool | validation._TYPE_FANCY=None,
                 label: None | bool | validation._TYPE_LABEL=None, 
@@ -247,6 +269,14 @@ def north_arrow(ax, draw=True,
                 aob: None | validation._TYPE_AOB=None, 
                 rotation: None | validation._TYPE_ROTATION=None):
     
+    # First, validating the two primary inputs
+    _location = validation._validate(validation._VALIDATE_PRIMARY, "location", location)
+
+    if scale is None:
+        _scale = _DEFAULT_SCALE
+    else:
+        _scale = validation._validate(validation._VALIDATE_PRIMARY, "scale", scale)
+
     # This works the same as it does with the NorthArrow object
     # If a dictionary is passed to any of the elements, first validate that it is "correct"
     # Note that we also merge the provided dict with the default style dict, so no keys are missing
@@ -269,10 +299,10 @@ def north_arrow(ax, draw=True,
     ## BASE ARROW ##
     # Because everything is dependent on this component, it ALWAYS exists
     # However, if we don't want it (base=False), then we'll hide it
-    if _base == False:
-        base_artist = matplotlib.patches.Polygon(_DEFAULT_BASE["coords"] * _DEFAULT_BASE["scale"], closed=True, visible=False, **_del_keys(_DEFAULT_BASE, ["coords","scale"]))
+    if base == False:
+        base_artist = matplotlib.patches.Polygon(_DEFAULT_BASE["coords"] * _scale, closed=True, visible=False, **_del_keys(_DEFAULT_BASE, ["coords","scale"]))
     else:
-        base_artist = matplotlib.patches.Polygon(_base["coords"] * _base["scale"], closed=True, visible=True, **_del_keys(_base, ["coords","scale"]))
+        base_artist = matplotlib.patches.Polygon(_base["coords"] * _scale, closed=True, visible=True, **_del_keys(_base, ["coords","scale"]))
 
     ## ARROW SHADOW ##
     # This is not its own artist, but instead just something we modify about the base artist using a path effect
@@ -288,7 +318,7 @@ def north_arrow(ax, draw=True,
     # If we want the fancy extra patch, we need another artist
     if _fancy:
         # Note that here, unfortunately, we are reliant on the scale attribute from the base arrow
-        fancy_artist = matplotlib.patches.Polygon(_fancy["coords"] * _base["scale"], closed=True, visible=bool(_fancy), **_del_keys(_fancy, ["coords"]))
+        fancy_artist = matplotlib.patches.Polygon(_fancy["coords"] * _scale, closed=True, visible=bool(_fancy), **_del_keys(_fancy, ["coords"]))
         # It is also added to the scale_box so it is scaled in-line
         scale_box.add_artist(fancy_artist)
     
@@ -326,7 +356,7 @@ def north_arrow(ax, draw=True,
     ## CREATING THE OFFSET BOX ##
     # The AnchoredOffsetBox allows us to place the pack_box relative to our axes
     # Note that the position string (upper left, lower right, center, etc.) comes from the location variable
-    aob_box = matplotlib.offsetbox.AnchoredOffsetbox(loc=location, child=pack_box, **_del_keys(_aob, ["facecolor","edgecolor","alpha"]))
+    aob_box = matplotlib.offsetbox.AnchoredOffsetbox(loc=_location, child=pack_box, **_del_keys(_aob, ["facecolor","edgecolor","alpha"]))
     # Also setting the facecolor and transparency of the box
     if _aob["facecolor"] is not None:
         aob_box.patch.set_facecolor(_aob["facecolor"])

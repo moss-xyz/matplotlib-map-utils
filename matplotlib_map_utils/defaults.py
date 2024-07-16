@@ -59,10 +59,12 @@ _COORDS_FANCY_XS = numpy.array([
 # The arrow will appear to be ~1/10 of an inch in height
 # Here is also the only place that we use the _COORDS_FANCY_XS array!
 
+# Scale
+_SCALE_XS = 0.12
+
 # Base
 _BASE_XS = {
     "coords":_COORDS_BASE,
-    "scale":0.12, 
     "facecolor":"white", 
     "edgecolor":"black", 
     "linewidth":0.7, 
@@ -127,10 +129,12 @@ _AOB_XS = {
 # Should work well for ~A6 paper (4 to 6 inches, or 11 to 15 cm)
 # The arrow will appear to be ~1/4 of an inch in height
 
+# Scale
+_SCALE_SM = 0.25
+
 # Base
 _BASE_SM = {
     "coords":_COORDS_BASE,
-    "scale":0.25, 
     "facecolor":"white", 
     "edgecolor":"black", 
     "linewidth":0.5, 
@@ -195,10 +199,12 @@ _AOB_SM = {
 # Should work well for ~A4/Letter paper (8 to 12 inches, or 21 to 30 cm)
 # The arrow will appear to be ~ 1/2 an inch or ~1 cm in height
 
+# Scale
+_SCALE_MD = 0.50
+
 # Base
 _BASE_MD = {
     "coords":_COORDS_BASE,
-    "scale":0.50, 
     "facecolor":"white", 
     "edgecolor":"black", 
     "linewidth":1, 
@@ -263,10 +269,12 @@ _AOB_MD = {
 # Should work well for ~A2 paper (16 to 24 inches, or 42 to 60 cm)
 # The arrow will appear to be ~an inch in height
 
+# Scale
+_SCALE_LG = 1
+
 # Base
 _BASE_LG = {
     "coords":_COORDS_BASE,
-    "scale":1, 
     "facecolor":"white", 
     "edgecolor":"black", 
     "linewidth":2, 
@@ -331,10 +339,12 @@ _AOB_LG = {
 # Should work well for ~A0/Poster paper (33 to 47 inches, or 85 to 120 cm)
 # The arrow will appear to be ~2 inches in height
 
+# Scale
+_SCALE_XL = 2
+
 # Base
 _BASE_XL = {
     "coords":_COORDS_BASE,
-    "scale":2, 
     "facecolor":"white", 
     "edgecolor":"black", 
     "linewidth":4, 
@@ -398,9 +408,9 @@ _AOB_XL = {
 ## CONTAINER
 # This makes an easy-to-call dictionary of all the defaults we've set, for easy unpacking by the set_size function
 _DEFAULT_CONTAINER = {
-    "xs":[_BASE_XS, _FANCY_XS, _LABEL_XS, _SHADOW_XS, _PACK_XS, _AOB_XS],
-    "sm":[_BASE_SM, _FANCY_SM, _LABEL_SM, _SHADOW_SM, _PACK_SM, _AOB_SM],
-    "md":[_BASE_MD, _FANCY_MD, _LABEL_MD, _SHADOW_MD, _PACK_MD, _AOB_MD],
-    "lg":[_BASE_LG, _FANCY_LG, _LABEL_LG, _SHADOW_LG, _PACK_LG, _AOB_LG],
-    "xl":[_BASE_XL, _FANCY_XL, _LABEL_XL, _SHADOW_XL, _PACK_XL, _AOB_XL],
+    "xs":[_SCALE_XS, _BASE_XS, _FANCY_XS, _LABEL_XS, _SHADOW_XS, _PACK_XS, _AOB_XS],
+    "sm":[_SCALE_SM, _BASE_SM, _FANCY_SM, _LABEL_SM, _SHADOW_SM, _PACK_SM, _AOB_SM],
+    "md":[_SCALE_MD, _BASE_MD, _FANCY_MD, _LABEL_MD, _SHADOW_MD, _PACK_MD, _AOB_MD],
+    "lg":[_SCALE_LG, _BASE_LG, _FANCY_LG, _LABEL_LG, _SHADOW_LG, _PACK_LG, _AOB_LG],
+    "xl":[_SCALE_XL, _BASE_XL, _FANCY_XL, _LABEL_XL, _SHADOW_XL, _PACK_XL, _AOB_XL],
 }
