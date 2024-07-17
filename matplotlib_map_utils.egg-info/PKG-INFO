@@ -1,3 +1,19 @@
+Metadata-Version: 2.1
+Name: matplotlib-map-utils
+Version: 1.0.3
+Summary: A suite of tools for creating maps in matplotlib
+Author-email: David Moss <davidmoss1221@gmail.com>
+Project-URL: Homepage, https://github.com/moss-xyz/matplotlib-map-utils/
+Project-URL: Bug Tracker, https://github.com/moss-xyz/matplotlib-map-utils/issues
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: GNU General Public License (GPL)
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: matplotlib>=3.9.0
+Requires-Dist: cartopy>=0.23.0
+
 # matplotlib-map-utils
  
 ---
@@ -42,7 +58,7 @@ The quickest way to add a single north arrow to a single plot is to use the `nor
 
 ```python
 # Setting up a plot
-fig, ax = matplotlib.pyplot.subplots(1,1, figsize=(5,5), dpi=150)
+fig, ax = matplotlib.pyplot.subplots(1,1, figsize=(10,10), dpi=300)
 # Adding a north arrow to the upper-right corner of the axis, without any rotation (see Rotation under Formatting Components for details)
 north_arrow.north_arrow(ax=ax, location="upper right", rotation={"degrees":0})
 ```
@@ -51,16 +67,12 @@ An object-oriented approach is also supported:
 
 ```python
 # Setting up a plot
-fig, ax = matplotlib.pyplot.subplots(1,1, figsize=(5,5), dpi=150)
+fig, ax = matplotlib.pyplot.subplots(1,1, figsize=(10,10), dpi=300)
 # Creating a north arrow for the upper-right corner of the axis, without any rotation (see Rotation under Formatting Components for details)
 na = north_arrow.NorthArrow(ax=ax, location="upper right", rotation={"degrees":0})
 # Adding the artist to the plot
 ax.add_artist(na)
 ```
-
-Both of these will create an output like the following:
-
-![Example north arrow](matplotlib_map_utils/docs/assets/readme_northarrow.png)
 
 #### Customization
 
@@ -83,14 +95,6 @@ north_arrow(
 ```
 
 Refer to `docs\howto_north_arrow` for details on how to customize each facet of the north arrow.
-
-#### Rotation
-
-The north arrow object is also capable of pointing towards "true north", given a CRS and reference point:
-
-![Example north arrow rotation](matplotlib_map_utils/docs/assets/readme_northarrow_rotation.png)
-
-Instructions for how to do so can be found in `docs\howto_north_arrow`.
 
 ---
 

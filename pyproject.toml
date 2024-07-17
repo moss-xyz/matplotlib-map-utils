@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "matplotlib-map-utils"
+version = "1.0.3"
+authors = [
+  { name="David Moss", email="davidmoss1221@gmail.com" },
+]
+description = "A suite of tools for creating maps in matplotlib"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License (GPL)",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "matplotlib>=3.9.0",
+    "cartopy>=0.23.0"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/moss-xyz/matplotlib-map-utils/"
+"Bug Tracker" = "https://github.com/moss-xyz/matplotlib-map-utils/issues"

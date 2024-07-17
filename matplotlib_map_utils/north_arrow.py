@@ -26,8 +26,8 @@ import matplotlib.rcsetup
 # The types we use in this script
 from typing import Literal
 # The information contained in our helper scripts (validation and defaults)
-import defaults
-import validation
+from . import defaults
+from . import validation
 
 ### INITIALIZATION ###
 
