@@ -26,15 +26,15 @@ import matplotlib.rcsetup
 # The types we use in this script
 from typing import Literal
 # The information contained in our helper scripts (validation and defaults)
-from . import defaults
-from . import validation
+from ..defaults import north_arrow
+from ..validation import validation
 
 ### INITIALIZATION ###
 
 # Setting the defaults to the "medium" size, which is roughly optimized for A4/Letter paper
 # Making these as globals is important for the set_size() function to work later
-_DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = defaults._DEFAULT_CONTAINER["md"]
-_DEFAULT_ROTATION = defaults._ROTATION_ALL
+_DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = north_arrow._DEFAULT_CONTAINER["md"]
+_DEFAULT_ROTATION = north_arrow._ROTATION_ALL
 
 ### CLASSES ###
 
@@ -242,15 +242,15 @@ class NorthArrow(matplotlib.artist.Artist):
         global _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB
         # Changing the global default values as required
         if size.lower() in ["xs","xsmall","x-small"]:
-            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = defaults._DEFAULT_CONTAINER["xs"]
+            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = north_arrow._DEFAULT_CONTAINER["xs"]
         elif size.lower() in ["sm","small"]:
-            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = defaults._DEFAULT_CONTAINER["sm"]
+            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = north_arrow._DEFAULT_CONTAINER["sm"]
         elif size.lower() in ["md","medium"]:
-            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = defaults._DEFAULT_CONTAINER["md"]
+            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = north_arrow._DEFAULT_CONTAINER["md"]
         elif size.lower() in ["lg","large"]:
-            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = defaults._DEFAULT_CONTAINER["lg"]
+            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = north_arrow._DEFAULT_CONTAINER["lg"]
         elif size.lower() in ["xl","xlarge","x-large"]:
-            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = defaults._DEFAULT_CONTAINER["xl"]
+            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = north_arrow._DEFAULT_CONTAINER["xl"]
         else:
             raise ValueError("Invalid value supplied, try one of ['xsmall', 'small', 'medium', 'large', 'xlarge'] instead")
 
@@ -380,7 +380,7 @@ def north_arrow(ax, draw=True,
     ## DRAWING ##
     # If this option is set to true, we'll draw the final artists as desired
     if draw==True:
-        ax.add_artist(aob_box)
+        _ = ax.add_artist(aob_box)
     # If not, we'll return the aob_box as an artist object (the NorthArrow draw() function uses this)
     else:
         return aob_box
