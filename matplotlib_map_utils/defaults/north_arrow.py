@@ -1,8 +1,8 @@
-############################################################
-# defaults.py contains default values for the artists
+#####################################################################
+# defaults/north_arrow.py contains default values for the NorthArrows
 # at difference plot sizes (xsmall to xlarge)
 # see their corresponding sizes under each default heading
-############################################################
+#####################################################################
 
 # The main variables that update are the following:
 # base: scale, linewidth
@@ -407,7 +407,7 @@ _AOB_XL = {
 
 ## CONTAINER
 # This makes an easy-to-call dictionary of all the defaults we've set, for easy unpacking by the set_size function
-_DEFAULT_CONTAINER = {
+_DEFAULTS_NA = {
     "xs":[_SCALE_XS, _BASE_XS, _FANCY_XS, _LABEL_XS, _SHADOW_XS, _PACK_XS, _AOB_XS],
     "sm":[_SCALE_SM, _BASE_SM, _FANCY_SM, _LABEL_SM, _SHADOW_SM, _PACK_SM, _AOB_SM],
     "md":[_SCALE_MD, _BASE_MD, _FANCY_MD, _LABEL_MD, _SHADOW_MD, _PACK_MD, _AOB_MD],

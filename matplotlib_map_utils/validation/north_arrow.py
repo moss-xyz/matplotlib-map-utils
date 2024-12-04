@@ -1,5 +1,5 @@
 ############################################################
-# north_arrow.py contains all the main objects
+# validation/north_arrow.py contains all the main objects
 # for checking inputs passed to class definitions
 ############################################################
 

@@ -1,5 +1,5 @@
 ############################################################
-# scale_bar.py contains all the main objects
+# validation/scale_bar.py contains all the main objects
 # for checking inputs passed to class definitions
 ############################################################
 
