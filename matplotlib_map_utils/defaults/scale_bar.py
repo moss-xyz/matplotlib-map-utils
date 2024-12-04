@@ -368,7 +368,7 @@ _AOB_XL = {
 
 ## CONTAINER
 # This makes an easy-to-call dictionary of all the defaults we've set, for easy unpacking by the set_size function
-_DEFAULT_SB = {
+_DEFAULTS_SB = {
     "xs":[_BAR_XS, _LABELS_XS, _UNITS_XS, _TEXT_XS, _AOB_XS],
     "sm":[_BAR_SM, _LABELS_SM, _UNITS_SM, _TEXT_SM, _AOB_SM],
     "md":[_BAR_MD, _LABELS_MD, _UNITS_MD, _TEXT_MD, _AOB_MD],

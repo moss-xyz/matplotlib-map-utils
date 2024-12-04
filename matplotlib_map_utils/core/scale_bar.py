@@ -32,16 +32,14 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 import matplotlib.rcsetup
 # The types we use in this script
 from typing import Literal
-
-### TO REMOVE ###
-import random
-import geopandas
-import validation_scale_bar
-import defaults_scale_bar
+# The information contained in our helper scripts (validation and defaults)
+from ..defaults import scale_bar as sbd
+from ..validation import scale_bar as sbt
+from ..validation import functions as sbf
 
 ### INIT ###
 
-_DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = defaults_scale_bar._DEFAULT_CONTAINER["md"]
+_DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = sbd._DEFAULT_CONTAINER["md"]
 
 ### CLASSES ###
 
@@ -50,12 +48,12 @@ class ScaleBar(matplotlib.artist.Artist):
     ## INITIALIZATION ##
     def __init__(self, style: Literal["ticks","boxes"]="boxes",
                        location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="upper right",
-                       bar: None | bool | validation_scale_bar._TYPE_BAR=None,
-                       units: None | bool | validation_scale_bar._TYPE_UNITS=None,
-                       labels: None | bool | validation_scale_bar._TYPE_LABELS=None,
-                       text: None | bool | validation_scale_bar._TYPE_TEXT=None,
-                    #    pack: None | bool | validation_scale_bar._TYPE_PACK=None,
-                       aob: None | bool | validation_scale_bar._TYPE_AOB=None,
+                       bar: None | bool | sbt._TYPE_BAR=None,
+                       units: None | bool | sbt._TYPE_UNITS=None,
+                       labels: None | bool | sbt._TYPE_LABELS=None,
+                       text: None | bool | sbt._TYPE_TEXT=None,
+                    #    pack: None | bool | sbt._TYPE_PACK=None,
+                       aob: None | bool | sbt._TYPE_AOB=None,
                        ):
         # Starting up the object with the base properties of a matplotlib Artist
         matplotlib.artist.Artist.__init__(self)
@@ -65,11 +63,11 @@ class ScaleBar(matplotlib.artist.Artist):
         # If a specific component is not desired, it should be set to False during initialization
 
         ##### VALIDATING #####
-        style = validation_scale_bar._validate(validation_scale_bar._VALIDATE_PRIMARY, "style", style)
+        style = sbf._validate(sbt._VALIDATE_PRIMARY, "style", style)
         self._style = style
 
         # Location is stored as just a string
-        location = validation_scale_bar._validate(validation_scale_bar._VALIDATE_PRIMARY, "location", location)
+        location = sbf._validate(sbt._VALIDATE_PRIMARY, "location", location)
         self._location = location
         
 
@@ -77,26 +75,26 @@ class ScaleBar(matplotlib.artist.Artist):
         # This validation is dependent on the type of bar we are constructing
         # So we modify the validation dictionary to remove the keys that are not relevant (throwing a warning if they exist in the input)
         if self._style == "boxes":
-            bar = validation_scale_bar._validate_dict(bar, _del_keys(_DEFAULT_BAR, ["minor_frac","tick_loc","basecolors","tickcolors","tickwidth"]), 
-                                                      _del_keys(validation_scale_bar._VALIDATE_BAR, ["minor_frac","tick_loc","basecolors","tickcolors","tickwidth"]), return_clean=True, to_validate="input")
+            bar = sbf._validate_dict(bar, _del_keys(_DEFAULT_BAR, ["minor_frac","tick_loc","basecolors","tickcolors","tickwidth"]), 
+                                                      _del_keys(sbt._VALIDATE_BAR, ["minor_frac","tick_loc","basecolors","tickcolors","tickwidth"]), return_clean=True, to_validate="input")
         else:
-            bar = validation_scale_bar._validate_dict(bar, _del_keys(_DEFAULT_BAR, ["facecolors","edgecolors","edgewidth"]), 
-                                                      _del_keys(validation_scale_bar._VALIDATE_BAR, ["facecolors","edgecolors","edgewidth"]), return_clean=True, to_validate="input")
+            bar = sbf._validate_dict(bar, _del_keys(_DEFAULT_BAR, ["facecolors","edgecolors","edgewidth"]), 
+                                                      _del_keys(sbt._VALIDATE_BAR, ["facecolors","edgecolors","edgewidth"]), return_clean=True, to_validate="input")
         self._bar = bar
 
-        units = validation_scale_bar._validate_dict(units, _DEFAULT_UNITS, validation_scale_bar._VALIDATE_UNITS, return_clean=True, to_validate="input")
+        units = sbf._validate_dict(units, _DEFAULT_UNITS, sbt._VALIDATE_UNITS, return_clean=True, to_validate="input")
         self._units = units
 
-        labels = validation_scale_bar._validate_dict(labels, _DEFAULT_LABELS, validation_scale_bar._VALIDATE_LABELS, return_clean=True, to_validate="input")
+        labels = sbf._validate_dict(labels, _DEFAULT_LABELS, sbt._VALIDATE_LABELS, return_clean=True, to_validate="input")
         self._labels = labels
 
-        text = validation_scale_bar._validate_dict(text, _DEFAULT_TEXT, validation_scale_bar._VALIDATE_TEXT, return_clean=True, to_validate="input")
+        text = sbf._validate_dict(text, _DEFAULT_TEXT, sbt._VALIDATE_TEXT, return_clean=True, to_validate="input")
         self._text = text
 
-        # pack = validation_scale_bar._validate_dict(pack, _DEFAULT_PACK, validation_scale_bar._VALIDATE_PACK, return_clean=True, to_validate="input")
+        # pack = sbf._validate_dict(pack, _DEFAULT_PACK, sbt._VALIDATE_PACK, return_clean=True, to_validate="input")
         # self._pack = pack
 
-        aob = validation_scale_bar._validate_dict(aob, _DEFAULT_AOB, validation_scale_bar._VALIDATE_AOB, return_clean=True, to_validate="input")
+        aob = sbf._validate_dict(aob, _DEFAULT_AOB, sbt._VALIDATE_AOB, return_clean=True, to_validate="input")
         self._aob = aob
     
     # We do set the zorder for our objects individually,
@@ -117,7 +115,7 @@ class ScaleBar(matplotlib.artist.Artist):
 
     @style.setter
     def style(self, val: Literal["boxes","ticks"]):
-        val = validation_scale_bar._validate(validation_scale_bar._VALIDATE_PRIMARY, "style", val)
+        val = sbf._validate(sbt._VALIDATE_PRIMARY, "style", val)
         self._style = val
 
     # location/loc
@@ -127,7 +125,7 @@ class ScaleBar(matplotlib.artist.Artist):
 
     @location.setter
     def location(self, val: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]):
-        val = validation_scale_bar._validate(validation_scale_bar._VALIDATE_PRIMARY, "location", val)
+        val = sbf._validate(sbt._VALIDATE_PRIMARY, "location", val)
         self._location = val
     
     @property
@@ -136,7 +134,7 @@ class ScaleBar(matplotlib.artist.Artist):
 
     @loc.setter
     def loc(self, val: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]):
-        val = validation_scale_bar._validate(validation_scale_bar._VALIDATE_PRIMARY, "location", val)
+        val = sbf._validate(sbt._VALIDATE_PRIMARY, "location", val)
         self._location = val
 
     # bar
@@ -146,11 +144,11 @@ class ScaleBar(matplotlib.artist.Artist):
 
     @bar.setter
     def bar(self, val: dict):
-        val = validation_scale_bar._validate_type("bar", val, dict)
+        val = sbf._validate_type("bar", val, dict)
         if self._style == "boxes":
-            val = validation_scale_bar._validate_dict(val, self._bar, _del_keys(validation_scale_bar._VALIDATE_BAR, ["minor_frac","tick_loc","basecolors","tickcolors","tickwidth"]), return_clean=True, parse_false=False)
+            val = sbf._validate_dict(val, self._bar, _del_keys(sbt._VALIDATE_BAR, ["minor_frac","tick_loc","basecolors","tickcolors","tickwidth"]), return_clean=True, parse_false=False)
         else:
-            val = validation_scale_bar._validate_dict(val, self._bar, _del_keys(validation_scale_bar._VALIDATE_BAR, ["facecolors","edgecolors","edgewidth"]), return_clean=True, parse_false=False)
+            val = sbf._validate_dict(val, self._bar, _del_keys(sbt._VALIDATE_BAR, ["facecolors","edgecolors","edgewidth"]), return_clean=True, parse_false=False)
         self._bar = val
     
     # units
@@ -160,8 +158,8 @@ class ScaleBar(matplotlib.artist.Artist):
 
     @units.setter
     def units(self, val: dict):
-        val = validation_scale_bar._validate_type("units", val, dict)
-        val = validation_scale_bar._validate_dict(val, self._units, validation_scale_bar._VALIDATE_UNITS, return_clean=True, parse_false=False)
+        val = sbf._validate_type("units", val, dict)
+        val = sbf._validate_dict(val, self._units, sbt._VALIDATE_UNITS, return_clean=True, parse_false=False)
         self._units = val
     
     # labels
@@ -171,8 +169,8 @@ class ScaleBar(matplotlib.artist.Artist):
 
     @labels.setter
     def labels(self, val: dict):
-        val = validation_scale_bar._validate_type("labels", val, dict)
-        val = validation_scale_bar._validate_dict(val, self._labels, validation_scale_bar._VALIDATE_LABELS, return_clean=True, parse_false=False)
+        val = sbf._validate_type("labels", val, dict)
+        val = sbf._validate_dict(val, self._labels, sbt._VALIDATE_LABELS, return_clean=True, parse_false=False)
         self._labels = val
     
     # text
@@ -182,8 +180,8 @@ class ScaleBar(matplotlib.artist.Artist):
 
     @text.setter
     def text(self, val: dict):
-        val = validation_scale_bar._validate_type("text", val, dict)
-        val = validation_scale_bar._validate_dict(val, self._text, validation_scale_bar._VALIDATE_TEXT, return_clean=True, parse_false=False)
+        val = sbf._validate_type("text", val, dict)
+        val = sbf._validate_dict(val, self._text, sbt._VALIDATE_TEXT, return_clean=True, parse_false=False)
         self._text = val
     
     # aob
@@ -193,8 +191,8 @@ class ScaleBar(matplotlib.artist.Artist):
 
     @aob.setter
     def aob(self, val: dict):
-        val = validation_scale_bar._validate_type("aob", val, dict)
-        val = validation_scale_bar._validate_dict(val, self._aob, validation_scale_bar._VALIDATE_AOB, return_clean=True, parse_false=False)
+        val = sbf._validate_type("aob", val, dict)
+        val = sbf._validate_dict(val, self._aob, sbt._VALIDATE_AOB, return_clean=True, parse_false=False)
         self._aob = val
     
     ## COPY FUNCTION ##
@@ -230,15 +228,15 @@ class ScaleBar(matplotlib.artist.Artist):
         global _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB
         # Changing the global default values as required
         if size.lower() in ["xs","xsmall","x-small"]:
-            _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = defaults_scale_bar._DEFAULT_CONTAINER["xs"]
+            _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = sbd._DEFAULT_CONTAINER["xs"]
         elif size.lower() in ["sm","small"]:
-            _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = defaults_scale_bar._DEFAULT_CONTAINER["sm"]
+            _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = sbd._DEFAULT_CONTAINER["sm"]
         elif size.lower() in ["md","medium"]:
-            _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = defaults_scale_bar._DEFAULT_CONTAINER["md"]
+            _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = sbd._DEFAULT_CONTAINER["md"]
         elif size.lower() in ["lg","large"]:
-            _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = defaults_scale_bar._DEFAULT_CONTAINER["lg"]
+            _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = sbd._DEFAULT_CONTAINER["lg"]
         elif size.lower() in ["xl","xlarge","x-large"]:
-            _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = defaults_scale_bar._DEFAULT_CONTAINER["xl"]
+            _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = sbd._DEFAULT_CONTAINER["xl"]
         else:
             raise ValueError("Invalid value supplied, try one of ['xsmall', 'small', 'medium', 'large', 'xlarge'] instead")
 
@@ -246,35 +244,35 @@ class ScaleBar(matplotlib.artist.Artist):
 
 def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
                   location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="upper right",
-                  bar: None | bool | validation_scale_bar._TYPE_BAR=None,
-                  units: None | bool | validation_scale_bar._TYPE_UNITS=None,
-                  labels: None | bool | validation_scale_bar._TYPE_LABELS=None,
-                  text: None | bool | validation_scale_bar._TYPE_TEXT=None,
-                  aob: None | bool | validation_scale_bar._TYPE_AOB=None,
+                  bar: None | bool | sbt._TYPE_BAR=None,
+                  units: None | bool | sbt._TYPE_UNITS=None,
+                  labels: None | bool | sbt._TYPE_LABELS=None,
+                  text: None | bool | sbt._TYPE_TEXT=None,
+                  aob: None | bool | sbt._TYPE_AOB=None,
                   return_aob: bool=True
                   ):
 
     ##### VALIDATION #####
-    _style = validation_scale_bar._validate(validation_scale_bar._VALIDATE_PRIMARY, "style", style)
-    _location = validation_scale_bar._validate(validation_scale_bar._VALIDATE_PRIMARY, "location", location)
+    _style = sbf._validate(sbt._VALIDATE_PRIMARY, "style", style)
+    _location = sbf._validate(sbt._VALIDATE_PRIMARY, "location", location)
 
     # This works the same as it does with the ScaleBar object(s)
     # If a dictionary is passed to any of the elements, first validate that it is "correct"
     # Note that we also merge the provided dict with the default style dict, so no keys are missing
     # If a specific component is not desired, it should be set to False in the function call
     if _style == "boxes":
-        _bar = validation_scale_bar._validate_dict(bar, _del_keys(_DEFAULT_BAR, ["minor_frac","tick_loc","basecolors","tickcolors","tickwidth"]), 
-                                                       _del_keys(validation_scale_bar._VALIDATE_BAR, ["minor_frac","tick_loc","basecolors","tickcolors","tickwidth"]), return_clean=True)
+        _bar = sbf._validate_dict(bar, _del_keys(_DEFAULT_BAR, ["minor_frac","tick_loc","basecolors","tickcolors","tickwidth"]), 
+                                                       _del_keys(sbt._VALIDATE_BAR, ["minor_frac","tick_loc","basecolors","tickcolors","tickwidth"]), return_clean=True)
     else:
-        _bar = validation_scale_bar._validate_dict(bar, _del_keys(_DEFAULT_BAR, ["facecolors","edgecolors","edgewidth"]), 
-                                                       _del_keys(validation_scale_bar._VALIDATE_BAR, ["facecolors","edgecolors","edgewidth"]), return_clean=True)
+        _bar = sbf._validate_dict(bar, _del_keys(_DEFAULT_BAR, ["facecolors","edgecolors","edgewidth"]), 
+                                                       _del_keys(sbt._VALIDATE_BAR, ["facecolors","edgecolors","edgewidth"]), return_clean=True)
     
-    _units = validation_scale_bar._validate_dict(units, _DEFAULT_UNITS, validation_scale_bar._VALIDATE_UNITS, return_clean=True)
-    _labels = validation_scale_bar._validate_dict(labels, _DEFAULT_LABELS, validation_scale_bar._VALIDATE_LABELS, return_clean=True)
-    # _text = validation_scale_bar._validate_dict(text, copy.deepcopy(_DEFAULT_TEXT), validation_scale_bar._VALIDATE_TEXT, return_clean=True)
-    _text = validation_scale_bar._validate_dict(text, _DEFAULT_TEXT, validation_scale_bar._VALIDATE_TEXT, return_clean=True)
-    # _pack = validation_scale_bar._validate_dict(pack, _DEFAULT_PACK, validation_scale_bar._VALIDATE_PACK, return_clean=True)
-    _aob = validation_scale_bar._validate_dict(aob, _DEFAULT_AOB, validation_scale_bar._VALIDATE_AOB, return_clean=True)
+    _units = sbf._validate_dict(units, _DEFAULT_UNITS, sbt._VALIDATE_UNITS, return_clean=True)
+    _labels = sbf._validate_dict(labels, _DEFAULT_LABELS, sbt._VALIDATE_LABELS, return_clean=True)
+    # _text = sbf._validate_dict(text, copy.deepcopy(_DEFAULT_TEXT), sbt._VALIDATE_TEXT, return_clean=True)
+    _text = sbf._validate_dict(text, _DEFAULT_TEXT, sbt._VALIDATE_TEXT, return_clean=True)
+    # _pack = sbf._validate_dict(pack, _DEFAULT_PACK, sbt._VALIDATE_PACK, return_clean=True)
+    _aob = sbf._validate_dict(aob, _DEFAULT_AOB, sbt._VALIDATE_AOB, return_clean=True)
 
     ##### CONFIGURING TEXT #####
     # TODO: should this be before or after the validation?
@@ -498,11 +496,11 @@ def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
 def dual_bars(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
                   location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="upper right",
                   units_dual=["mi","km"], bar_maxes=[None,None], bar_lengths=[None,None], major_divs=[None, None], minor_divs=[None, None],
-                  bar: None | bool | validation_scale_bar._TYPE_BAR=None,
-                  units: None | bool | validation_scale_bar._TYPE_UNITS=None,
-                  labels: None | bool | validation_scale_bar._TYPE_LABELS=None,
-                  text: None | bool | validation_scale_bar._TYPE_TEXT=None,
-                  aob: None | bool | validation_scale_bar._TYPE_AOB=None,
+                  bar: None | bool | sbt._TYPE_BAR=None,
+                  units: None | bool | sbt._TYPE_UNITS=None,
+                  labels: None | bool | sbt._TYPE_LABELS=None,
+                  text: None | bool | sbt._TYPE_TEXT=None,
+                  aob: None | bool | sbt._TYPE_AOB=None,
                   pad=0, sep=0,
                   return_aob: bool=True
                   ):
@@ -540,9 +538,9 @@ def dual_bars(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
         warnings.warn("bar['minor_div'] is ignored for dual_bars, as it is (optionally) set by minor_divs")
         _ = bar.pop("minor_div")
     
-    _style = validation_scale_bar._validate(validation_scale_bar._VALIDATE_PRIMARY, "style", style)
-    _location = validation_scale_bar._validate(validation_scale_bar._VALIDATE_PRIMARY, "location", location)
-    _aob = validation_scale_bar._validate_dict(aob, _DEFAULT_AOB, validation_scale_bar._VALIDATE_AOB, return_clean=True)
+    _style = sbf._validate(sbt._VALIDATE_PRIMARY, "style", style)
+    _location = sbf._validate(sbt._VALIDATE_PRIMARY, "location", location)
+    _aob = sbf._validate_dict(aob, _DEFAULT_AOB, sbt._VALIDATE_AOB, return_clean=True)
     
     ##### CREATION #####
     # Setting up the order of some other settings (label location, tick location)
@@ -684,7 +682,7 @@ def _scale_bar_config(ax, bar, major):
     else:
         # Standardizing the projection unit
         try:
-            units_proj = defaults_scale_bar.units_standard[units_proj]
+            units_proj = sbd.units_standard[units_proj]
         except:
             warnings.warn(f"Units for specified projection ({units_proj}) are considered invalid; please use a different projection that conforms to an expected unit value (such as US survey feet or metres)")
             return None
@@ -692,7 +690,7 @@ def _scale_bar_config(ax, bar, major):
     # Standardizing the units specified by the user
     # This means we will also handle conversion if necessary
     try:
-        units_user = defaults_scale_bar.units_standard.get(bar["unit"])
+        units_user = sbd.units_standard.get(bar["unit"])
     except:
         warnings.warn(f"Desired output units selected by user ({bar["unit"]}) are considered invalid; please use one of the units specified in the units_standard dictionary in defaults.py")
         units_user = None
@@ -721,8 +719,8 @@ def _scale_bar_config(ax, bar, major):
         # We only need to do so if the units are different, however!
         if units_user != units_proj:
             # This works by finding the ratios between the two units, using meters as the base
-            # bar_max = bar_max * (defaults_scale_bar.convert_dict[units_proj] / defaults_scale_bar.convert_dict[units_user])
-            ax_range = ax_range * (defaults_scale_bar.convert_dict[units_proj] / defaults_scale_bar.convert_dict[units_user])
+            # bar_max = bar_max * (sbd.convert_dict[units_proj] / sbd.convert_dict[units_user])
+            ax_range = ax_range * (sbd.convert_dict[units_proj] / sbd.convert_dict[units_user])
     
     ## BAR LENGTH AND MAX VALUE ##
 
@@ -769,7 +767,7 @@ def _scale_bar_config(ax, bar, major):
                 break
         
         # Calculating the RMS for each preferred max number we have
-        major_breaks = list(defaults_scale_bar.preferred_divs.keys())
+        major_breaks = list(sbd.preferred_divs.keys())
         major_rms = [math.sqrt((m - (bar_max/(10**units_mag)))**2) for m in major_breaks]
 
         # Sorting for the "best" number
@@ -780,8 +778,8 @@ def _scale_bar_config(ax, bar, major):
         bar_max_best = sorted_breaks[0][0]
         bar_max = bar_max_best * 10**units_mag
         bar_length = (bar_max / ax_range) * ax_dim
-        major_div = defaults_scale_bar.preferred_divs[bar_max_best][0]
-        minor_div = defaults_scale_bar.preferred_divs[bar_max_best][1]
+        major_div = sbd.preferred_divs[bar_max_best][0]
+        minor_div = sbd.preferred_divs[bar_max_best][1]
 
     return bar_max, bar_length, units_label, major_div, minor_div
 
@@ -842,7 +840,7 @@ def _config_bar(ax, bar):
     else:
         # Standardizing the projection unit
         try:
-            units_proj = defaults_scale_bar.units_standard[units_proj]
+            units_proj = sbd.units_standard[units_proj]
         except:
             warnings.warn(f"Units for specified projection ({units_proj}) are considered invalid; please use a different projection that conforms to an expected unit value (such as US survey feet or metres)")
             return None
@@ -850,7 +848,7 @@ def _config_bar(ax, bar):
     # Standardizing the units specified by the user
     # This means we will also handle conversion if necessary
     try:
-        units_user = defaults_scale_bar.units_standard.get(bar["unit"])
+        units_user = sbd.units_standard.get(bar["unit"])
     except:
         warnings.warn(f"Desired output units selected by user ({bar["unit"]}) are considered invalid; please use one of the units specified in the units_standard dictionary in defaults.py")
         units_user = None
@@ -877,7 +875,7 @@ def _config_bar(ax, bar):
         # We only need to do so if the units are different, however!
         if units_user != units_proj:
             # This works by finding the ratios between the two units, using meters as the base
-            ax_range = ax_range * (defaults_scale_bar.convert_dict[units_proj] / defaults_scale_bar.convert_dict[units_user])
+            ax_range = ax_range * (sbd.convert_dict[units_proj] / sbd.convert_dict[units_user])
     
     ## BAR LENGTH AND MAX VALUE ##
     # bar_max is the length of the bar in UNITS, not INCHES
@@ -934,7 +932,7 @@ def _config_bar(ax, bar):
                 break
         
         # Calculating the RMS for each preferred max number we have
-        major_breaks = list(defaults_scale_bar.preferred_divs.keys())
+        major_breaks = list(sbd.preferred_divs.keys())
         major_rms = [math.sqrt((m - (bar_max/(10**units_mag)))**2) for m in major_breaks]
 
         # Sorting for the "best" number
@@ -945,8 +943,8 @@ def _config_bar(ax, bar):
         bar_max_best = sorted_breaks[0][0]
         bar_max = bar_max_best * 10**units_mag
         bar_length = (bar_max / ax_range) * ax_dim
-        major_div = defaults_scale_bar.preferred_divs[bar_max_best][0]
-        minor_div = defaults_scale_bar.preferred_divs[bar_max_best][1]
+        major_div = sbd.preferred_divs[bar_max_best][0]
+        minor_div = sbd.preferred_divs[bar_max_best][1]
 
     return bar_max, bar_length, units_label, major_div, minor_div
 
