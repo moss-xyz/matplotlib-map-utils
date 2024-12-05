@@ -18,7 +18,7 @@ import matplotlib.rcsetup
 # The types we use in this script
 from typing import Tuple, TypedDict, Literal, get_args
 # Finally, the validation functions
-import functions as vf
+from . import functions as vf
 
 ### ALL ###
 # This code tells other packages what to import if not explicitly stated

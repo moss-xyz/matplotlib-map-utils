@@ -39,7 +39,7 @@ from ..validation import functions as sbf
 
 ### INIT ###
 
-_DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = sbd._DEFAULT_CONTAINER["md"]
+_DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = sbd._DEFAULTS_SB["md"]
 
 ### CLASSES ###
 
@@ -228,15 +228,15 @@ class ScaleBar(matplotlib.artist.Artist):
         global _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB
         # Changing the global default values as required
         if size.lower() in ["xs","xsmall","x-small"]:
-            _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = sbd._DEFAULT_CONTAINER["xs"]
+            _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = sbd._DEFAULTS_SB["xs"]
         elif size.lower() in ["sm","small"]:
-            _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = sbd._DEFAULT_CONTAINER["sm"]
+            _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = sbd._DEFAULTS_SB["sm"]
         elif size.lower() in ["md","medium"]:
-            _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = sbd._DEFAULT_CONTAINER["md"]
+            _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = sbd._DEFAULTS_SB["md"]
         elif size.lower() in ["lg","large"]:
-            _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = sbd._DEFAULT_CONTAINER["lg"]
+            _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = sbd._DEFAULTS_SB["lg"]
         elif size.lower() in ["xl","xlarge","x-large"]:
-            _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = sbd._DEFAULT_CONTAINER["xl"]
+            _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = sbd._DEFAULTS_SB["xl"]
         else:
             raise ValueError("Invalid value supplied, try one of ['xsmall', 'small', 'medium', 'large', 'xlarge'] instead")
 
@@ -557,9 +557,9 @@ def dual_bars(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
         # Creating a bar
         # Because draw is False and return_aob is false, an OffsetImage will be returned
         bars.append(scale_bar(ax, draw=False, style=_style, location=location, 
-                              bar=(bar | bar_settings), 
+                              bar=((bar | bar_settings) if bar is not None else bar_settings), 
                               units=units, 
-                              labels=(labels | label_settings), 
+                              labels=(labels | label_settings if labels is not None else label_settings), 
                               text=text,
                               return_aob=False))
 
@@ -613,175 +613,9 @@ def dual_bars(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
 ### OTHER FUNCTIONS ###
 
 # This function will remove any keys we specify from a dictionary
-# This is useful if we need to unpack on certain values from a dictionary, and is used in north_arrow()
+# This is useful if we need to unpack on certain values from a dictionary, and is used in scale_bar()
 def _del_keys(dict, to_remove):
     return {key: val for key, val in dict.items() if key not in to_remove}
-
-# This function handles the config steps (width, etc)
-# that are shared across all the different scale bars
-def _scale_bar_config(ax, bar, major):
-
-    ## PLOT INFO ##
-    # Literally just getting the figure for the passed axis
-
-    fig = ax.get_figure()
-    
-    ## ROTATION ##
-    # Calculating if the rotation is vertical or horizontal
-
-    # Figuring out how many quarter turns the rotation value is approximately
-    quarters = int(round(bar["rotation"]/90,0))
-    
-    # EVEN quarter turns (0, 180, 360, -180) are considered horizontal
-    # ODD quarter turns (90, 270, -90, -270) are considered vertical
-    if quarters % 2 == 0:
-        bar_vertical = False
-    else:
-        bar_vertical = True
-    
-    ## BAR DIMENSIONS ##
-    # Finding the max length and optimal divisions of the scale bar
-
-    # Finding the dimensions of the axis and the limits
-    # get_tightbbox() returns values in pixel coordinates
-    # so dividing by dpi gets us the inches of the axis
-    # Vertical scale bars are oriented against the y-axis (height)
-    if bar_vertical==True:
-        ax_dim = ax.patch.get_tightbbox().height / fig.dpi
-        min_lim, max_lim = ax.get_ylim()
-    # Horizontal scale bars are oriented against the x-axis (width)
-    else:
-        ax_dim = ax.patch.get_tightbbox().width / fig.dpi
-        min_lim, max_lim = ax.get_xlim()
-    # This calculates the range from max to min on the axis of interest
-    ax_range = abs(max_lim - min_lim)
-
-    ## UNITS ##
-    # Now, calculating the proportion of the dimension axis that we need
-    
-    # Capturing the unit from the projection
-    # (We use bar_vertical to index; 0 is for east-west axis, 1 is for north-south)
-    units_proj = pyproj.CRS(bar["projection"]).axis_info[bar_vertical].unit_name
-    # If the provided units are in degrees, we will convert to meters first
-    # This will recalculate the ax_range
-    if units_proj=="degree":
-        warnings.warn(f"Provided CRS {bar["projection"]} uses degrees. An attempt will be made at conversion, but there will be accuracy issues: it is recommended that you use a projected CRS instead.")
-        ylim = ax.get_ylim()
-        xlim = ax.get_xlim()
-        # Using https://github.com/seangrogan/great_circle_calculator/blob/master/great_circle_calculator/great_circle_calculator.py
-        # If the bar is vertical, we use the midpoint of the longitude (x-axis) and the max and min of the latitude (y-axis)
-        if bar_vertical==True:
-            ax_range = distance_between_points(((xlim[0]+xlim[1])/2, ylim[0]), ((xlim[0]+xlim[1])/2, ylim[1]))
-        # Otherwise, the opposite
-        else:
-            ax_range = distance_between_points((xlim[0], (ylim[0]+ylim[1])/2), (xlim[1], (ylim[0]+ylim[1])/2))
-        # Setting units_proj to meters now
-        units_proj = "m"
-        
-    # If a projected CRS is provided instead...
-    else:
-        # Standardizing the projection unit
-        try:
-            units_proj = sbd.units_standard[units_proj]
-        except:
-            warnings.warn(f"Units for specified projection ({units_proj}) are considered invalid; please use a different projection that conforms to an expected unit value (such as US survey feet or metres)")
-            return None
-
-    # Standardizing the units specified by the user
-    # This means we will also handle conversion if necessary
-    try:
-        units_user = sbd.units_standard.get(bar["unit"])
-    except:
-        warnings.warn(f"Desired output units selected by user ({bar["unit"]}) are considered invalid; please use one of the units specified in the units_standard dictionary in defaults.py")
-        units_user = None
-
-    # Converting
-
-    # First, the case where the user doesn't provide any units
-    # In this instance, we just use the units from the projection
-    if units_user is None:
-        units_label = units_proj
-        # If necessary, scaling "small" units to "large" units
-        # Meters to km
-        if units_proj == "m" and ax_range > (1000*5):
-            # bar_max = bar_max / 1000
-            ax_range = ax_range / 1000
-            units_label = "km"
-        # Feet to mi
-        elif units_proj == "ft" and ax_range > (5280*5):
-            # bar_max = bar_max / 5280
-            ax_range = ax_range / 5280
-            units_label = "mi"
-
-    # Otherwise, if the user supplied a unit of some sort, then handle conversion
-    else:
-        units_label = units_user
-        # We only need to do so if the units are different, however!
-        if units_user != units_proj:
-            # This works by finding the ratios between the two units, using meters as the base
-            # bar_max = bar_max * (sbd.convert_dict[units_proj] / sbd.convert_dict[units_user])
-            ax_range = ax_range * (sbd.convert_dict[units_proj] / sbd.convert_dict[units_user])
-    
-    ## BAR LENGTH AND MAX VALUE ##
-
-    # Setting the bar_max
-    # bar_max is the length of the bar in UNITS, not INCHES
-    # If it is not provided, the optimal value is calculated
-    if bar["max"] is None:
-        # If no bar length is provided, set to ~20% of the limit
-        if bar["length"] is None:
-            bar_max = 0.20 * ax_range
-        # If the value is less than 1, set to that proportion of the limit
-        elif bar["length"] < 1:
-            bar_max = bar["length"] * ax_range
-        # Otherwise, assume the value is already in inches, and calculate the fraction relative to the axis
-        # Then find the proportion of the limit
-        else:
-            if bar["length"] < ax_dim:
-                bar_max = (bar["length"] / ax_dim) * ax_range
-            else:
-                # TODO: add warning here
-                bar_max = 0.20 * ax_range
-    # If bar["max"] is provided, don't need to go through all of this effort
-    else:
-        if bar["length"] is not None:
-            warnings.warn("Both bar['max'] and bar['length'] were set, so the value for bar['length'] will be ignored. Please reference the documentation to understand why both may not be set at the same time.")
-        bar_max = bar["max"]
-
-    ## BAR DIVISIONS ##
-
-    # If both a max bar value and the # of breaks is provided, will not need to auto calculate
-    if bar["max"] is not None and major["div"] is not None:
-        # bar_max = bar["max"]
-        bar_length = (bar_max / ax_range) * ax_dim
-        major_div = major["div"]
-        minor_div = 1 # minor["div"] # might be none
-
-    # If none, or only one, is provided, need to auto calculate optimal values
-    else:
-        # Finding the magnitude of the max of the bar
-        for units_mag in range(0,23):
-            if bar_max / (10 ** (units_mag+1)) > 1.5:
-                units_mag += 1
-            else:
-                break
-        
-        # Calculating the RMS for each preferred max number we have
-        major_breaks = list(sbd.preferred_divs.keys())
-        major_rms = [math.sqrt((m - (bar_max/(10**units_mag)))**2) for m in major_breaks]
-
-        # Sorting for the "best" number
-        # Sorted() works on the first item in the tuple contained in the list
-        sorted_breaks = [(m,r) for r,m in sorted(zip(major_rms, major_breaks))]
-
-        # Saving the values
-        bar_max_best = sorted_breaks[0][0]
-        bar_max = bar_max_best * 10**units_mag
-        bar_length = (bar_max / ax_range) * ax_dim
-        major_div = sbd.preferred_divs[bar_max_best][0]
-        minor_div = sbd.preferred_divs[bar_max_best][1]
-
-    return bar_max, bar_length, units_label, major_div, minor_div
 
 # This function handles the config steps (width, divs, etc)
 # that are shared across all the different scale bars
@@ -840,7 +674,7 @@ def _config_bar(ax, bar):
     else:
         # Standardizing the projection unit
         try:
-            units_proj = sbd.units_standard[units_proj]
+            units_proj = sbt.units_standard[units_proj]
         except:
             warnings.warn(f"Units for specified projection ({units_proj}) are considered invalid; please use a different projection that conforms to an expected unit value (such as US survey feet or metres)")
             return None
@@ -848,7 +682,7 @@ def _config_bar(ax, bar):
     # Standardizing the units specified by the user
     # This means we will also handle conversion if necessary
     try:
-        units_user = sbd.units_standard.get(bar["unit"])
+        units_user = sbt.units_standard.get(bar["unit"])
     except:
         warnings.warn(f"Desired output units selected by user ({bar["unit"]}) are considered invalid; please use one of the units specified in the units_standard dictionary in defaults.py")
         units_user = None
@@ -875,7 +709,7 @@ def _config_bar(ax, bar):
         # We only need to do so if the units are different, however!
         if units_user != units_proj:
             # This works by finding the ratios between the two units, using meters as the base
-            ax_range = ax_range * (sbd.convert_dict[units_proj] / sbd.convert_dict[units_user])
+            ax_range = ax_range * (sbt.convert_dict[units_proj] / sbt.convert_dict[units_user])
     
     ## BAR LENGTH AND MAX VALUE ##
     # bar_max is the length of the bar in UNITS, not INCHES
@@ -932,7 +766,7 @@ def _config_bar(ax, bar):
                 break
         
         # Calculating the RMS for each preferred max number we have
-        major_breaks = list(sbd.preferred_divs.keys())
+        major_breaks = list(sbt.preferred_divs.keys())
         major_rms = [math.sqrt((m - (bar_max/(10**units_mag)))**2) for m in major_breaks]
 
         # Sorting for the "best" number
@@ -943,8 +777,8 @@ def _config_bar(ax, bar):
         bar_max_best = sorted_breaks[0][0]
         bar_max = bar_max_best * 10**units_mag
         bar_length = (bar_max / ax_range) * ax_dim
-        major_div = sbd.preferred_divs[bar_max_best][0]
-        minor_div = sbd.preferred_divs[bar_max_best][1]
+        major_div = sbt.preferred_divs[bar_max_best][0]
+        minor_div = sbt.preferred_divs[bar_max_best][1]
 
     return bar_max, bar_length, units_label, major_div, minor_div
 

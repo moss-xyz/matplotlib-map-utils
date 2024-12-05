@@ -34,7 +34,7 @@ from ..validation import functions as naf
 
 # Setting the defaults to the "medium" size, which is roughly optimized for A4/Letter paper
 # Making these as globals is important for the set_size() function to work later
-_DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = nad._DEFAULT_CONTAINER["md"]
+_DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = nad._DEFAULTS_NA["md"]
 _DEFAULT_ROTATION = nad._ROTATION_ALL
 
 ### CLASSES ###
@@ -58,35 +58,35 @@ class NorthArrow(matplotlib.artist.Artist):
         # If a specific component is not desired, it should be set to False during initialization
 
         # Location is stored as just a string
-        location =  naf._validate(north_arrow._VALIDATE_PRIMARY, "location", location)
+        location =  naf._validate(nat._VALIDATE_PRIMARY, "location", location)
         self._location = location
 
         # Scale will set to the default size if no value is passed
-        scale = naf._validate(north_arrow._VALIDATE_PRIMARY, "scale", scale)
+        scale = naf._validate(nat._VALIDATE_PRIMARY, "scale", scale)
         if scale is None:
             self._scale = _DEFAULT_SCALE
         else:
             self._scale = scale
         
         # Main elements
-        base = naf._validate_dict(base, _DEFAULT_BASE, north_arrow._VALIDATE_BASE, return_clean=True, parse_false=False)
+        base = naf._validate_dict(base, _DEFAULT_BASE, nat._VALIDATE_BASE, return_clean=True, parse_false=False)
         self._base = base
 
-        fancy = naf._validate_dict(fancy, _DEFAULT_FANCY, north_arrow._VALIDATE_FANCY, return_clean=True, parse_false=False)
+        fancy = naf._validate_dict(fancy, _DEFAULT_FANCY, nat._VALIDATE_FANCY, return_clean=True, parse_false=False)
         self._fancy = fancy
 
-        label = naf._validate_dict(label, _DEFAULT_LABEL, north_arrow._VALIDATE_LABEL, return_clean=True, parse_false=False)
+        label = naf._validate_dict(label, _DEFAULT_LABEL, nat._VALIDATE_LABEL, return_clean=True, parse_false=False)
         self._label = label
         
-        shadow = naf._validate_dict(shadow, _DEFAULT_SHADOW, north_arrow._VALIDATE_SHADOW, return_clean=True, parse_false=False)
+        shadow = naf._validate_dict(shadow, _DEFAULT_SHADOW, nat._VALIDATE_SHADOW, return_clean=True, parse_false=False)
         self._shadow = shadow
 
         # Other properties
-        pack = naf._validate_dict(pack, _DEFAULT_PACK, north_arrow._VALIDATE_PACK, return_clean=True, parse_false=False)
+        pack = naf._validate_dict(pack, _DEFAULT_PACK, nat._VALIDATE_PACK, return_clean=True, parse_false=False)
         self._pack = pack
-        aob = naf._validate_dict(aob, _DEFAULT_AOB, north_arrow._VALIDATE_AOB, return_clean=True, parse_false=False)
+        aob = naf._validate_dict(aob, _DEFAULT_AOB, nat._VALIDATE_AOB, return_clean=True, parse_false=False)
         self._aob = aob
-        rotation = naf._validate_dict(rotation, _DEFAULT_ROTATION | rotation, north_arrow._VALIDATE_ROTATION, return_clean=True, parse_false=False)
+        rotation = naf._validate_dict(rotation, _DEFAULT_ROTATION | rotation, nat._VALIDATE_ROTATION, return_clean=True, parse_false=False)
         self._rotation = rotation
     
     # We do set the zorder for our objects individually,
@@ -107,7 +107,7 @@ class NorthArrow(matplotlib.artist.Artist):
 
     @location.setter
     def location(self, val: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]):
-        val = naf._validate(north_arrow._VALIDATE_PRIMARY, "location", val)
+        val = naf._validate(nat._VALIDATE_PRIMARY, "location", val)
         self._location = val
     
     @property
@@ -116,7 +116,7 @@ class NorthArrow(matplotlib.artist.Artist):
 
     @loc.setter
     def loc(self, val: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]):
-        val = naf._validate(north_arrow._VALIDATE_PRIMARY, "location", val)
+        val = naf._validate(nat._VALIDATE_PRIMARY, "location", val)
         self._location = val
 
     # scale
@@ -126,7 +126,7 @@ class NorthArrow(matplotlib.artist.Artist):
 
     @scale.setter
     def scale(self, val: None | float | int):
-        val = naf._validate(north_arrow._VALIDATE_PRIMARY, "scale", val)
+        val = naf._validate(nat._VALIDATE_PRIMARY, "scale", val)
         if val is None:
             self._scale = _DEFAULT_SCALE
         else:
@@ -140,7 +140,7 @@ class NorthArrow(matplotlib.artist.Artist):
     @base.setter
     def base(self, val: dict):
         val = naf._validate_type("base", val, dict)
-        val = naf._validate_dict(val, self._base, north_arrow._VALIDATE_BASE, return_clean=True, parse_false=False)
+        val = naf._validate_dict(val, self._base, nat._VALIDATE_BASE, return_clean=True, parse_false=False)
         self._base = val
     
     # fancy
@@ -151,7 +151,7 @@ class NorthArrow(matplotlib.artist.Artist):
     @fancy.setter
     def fancy(self, val: dict):
         val = naf._validate_type("fancy", val, dict)
-        val = naf._validate_dict(val, self._fancy, north_arrow._VALIDATE_FANCY, return_clean=True, parse_false=False)
+        val = naf._validate_dict(val, self._fancy, nat._VALIDATE_FANCY, return_clean=True, parse_false=False)
         self._fancy = val
     
     # label
@@ -162,7 +162,7 @@ class NorthArrow(matplotlib.artist.Artist):
     @label.setter
     def label(self, val: dict):
         val = naf._validate_type("label", val, dict)
-        val = naf._validate_dict(val, self._label, north_arrow._VALIDATE_LABEL, return_clean=True, parse_false=False)
+        val = naf._validate_dict(val, self._label, nat._VALIDATE_LABEL, return_clean=True, parse_false=False)
         self._label = val
     
     # shadow
@@ -173,7 +173,7 @@ class NorthArrow(matplotlib.artist.Artist):
     @shadow.setter
     def shadow(self, val: dict):
         val = naf._validate_type("shadow", val, dict)
-        val = naf._validate_dict(val, self._shadow, north_arrow._VALIDATE_SHADOW, return_clean=True, parse_false=False)
+        val = naf._validate_dict(val, self._shadow, nat._VALIDATE_SHADOW, return_clean=True, parse_false=False)
         self._shadow = val
     
     # pack
@@ -184,7 +184,7 @@ class NorthArrow(matplotlib.artist.Artist):
     @pack.setter
     def pack(self, val: dict):
         val = naf._validate_type("pack", val, dict)
-        val = naf._validate_dict(val, self._pack, north_arrow._VALIDATE_PACK, return_clean=True, parse_false=False)
+        val = naf._validate_dict(val, self._pack, nat._VALIDATE_PACK, return_clean=True, parse_false=False)
         self._pack = val
     
     # aob
@@ -195,7 +195,7 @@ class NorthArrow(matplotlib.artist.Artist):
     @aob.setter
     def aob(self, val: dict):
         val = naf._validate_type("aob", val, dict)
-        val = naf._validate_dict(val, self._aob, north_arrow._VALIDATE_AOB, return_clean=True, parse_false=False)
+        val = naf._validate_dict(val, self._aob, nat._VALIDATE_AOB, return_clean=True, parse_false=False)
         self._aob = val
     
     # rotation
@@ -206,7 +206,7 @@ class NorthArrow(matplotlib.artist.Artist):
     @rotation.setter
     def rotation(self, val: dict):
         val = naf._validate_type("rotation", val, dict)
-        val = naf._validate_dict(val, self._rotation, north_arrow._VALIDATE_ROTATION, return_clean=True, parse_false=False)
+        val = naf._validate_dict(val, self._rotation, nat._VALIDATE_ROTATION, return_clean=True, parse_false=False)
         self._rotation = val
     
     ## COPY FUNCTION ##
@@ -243,15 +243,15 @@ class NorthArrow(matplotlib.artist.Artist):
         global _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB
         # Changing the global default values as required
         if size.lower() in ["xs","xsmall","x-small"]:
-            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = nad._DEFAULT_CONTAINER["xs"]
+            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = nad._DEFAULTS_NA["xs"]
         elif size.lower() in ["sm","small"]:
-            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = nad._DEFAULT_CONTAINER["sm"]
+            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = nad._DEFAULTS_NA["sm"]
         elif size.lower() in ["md","medium"]:
-            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = nad._DEFAULT_CONTAINER["md"]
+            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = nad._DEFAULTS_NA["md"]
         elif size.lower() in ["lg","large"]:
-            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = nad._DEFAULT_CONTAINER["lg"]
+            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = nad._DEFAULTS_NA["lg"]
         elif size.lower() in ["xl","xlarge","x-large"]:
-            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = nad._DEFAULT_CONTAINER["xl"]
+            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = nad._DEFAULTS_NA["xl"]
         else:
             raise ValueError("Invalid value supplied, try one of ['xsmall', 'small', 'medium', 'large', 'xlarge'] instead")
 
@@ -271,24 +271,24 @@ def north_arrow(ax, draw=True,
                 rotation: None | nat._TYPE_ROTATION=None):
     
     # First, validating the two primary inputs
-    _location = naf._validate(north_arrow._VALIDATE_PRIMARY, "location", location)
+    _location = naf._validate(nat._VALIDATE_PRIMARY, "location", location)
 
     if scale is None:
         _scale = _DEFAULT_SCALE
     else:
-        _scale = naf._validate(north_arrow._VALIDATE_PRIMARY, "scale", scale)
+        _scale = naf._validate(nat._VALIDATE_PRIMARY, "scale", scale)
 
     # This works the same as it does with the NorthArrow object
     # If a dictionary is passed to any of the elements, first validate that it is "correct"
     # Note that we also merge the provided dict with the default style dict, so no keys are missing
     # If a specific component is not desired, it should be set to False in the function call
-    _base = naf._validate_dict(base, _DEFAULT_BASE, north_arrow._VALIDATE_BASE, return_clean=True)
-    _fancy = naf._validate_dict(fancy, _DEFAULT_FANCY, north_arrow._VALIDATE_FANCY, return_clean=True)
-    _label = naf._validate_dict(label, _DEFAULT_LABEL, north_arrow._VALIDATE_LABEL, return_clean=True)
-    _shadow = naf._validate_dict(shadow, _DEFAULT_SHADOW, north_arrow._VALIDATE_SHADOW, return_clean=True)
-    _pack = naf._validate_dict(pack, _DEFAULT_PACK, north_arrow._VALIDATE_PACK, return_clean=True)
-    _aob = naf._validate_dict(aob, _DEFAULT_AOB, north_arrow._VALIDATE_AOB, return_clean=True)
-    _rotation = naf._validate_dict(rotation, _DEFAULT_ROTATION, north_arrow._VALIDATE_ROTATION, return_clean=True)
+    _base = naf._validate_dict(base, _DEFAULT_BASE, nat._VALIDATE_BASE, return_clean=True)
+    _fancy = naf._validate_dict(fancy, _DEFAULT_FANCY, nat._VALIDATE_FANCY, return_clean=True)
+    _label = naf._validate_dict(label, _DEFAULT_LABEL, nat._VALIDATE_LABEL, return_clean=True)
+    _shadow = naf._validate_dict(shadow, _DEFAULT_SHADOW, nat._VALIDATE_SHADOW, return_clean=True)
+    _pack = naf._validate_dict(pack, _DEFAULT_PACK, nat._VALIDATE_PACK, return_clean=True)
+    _aob = naf._validate_dict(aob, _DEFAULT_AOB, nat._VALIDATE_AOB, return_clean=True)
+    _rotation = naf._validate_dict(rotation, _DEFAULT_ROTATION, nat._VALIDATE_ROTATION, return_clean=True)
     
     # First, getting the figure for our axes
     fig = ax.get_figure()

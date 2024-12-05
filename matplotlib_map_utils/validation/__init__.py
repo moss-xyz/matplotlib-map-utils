@@ -1,2 +1,2 @@
-from north_arrow import *
-from scale_bar import *
+from .north_arrow import *
+from .scale_bar import *
