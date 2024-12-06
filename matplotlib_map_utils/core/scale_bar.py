@@ -52,7 +52,6 @@ class ScaleBar(matplotlib.artist.Artist):
                        units: None | bool | sbt._TYPE_UNITS=None,
                        labels: None | bool | sbt._TYPE_LABELS=None,
                        text: None | bool | sbt._TYPE_TEXT=None,
-                    #    pack: None | bool | sbt._TYPE_PACK=None,
                        aob: None | bool | sbt._TYPE_AOB=None,
                        ):
         # Starting up the object with the base properties of a matplotlib Artist
@@ -266,16 +265,12 @@ def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
     else:
         _bar = sbf._validate_dict(bar, _del_keys(_DEFAULT_BAR, ["facecolors","edgecolors","edgewidth"]), 
                                                        _del_keys(sbt._VALIDATE_BAR, ["facecolors","edgecolors","edgewidth"]), return_clean=True)
-    
     _units = sbf._validate_dict(units, _DEFAULT_UNITS, sbt._VALIDATE_UNITS, return_clean=True)
     _labels = sbf._validate_dict(labels, _DEFAULT_LABELS, sbt._VALIDATE_LABELS, return_clean=True)
-    # _text = sbf._validate_dict(text, copy.deepcopy(_DEFAULT_TEXT), sbt._VALIDATE_TEXT, return_clean=True)
-    _text = sbf._validate_dict(text, _DEFAULT_TEXT, sbt._VALIDATE_TEXT, return_clean=True)
-    # _pack = sbf._validate_dict(pack, _DEFAULT_PACK, sbt._VALIDATE_PACK, return_clean=True)
+    _text = sbf._validate_dict(text, copy.deepcopy(_DEFAULT_TEXT), sbt._VALIDATE_TEXT, return_clean=True) # this one has to be a deepcopy due to dictionary immutability
     _aob = sbf._validate_dict(aob, _DEFAULT_AOB, sbt._VALIDATE_AOB, return_clean=True)
 
     ##### CONFIGURING TEXT #####
-    # TODO: should this be before or after the validation?
     # First need to convert each string font size (if any) to a point size
     for d in [_text, _labels, _units]:
         if d is not None and "fontsize" in d.keys():
@@ -283,10 +278,10 @@ def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
 
     # The text dictionary acts as a shortcut for setting text properties elsewhere (units, major, and minor)
     # So the first order of business is to use it as an override for the other dictionaries as needed
-    _units = _units | _text
+    _units = _text | _units
     # Then change the textcolor key to textcolors so it fits in the major category
-    _text["textcolors"] = _text["textcolor"]
-    _labels = _labels | _del_keys(_text, ["textcolor"])
+    _text["textcolors"] = _text["textcolor"] # if we hadn't made a deepcopy above, this would cause errors later (text shouldn't have textcolors as a key)
+    _labels = _del_keys(_text, ["textcolor"]) | _labels
     
     ##### CONFIG #####
 
@@ -361,7 +356,8 @@ def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
             units_x = _units["fontsize"]/2
         bar_artists.append(_make_text(major_width, None, "none", "none", gap_width,
                                             units_label, units_x, None, "center_baseline", units_ha, _units["textcolor"], _units["fontsize"], 
-                                            _units["rotation"], _units["rotation_mode"], _units["stroke_width"], _units["stroke_color"]))
+                                            _units["rotation"], _units["rotation_mode"], _units["stroke_width"], _units["stroke_color"],
+                                            **{k:v for k,v in _units.items() if k in ["fontfamily","fontstyle","fontweight"]}))
 
     # If needed, reverse the order of the boxes
     if _bar["reverse"] == True:
@@ -395,7 +391,8 @@ def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
     # We already established the widths with the _config_seg function
     label_artists += [(_make_text(l["length"], label_height, "none", "none", gap_width,
                                        l["label"], l["length"]/2, label_y, "bottom", label_ha, c, _labels["fontsize"], 
-                                       _labels["rotation"], _labels["rotation_mode"], _labels["stroke_width"], _labels["stroke_color"])) 
+                                       _labels["rotation"], _labels["rotation_mode"], _labels["stroke_width"], _labels["stroke_color"],
+                                       **{k:v for k,v in _labels.items() if k in ["fontfamily","fontstyle","fontweight"]})) 
                     for l,c in zip(segments, label_textcolors)]
 
     # If needed, reverse the order of the text
@@ -436,7 +433,8 @@ def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
         # Making the units text
         units = _make_text(major_width*1.5, None, "none", "none", gap_width,
                                  units_label, units_x, None, "center_baseline", units_ha, _units["textcolor"], _units["fontsize"], 
-                                 _units["rotation"], _units["rotation_mode"], _units["stroke_width"], _units["stroke_color"])
+                                 _units["rotation"], _units["rotation_mode"], _units["stroke_width"], _units["stroke_color"],
+                                 **{k:v for k,v in _units.items() if k in ["fontfamily","fontstyle","fontweight"]})
         # Stacking with the other elements
         units_elements = [units, major_pack]
         
@@ -742,8 +740,11 @@ def _config_bar(ax, bar):
         bar_max = bar["max"]
         bar_length = (bar_max / ax_range) * ax_dim
         major_div = bar["major_div"]
-        # If the minor div is not provided, will generate a default
-        if bar["minor_div"] is None:
+        # If we don't want minor divs, 1 is the default value to auto-hide it
+        if bar.get("minor_type","none") == "none":
+            minor_div = 1
+        # Else, if the minor div is not provided, will generate a default
+        elif bar["minor_div"] is None:
             # If major div is divisible by 2, then 2 is a good minor div
             if major_div % 2 == 0:
                 minor_div = 2
@@ -778,7 +779,10 @@ def _config_bar(ax, bar):
         bar_max = bar_max_best * 10**units_mag
         bar_length = (bar_max / ax_range) * ax_dim
         major_div = sbt.preferred_divs[bar_max_best][0]
-        minor_div = sbt.preferred_divs[bar_max_best][1]
+        if bar.get("minor_type","none") == "none":
+            minor_div = 1
+        else:
+            minor_div = sbt.preferred_divs[bar_max_best][1]
 
     return bar_max, bar_length, units_label, major_div, minor_div
 
@@ -1058,7 +1062,9 @@ def _make_ticks(fig, segments, tick_loc, bar_max, bar_length, major_width, major
 
 # A function, similar to above, but for adding text as well
 # This is used pretty frequently when making spacers and major boxes
-def _make_text(width, height, facecolor, edgecolor, linewidth, text_label, text_x, text_y, text_va, text_ha, text_color, text_fontsize, text_rotation=0, text_mode="anchor", stroke_width=0, stroke_color="none"):
+def _make_text(width, height, facecolor, edgecolor, linewidth, 
+               text_label, text_x, text_y, text_va, text_ha, text_color, text_fontsize, 
+               text_rotation=0, text_mode="anchor", stroke_width=0, stroke_color="none", **kwargs):
     # First, creating a path effect for the stroke, if needed
     if stroke_width > 0:
         text_stroke = [matplotlib.patheffects.withStroke(linewidth=stroke_width, foreground=stroke_color)]
@@ -1074,7 +1080,8 @@ def _make_text(width, height, facecolor, edgecolor, linewidth, text_label, text_
     # Checking that the text is not None
     if text_label is not None:
         # Placing the text in the drawing area
-        text = matplotlib.text.Text(x=text_x, y=text_y, text=text_label, va=text_va, ha=text_ha, color=text_color, fontsize=text_fontsize, rotation=text_rotation, rotation_mode=text_mode, path_effects=text_stroke)
+        text = matplotlib.text.Text(x=text_x, y=text_y, text=text_label, va=text_va, ha=text_ha, color=text_color, fontsize=text_fontsize, 
+                                    rotation=text_rotation, rotation_mode=text_mode, path_effects=text_stroke, **kwargs)
         area.add_artist(text)
     # Returning the final drawing area with text
     return area

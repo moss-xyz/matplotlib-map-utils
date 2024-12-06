@@ -90,7 +90,7 @@ class _TYPE_BAR(TypedDict, total=False):
     major_div: int # the number of major divisions on the bar
     minor_div: int # the number of minor divisions on the bar
     minor_frac: float # the fraction of the major division that the minor division should be (e.g. 0.5 = half the size of the major division)
-    minor_type: Literal["all","first"] # whether the minor divisions should be drawn on all major divisions or just the first one
+    minor_type: Literal["all","first","none"] # whether the minor divisions should be drawn on all major divisions or just the first one
     # Boxes only
     facecolors: list | tuple | str # a color or list of colors to use for the faces of the boxes
     edgecolors: list | tuple | str # a color or list of colors to use for the edges of the boxes
@@ -100,7 +100,6 @@ class _TYPE_BAR(TypedDict, total=False):
     basecolors: list | tuple | str # a color or list of colors to use for the bottom bar
     tickcolors: list | tuple | str # a color or list of colors to use for the ticks
     tickwidth: float | int # the line thickness of the bottom bar and ticks
-
 
 
 class _TYPE_LABELS(TypedDict, total=False):
@@ -120,7 +119,6 @@ class _TYPE_LABELS(TypedDict, total=False):
     rotation_mode: Literal["anchor","default"] # from matplotlib documentation
     sep: float | int # between 0 and inf, used to add separation between the labels and the bar
     pad: float | int # between 0 and inf, used to add separation between the labels and the bar
-
 
 
 class _TYPE_UNITS(TypedDict, total=False):
@@ -150,6 +148,7 @@ class _TYPE_TEXT(TypedDict, total=False):
     rotation: float | int # a value between -360 and 360 to rotate the text elements by
     rotation_mode: Literal["anchor","default"] # from matplotlib documentation
 
+
 class _TYPE_AOB(TypedDict, total=False):
     facecolor: str # NON-STANDARD: used to set the facecolor of the offset box (i.e. to white), any color vlaue for matplotlib
     edgecolor: str # NON-STANDARD: used to set the edge of the offset box (i.e. to black), any color vlaue for matplotlib
@@ -171,6 +170,7 @@ _VALIDATE_PRIMARY = {
 }
 
 _VALID_BAR_TICK_LOC = get_args(_TYPE_BAR.__annotations__["tick_loc"])
+_VALID_BAR_MINOR_TYPE = get_args(_TYPE_BAR.__annotations__["minor_type"]) 
 
 _VALIDATE_BAR = {
     "projection":{"func":vf._validate_projection}, # must be a valid CRS
@@ -184,7 +184,7 @@ _VALIDATE_BAR = {
     "major_div":{"func":vf._validate_range, "kwargs":{"min":1, "max":None, "none_ok":True}}, # between 0 and inf
     "minor_div":{"func":vf._validate_range, "kwargs":{"min":0, "max":None, "none_ok":True}}, # between 0 and inf
     "minor_frac":{"func":vf._validate_range, "kwargs":{"min":0, "max":1, "none_ok":True}}, # ticks only: between 0 and 1
-    "minor_type":{"func":vf._validate_list, "kwargs":{"list":["all","first"]}}, # either item in the list
+    "minor_type":{"func":vf._validate_list, "kwargs":{"list":_VALID_BAR_MINOR_TYPE, "none_ok":True}}, # any item in the list, or None (for no minor)
 
     "facecolors":{"func":vf._validate_iterable, "kwargs":{"func":matplotlib.rcsetup.validate_color}}, # boxes only: any color value for matplotlib
     "edgecolors":{"func":vf._validate_iterable, "kwargs":{"func":matplotlib.rcsetup.validate_color}}, # boxes only: any color value for matplotlib

@@ -27,7 +27,7 @@ _BAR_XS = {
     "major_div":None,
     "minor_div":None,
     "minor_frac":0.66,
-    "minor_type":"first",
+    "minor_type":"none",
     "facecolors":["black","white"],
     "edgecolors":"black",
     "edgewidth":0.5, # changed
@@ -98,7 +98,7 @@ _BAR_SM = {
     "major_div":None,
     "minor_div":None,
     "minor_frac":0.66,
-    "minor_type":"first",
+    "minor_type":"none",
     "facecolors":["black","white"],
     "edgecolors":"black",
     "edgewidth":0.75, # changed

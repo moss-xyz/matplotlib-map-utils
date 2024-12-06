@@ -190,8 +190,8 @@ def _validate_dict(input_dict, default_dict, functions, to_validate=None, return
             print(f"Warning: Invalid keys detected ({invalid}). These will be ignored.")
         # First, trimming our values to only those we need to validate
         if to_validate == "input":
-            values = {key: val for key, val in values.items() if key in input_dict.keys()}
-            functions = {key: val for key, val in functions.items() if key in input_dict.keys()}
+            values = {key: val for key, val in values.items() if (key in input_dict.keys() and key in functions.keys())} # have to check against both here
+            functions = {key: val for key, val in functions.items() if key in values.keys()}
         elif to_validate is not None:
             values = {key: val for key, val in values.items() if key in to_validate}
             functions = {key: val for key, val in functions.items() if key in values.keys()}
