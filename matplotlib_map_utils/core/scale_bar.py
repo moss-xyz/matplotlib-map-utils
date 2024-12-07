@@ -311,8 +311,11 @@ def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
     major_height = _bar["height"]*72
 
     # Initializing the bar with an invisible spacer, to align it with the text later
+    # if all of these conditions are met, we do not need a spcer
+    if _labels["style"] == "last_only" and major_div==1 and (minor_div==1 or minor_div==0):
+        bar_artists = []
     # If we have minor divs, it will be equal to half the minor width
-    if minor_div > 1:
+    elif minor_div > 1:
         bar_artists = [_make_boxes(major_width/minor_div/2, major_height, "none", "none", gap_width)]
     # if we don't, it will be equal to half the major width
     else:
@@ -328,6 +331,9 @@ def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
         # Getting the widths of the boxes from our segments
         # Note we drop the last segment - that is purely for the max value of the bar, which we don't represent with a segment, but does have a label
         box_widths = [s["width"] for s in segments[:-1] if s["type"]!="spacer"]
+        # error checking the edge case when labels_style=="last_only" and major_div==1 and minor_div==0
+        if len(box_widths)==0:
+            box_widths = [segments[0]["width"]]
         # Now we actually make all the division boxes
         bar_artists += [_make_boxes(w, major_height, f, e, _bar["edgewidth"]) for w,f,e in zip(box_widths, bar_facecolors, bar_edgecolors)]
 
@@ -379,7 +385,9 @@ def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
     label_height = _labels["fontsize"] + _labels["stroke_width"]*2
     label_y = _labels["stroke_width"]
     if _labels["style"] == "last_only":
-        if _bar["reverse"] == True:
+        if major_div==1 and (minor_div==1 or minor_div==0):
+            label_ha = "center"
+        elif _bar["reverse"] == True:
             label_ha = "left"
         else:
             label_ha = "right"
@@ -850,6 +858,11 @@ def _config_seg(bar_max, major_width, major_div, minor_div, minor_type, label_st
                 s["label"] = s["value"]
             else:
                 s["label"] = None
+        # This is a custom override when specific conditions are met
+        if major_div==1 and (minor_div==1 or minor_div==0):
+            # We only need to keep the last segment
+            segments[0] = segments[1]
+            segments = segments[:1]
     # If we only have labels on the first minor segment, plus all the major segments
     elif label_style=="minor_first":
         apply_minor = True
