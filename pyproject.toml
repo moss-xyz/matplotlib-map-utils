@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "matplotlib-map-utils"
-version = "1.0.3"
+version = "2.0.0"
 authors = [
   { name="David Moss", email="davidmoss1221@gmail.com" },
 ]
@@ -18,8 +18,12 @@ classifiers = [
 ]
 dependencies = [
     "matplotlib>=3.9.0",
-    "cartopy>=0.23.0"
+    "cartopy>=0.23.0",
+    "great-circle-calculator>=1.3.1"
 ]
+
+[tool.setuptools.packages.find]
+exclude = ["matplotlib_map_utils.scratch*"]
 
 [project.urls]
 "Homepage" = "https://github.com/moss-xyz/matplotlib-map-utils/"
