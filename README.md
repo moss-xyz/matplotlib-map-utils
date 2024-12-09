@@ -4,7 +4,7 @@
 
 **Documentation**: See `docs` folder
 
-**Source Code**: Find the project on GitHub
+**Source Code**: [Available on GitHub](https://github.com/moss-xyz/matplotlib-map-utils)
 
 ---
 
@@ -130,6 +130,10 @@ north_arrow(
 )
 ```
 
+This will create an output like the following:
+
+![Customized north arrow](matplotlib_map_utils/docs/assets/readme_northarrow_customization.png)
+
 Refer to `docs\howto_north_arrow` for details on how to customize each facet of the north arrow.
 
 #### Rotation
@@ -175,7 +179,7 @@ fig, ax = matplotlib.pyplot.subplots(1,1, figsize=(5,5), dpi=150)
 # Here, we change the boxes to "ticks"
 sb = ScaleBar(location="upper right", style="boxes", bar={"projection":3857})
 # Adding the artist to the plot
-ax.add_artist(sba)
+ax.add_artist(sb)
 ```
 
 Both of these will create an output like the following (function is left, class is right):
@@ -234,6 +238,8 @@ If I continue development of this project, I will be looking to add or fix the f
   * Create more styles for the arrow, potentiallly including a compass rose and a line-only arrow
 
 * **Scale Bar:**
+
+  * Allow for custom unit definitions (instead of just metres/feet/miles/kilometres/etc.), so that the scale bar can be used on arbitrary plots (such as inches/cm/mm, mathmatical plots, and the like)
 
   * Fix/improve the `dual_bars()` function, which currently doesn't work great with rotations
 
