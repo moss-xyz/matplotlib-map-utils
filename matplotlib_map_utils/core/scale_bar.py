@@ -511,6 +511,14 @@ def dual_bars(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
                   return_aob: bool=True
                   ):
     
+    ##### CONCATENATION #####
+    # NOTE: Probably a better way to do this, will investigate
+    _bar = _del_keys(_DEFAULT_BAR, ["rotation", "unit", "max", "length", "major_div", "minor_div"]) | bar
+    _units = _DEFAULT_UNITS | units
+    _labels = _DEFAULT_LABELS | labels
+    _text = _DEFAULT_TEXT | text
+    _aob = _DEFAULT_AOB | aob
+    
     ##### VALIDATION #####
     if type(units_dual) not in [list, tuple] or len(units_dual) != 2:
         raise ValueError("units_dual must be a list or tuple of length 2")
@@ -523,26 +531,26 @@ def dual_bars(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
     if type(minor_divs) not in [list, tuple] or len(minor_divs) != 2:
         raise ValueError("minor_divs must be a list or tuple of length 2")
 
-    if units.get("loc", None) == "opposite":
+    if _units.get("loc", None) == "opposite":
         raise ValueError("units['loc'] for units cannot be opposite for dual_bars, as it will not align correctly with the second scale bar")
 
-    if bar.get("rotation", None) is not None and bar.get("rotation", 0) != 0:
-        warnings.warn("bar['rotation'] is not fully support. It is recommended instead that you set rotation to zero and return the image by setting draw=False and return_aob=False, to return the OffsetImage of the dual scale bars instead.")
-    if bar.get("unit", None) is not None:
+    if _bar.get("rotation", None) is not None and bar.get("rotation", 0) != 0:
+        warnings.warn("bar['rotation'] is not fully supported. It is recommended instead that you set rotation to zero and return the image by setting draw=False and return_aob=False, to return the OffsetImage of the dual scale bars instead.")
+    if _bar.get("unit", None) is not None:
         warnings.warn("bar['unit'] is ignored for dual_bars, as it is set by units_dual")
-        _ = bar.pop("unit")
-    if bar.get("max", None) is not None:
+        _ = _bar.pop("unit")
+    if _bar.get("max", None) is not None:
         warnings.warn("bar['max'] is ignored for dual_bars, as it is (optionally) set by bar_maxes")
-        _ = bar.pop("max")
-    if bar.get("length", None) is not None:
+        _ = _bar.pop("max")
+    if _bar.get("length", None) is not None:
         warnings.warn("bar['length'] is ignored for dual_bars, as it is (optionally) set by bar_lengths")
-        _ = bar.pop("length")
-    if bar.get("major_div", None) is not None:
+        _ = _bar.pop("length")
+    if _bar.get("major_div", None) is not None:
         warnings.warn("bar['major_div'] is ignored for dual_bars, as it is (optionally) set by major_divs")
-        _ = bar.pop("major_div")
-    if bar.get("minor_div", None) is not None:
+        _ = _bar.pop("major_div")
+    if _bar.get("minor_div", None) is not None:
         warnings.warn("bar['minor_div'] is ignored for dual_bars, as it is (optionally) set by minor_divs")
-        _ = bar.pop("minor_div")
+        _ = _bar.pop("minor_div")
     
     _style = sbf._validate(sbt._VALIDATE_PRIMARY, "style", style)
     _location = sbf._validate(sbt._VALIDATE_PRIMARY, "location", location)
@@ -571,7 +579,7 @@ def dual_bars(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
 
     ##### PACKING  #####
     # First need to know if we pack vertically or horizontally
-    bar_vertical = _calc_vert(bar["rotation"])
+    bar_vertical = _calc_vert(_bar["rotation"])
     packer = matplotlib.offsetbox.VPacker if bar_vertical == False else matplotlib.offsetbox.HPacker
     if bar["reverse"] == True:
         align = "right" if bar_vertical == False else "top"
@@ -586,7 +594,7 @@ def dual_bars(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
     # Placing the packer in the AOB first off
     aob_pack = matplotlib.offsetbox.AnchoredOffsetbox(loc=_location, child=pack, **_del_keys(_aob, ["facecolor","edgecolor","alpha"]))
     # Finding if and how much we need to nudge either image
-    aob_pack = _align_dual(ax, aob_pack, bar_vertical, bar["reverse"])
+    aob_pack = _align_dual(ax, aob_pack, bar_vertical, _bar["reverse"])
     
     ##### FINAL RENDER #####
     # If desired, we can just return the final packer
