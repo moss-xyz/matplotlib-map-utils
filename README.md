@@ -225,6 +225,10 @@ Two more projects assisted with the creation of this script:
 
 * [`Cartopy`](https://github.com/SciTools/cartopy/issues/2361) fixed an issue inherent to calling `.copy()` on `CRS` objects.
 
+#### Releases
+
+- `v2.0.1`: Fixed a bug in the `dual_bars()` function that prevented empty dictionaries to be passed. Also added a warning when auto-calculated bar widths appear to be exceeding the dimension of the axis (usually occurs when the axis is <2 kilometeres or miles long, depending on the units selected).
+
 #### Future Roadmap
 
 With the release of `v2.x`, and the addition of **Scale Bar** tools, this project has achieved the two main objectives that I set out to.
