@@ -511,24 +511,33 @@ def dual_bars(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
                   return_aob: bool=True
                   ):
     
+    _style = sbf._validate(sbt._VALIDATE_PRIMARY, "style", style)
+    _location = sbf._validate(sbt._VALIDATE_PRIMARY, "location", location)
+
     ##### CONCATENATION #####
     # NOTE: Probably a better way to do this, will investigate
-    _bar = _del_keys(_DEFAULT_BAR, ["rotation", "unit", "max", "length", "major_div", "minor_div"]) | bar
-    _units = _DEFAULT_UNITS | units
-    _labels = _DEFAULT_LABELS | labels
-    _text = _DEFAULT_TEXT | text
-    _aob = _DEFAULT_AOB | aob
+    # Validation is done within each call of the scale_bar function, so don't need to do as much here
+    if _style == "boxes":
+        _bar = (_del_keys(_DEFAULT_BAR, ["rotation", "unit", "max", "length", "major_div", "minor_div",
+                                         "minor_frac","tick_loc","basecolors","tickcolors","tickwidth"]) | bar)
+    else:
+        _bar = (_del_keys(_DEFAULT_BAR, ["rotation", "unit", "max", "length", "major_div", "minor_div",
+                                         "facecolors","edgecolors","edgewidth"]) | bar)
+    _units = _DEFAULT_UNITS | units if units is not None else _DEFAULT_UNITS
+    _labels = _DEFAULT_LABELS | labels if labels is not None else _DEFAULT_LABELS
+    _text = _DEFAULT_TEXT | text if text is not None else _DEFAULT_TEXT
+    _aob = _DEFAULT_AOB | aob if aob is not None else _DEFAULT_AOB
     
     ##### VALIDATION #####
-    if type(units_dual) not in [list, tuple] or len(units_dual) != 2:
+    if not isinstance(units_dual, (list, tuple)) or len(units_dual) != 2:
         raise ValueError("units_dual must be a list or tuple of length 2")
-    if type(bar_maxes) not in [list, tuple] or len(bar_maxes) != 2:
+    if not isinstance(bar_maxes, (list, tuple)) or len(bar_maxes) != 2:
         raise ValueError("bar_maxes must be a list or tuple of length 2")
-    if type(bar_lengths) not in [list, tuple] or len(bar_lengths) != 2:
+    if not isinstance(bar_lengths, (list, tuple)) or len(bar_lengths) != 2:
         raise ValueError("bar_lengths must be a list or tuple of length 2")
-    if type(major_divs) not in [list, tuple] or len(major_divs) != 2:
+    if not isinstance(major_divs, (list, tuple)) or len(major_divs) != 2:
         raise ValueError("major_divs must be a list or tuple of length 2")
-    if type(minor_divs) not in [list, tuple] or len(minor_divs) != 2:
+    if not isinstance(minor_divs, (list, tuple)) or len(minor_divs) != 2:
         raise ValueError("minor_divs must be a list or tuple of length 2")
 
     if _units.get("loc", None) == "opposite":
@@ -552,9 +561,7 @@ def dual_bars(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
         warnings.warn("bar['minor_div'] is ignored for dual_bars, as it is (optionally) set by minor_divs")
         _ = _bar.pop("minor_div")
     
-    _style = sbf._validate(sbt._VALIDATE_PRIMARY, "style", style)
-    _location = sbf._validate(sbt._VALIDATE_PRIMARY, "location", location)
-    _aob = sbf._validate_dict(aob, _DEFAULT_AOB, sbt._VALIDATE_AOB, return_clean=True)
+    _aob = sbf._validate_dict(_aob, _DEFAULT_AOB, sbt._VALIDATE_AOB, return_clean=True)
     
     ##### CREATION #####
     # Setting up the order of some other settings (label location, tick location)
@@ -571,10 +578,11 @@ def dual_bars(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
         # Creating a bar
         # Because draw is False and return_aob is false, an OffsetImage will be returned
         bars.append(scale_bar(ax, draw=False, style=_style, location=location, 
-                              bar=((bar | bar_settings) if bar is not None else bar_settings), 
-                              units=units, 
-                              labels=(labels | label_settings if labels is not None else label_settings), 
-                              text=text,
+                              bar=(_bar | bar_settings), 
+                              units=_units, 
+                              labels=(_labels | label_settings),
+                              text=_text,
+                              aob=None,
                               return_aob=False))
 
     ##### PACKING  #####
@@ -741,7 +749,7 @@ def _config_bar(ax, bar):
             if bar["length"] < ax_dim:
                 bar_max = (bar["length"] / ax_dim) * ax_range
             else:
-                warnings.warn(f"Provided bar length ({bar["length"]}) is greater than the axis length ({ax_dim}); setting bar length to default (20% of axis length).")
+                warnings.warn(f"Provided bar length ({bar["length"]}) is greater than the axis length ({ax_dim}); setting bar length to default (25% of axis length).")
                 bar_max = 0.25 * ax_range
     # If bar["max"] is provided, don't need to go through all of this effort
     else:
@@ -799,6 +807,10 @@ def _config_bar(ax, bar):
             minor_div = 1
         else:
             minor_div = sbt.preferred_divs[bar_max_best][1]
+        
+        # Doing a quick check of the calculated value, to see if it is "too long"
+        if (bar_length / ax_dim > 0.9) or (bar_max > ax_range * 0.9):
+            warnings.warn(f"The auto-calculated dimensions of the bar are too large for the axis. This usually happens when the height or width of your map is ~1 to 2 miles or kilometres (depending on your selected unit). This will result in a bar close to or longer than your axis, extending beyond your frame. Consider either manually specifying a 'max' and 'major_div' value less than 2, or switching your units to feet/metres as necessary.")
 
     return bar_max, bar_length, units_label, major_div, minor_div
 
