@@ -679,7 +679,7 @@ def _config_bar(ax, bar):
     # If the provided units are in degrees, we will convert to meters first
     # This will recalculate the ax_range
     if units_proj=="degree":
-        warnings.warn(f"Provided CRS {bar["projection"]} uses degrees. An attempt will be made at conversion, but there will be accuracy issues: it is recommended that you use a projected CRS instead.")
+        warnings.warn(f"Provided CRS {bar['projection']} uses degrees. An attempt will be made at conversion, but there will be accuracy issues: it is recommended that you use a projected CRS instead.")
         ylim = ax.get_ylim()
         xlim = ax.get_xlim()
         # Using https://github.com/seangrogan/great_circle_calculator/blob/master/great_circle_calculator/great_circle_calculator.py
@@ -706,7 +706,7 @@ def _config_bar(ax, bar):
     try:
         units_user = sbt.units_standard.get(bar["unit"])
     except:
-        warnings.warn(f"Desired output units selected by user ({bar["unit"]}) are considered invalid; please use one of the units specified in the units_standard dictionary in defaults.py")
+        warnings.warn(f"Desired output units selected by user ({bar['unit']}) are considered invalid; please use one of the units specified in the units_standard dictionary in defaults.py")
         units_user = None
 
     # Converting
@@ -749,7 +749,7 @@ def _config_bar(ax, bar):
             if bar["length"] < ax_dim:
                 bar_max = (bar["length"] / ax_dim) * ax_range
             else:
-                warnings.warn(f"Provided bar length ({bar["length"]}) is greater than the axis length ({ax_dim}); setting bar length to default (25% of axis length).")
+                warnings.warn(f"Provided bar length ({bar['length']}) is greater than the axis length ({ax_dim}); setting bar length to default (25% of axis length).")
                 bar_max = 0.25 * ax_range
     # If bar["max"] is provided, don't need to go through all of this effort
     else:

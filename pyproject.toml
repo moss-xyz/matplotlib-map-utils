@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "matplotlib-map-utils"
-version = "2.0.1"
+version = "2.0.2"
 authors = [
   { name="David Moss", email="davidmoss1221@gmail.com" },
 ]
 description = "A suite of tools for creating maps in matplotlib"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU General Public License (GPL)",

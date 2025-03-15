@@ -32,11 +32,11 @@ pip install matplotlib-map-utils
 
 The requirements for this package are:
 
-* `python >= 3.9.0` (due to the dictionary-concatenation method utilized)
+* `python >= 3.10` (due to the use of the pipe operator to concatenate dictionaries and types)
 
-* `matplotlib >= 3.9.0` (might work with lower versions but not guaranteed)
+* `matplotlib >= 3.9` (might work with lower versions but not guaranteed)
 
-* `cartopy >= 0.23.0` (due to earlier bug with calling `copy()` on `CRS` objects)
+* `cartopy >= 0.23` (due to earlier bug with calling `copy()` on `CRS` objects)
 
 ---
 
@@ -228,6 +228,8 @@ Two more projects assisted with the creation of this script:
 #### Releases
 
 - `v2.0.1`: Fixed a bug in the `dual_bars()` function that prevented empty dictionaries to be passed. Also added a warning when auto-calculated bar widths appear to be exceeding the dimension of the axis (usually occurs when the axis is <2 kilometeres or miles long, depending on the units selected).
+
+- `v2.0.2`: Changed f-string formatting to alternate double and single quotes, so as to maintain compatibility with versions of Python before 3.12 (see [here](https://github.com/moss-xyz/matplotlib-map-utils/issues/3)). However, this did reveal that another aspect of the code, namely concatenating `type` in function arguments, requires 3.10, and so the minimum python version was incremented.
 
 #### Future Roadmap
 
