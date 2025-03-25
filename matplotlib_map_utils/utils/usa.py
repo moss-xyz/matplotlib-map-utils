@@ -1,6 +1,19 @@
 import re
 import json
-import warnings 
+import warnings
+from typing import List, Literal, Union
+
+# Literal lists, for intellisense
+regions = Literal["Midwest", "Northeast", "South", "Territory", "West"]
+divisions = Literal["Commonwealth", "Compact of Free Association", "East North Central", 
+                    "East South Central", "Incorporated and Unorganized", "Mid-Atlantic", 
+                    "Mountain", "New England", "Pacific", "South Atlantic", "Unincorporated and Organized", 
+                    "Unincorporated and Unorganized", "West North Central", "West South Central"] 
+ombs = Literal["Region I", "Region II", "Region III", "Region IV", "Region IX", "Region V", 
+               "Region VI", "Region VII", "Region VIII", "Region X", "Territory"]
+beas = Literal["Far West", "Great Lakes", "Mideast", "New England", "Plains", 
+               "Rocky Mountain", "Southeast", "Southwest", "Territory"]
+returns = Literal["fips","name","abbr","object","dict"]
 
 class USA:
     # No arguments need to pass on initialization really
@@ -71,10 +84,18 @@ class USA:
     ## Normalize the input to be in a list (if not already)
     ## Perform the filter step
     # Each step is also available as its own independent function, as needed
-    def filter(self, valid=True, fips=None, name=None, abbr=None, 
-               state=None, contiguous=None, territory=None, 
-               region=None, division=None, omb=None, bea=None,
-               to_return="fips"):
+    def filter(self, valid: bool | None=True, 
+               fips: str | int | None=None, 
+               name: str | None=None, 
+               abbr: str | None=None, 
+               state: bool | None=None, 
+               contiguous: bool | None=None, 
+               territory: bool | None=None, 
+               region: Union[regions, List[regions]]=None, 
+               division: Union[divisions, List[divisions]]=None, 
+               omb: Union[ombs, List[ombs]]=None,
+               bea: Union[beas, List[beas]]=None,
+               to_return: Union[returns, List[returns]]="fips"):
         
         # Getting a copy of our jurisdictions, which will be filtered each time
         filter_juris = self.jurisdictions.copy()
@@ -133,22 +154,22 @@ class USA:
             return self._process_return(filtered, to_return)
 
     # Shortcuts for filtering based on valid, state, contiguous, and territory
-    def filter_valid(self, valid, to_filter=None, to_return="fips"):
+    def filter_valid(self, valid: bool, to_filter=None, to_return="fips"):
         return self._filter_bool(valid, "valid", to_filter, to_return)
     
-    def filter_state(self, state, to_filter=None, to_return="fips"):
+    def filter_state(self, state: bool, to_filter=None, to_return="fips"):
         return self._filter_bool(state, "state", to_filter, to_return)
     
-    def filter_contiguous(self, contiguous, to_filter=None, to_return="fips"):
+    def filter_contiguous(self, contiguous: bool, to_filter=None, to_return="fips"):
         return self._filter_bool(contiguous, "contiguous", to_filter, to_return)
     
-    def filter_territory(self, territory, to_filter=None, to_return="fips"):
+    def filter_territory(self, territory: bool, to_filter=None, to_return="fips"):
         return self._filter_bool(territory, "territory", to_filter, to_return)
 
     # Filtering FIPS
     # Will accept an integer or a two-digit string as an input
     # If a longer string is inserted, will truncate to only the first two characters
-    def filter_fips(self, fips, to_filter=None, to_return="abbr"):
+    def filter_fips(self, fips: str | List[str], to_filter=None, to_return="abbr"):
         # If nothing is passed to to_filter, getting the jurisdictions list
         to_filter = self.jurisdictions.copy() if to_filter is None else to_filter
         # Normalizing the fips value being passed
@@ -174,7 +195,7 @@ class USA:
     # Will accept strings
     # Will normalize the string first (trim, case, special characters), before checking
     # Some states also have an alias available for checking against (Washington, D.C. and District of Columbia are equivalent)
-    def filter_name(self, name, to_filter=None, to_return="fips"):
+    def filter_name(self, name: str | List[str], to_filter=None, to_return="fips"):
         # If nothing is passed to to_filter, getting the jurisdictions list
         to_filter = self.jurisdictions.copy() if to_filter is None else to_filter
         # Normalizing the name input being passed
@@ -198,7 +219,7 @@ class USA:
     # Will accept strings
     # Will normalize the string first (trim, case, special characters), before checking
     # If a string longer than two characters is passed, will only look at the first two characters!
-    def filter_abbr(self, abbr, to_filter=None, to_return="fips"):
+    def filter_abbr(self, abbr: str | List[str], to_filter=None, to_return="fips"):
         # If nothing is passed to to_filter, getting the jurisdictions list
         to_filter = self.jurisdictions.copy() if to_filter is None else to_filter
         # Normalizing the input being passed
@@ -244,16 +265,16 @@ class USA:
         return self._process_return(filtered, to_return)
     
     # Iterations for each categorical filter based on their respective inputs
-    def filter_region(self, region, to_filter=None, to_return="fips"):
+    def filter_region(self, region: Union[regions, List[regions]], to_filter=None, to_return="fips"):
         return self._filter_categorical(region, "region", to_filter, to_return)
     
-    def filter_division(self, division, to_filter=None, to_return="fips"):
+    def filter_division(self, division: Union[divisions, List[divisions]], to_filter=None, to_return="fips"):
         return self._filter_categorical(division, "division", to_filter, to_return)
     
-    def filter_omb(self, omb, to_filter=None, to_return="fips"):
+    def filter_omb(self, omb: Union[ombs, List[ombs]], to_filter=None, to_return="fips"):
         return self._filter_categorical(omb, "omb", to_filter, to_return)
     
-    def filter_bea(self, bea, to_filter=None, to_return="fips"):
+    def filter_bea(self, bea: Union[beas, List[beas]], to_filter=None, to_return="fips"):
         return self._filter_categorical(bea, "bea", to_filter, to_return)
 
     # Function that processes the returning of a filtered jurisdiction
