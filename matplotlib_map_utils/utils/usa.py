@@ -1,6 +1,7 @@
 import re
 import json
 import warnings
+from importlib import resources
 from typing import List, Literal, Union
 
 # Literal lists, for intellisense
@@ -22,7 +23,7 @@ class USA:
 
     # This is just for loading the JSON
     def _load_json(self):
-        with open("./usa.json") as f:
+        with resources.files("matplotlib_map_utils.utils").joinpath("usa.json").open("r") as f:
             usa_json = json.load(f)
         return usa_json
     
