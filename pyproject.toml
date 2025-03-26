@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "matplotlib-map-utils"
-version = "2.0.2"
+version = "2.1.0"
 authors = [
   { name="David Moss", email="davidmoss1221@gmail.com" },
 ]
@@ -24,6 +24,9 @@ dependencies = [
 
 [tool.setuptools.packages.find]
 exclude = ["matplotlib_map_utils.scratch*"]
+
+[tool.setuptools.package-data]
+"matplotlib_map_utils.utils" = ["*.json"]
 
 [project.urls]
 "Homepage" = "https://github.com/moss-xyz/matplotlib-map-utils/"
