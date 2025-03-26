@@ -5,15 +5,22 @@ from importlib import resources
 from typing import List, Literal, Union
 
 # Literal lists, for intellisense
-regions = Literal["Midwest", "Northeast", "South", "Territory", "West"]
-divisions = Literal["Commonwealth", "Compact of Free Association", "East North Central", 
-                    "East South Central", "Incorporated and Unorganized", "Mid-Atlantic", 
-                    "Mountain", "New England", "Pacific", "South Atlantic", "Unincorporated and Organized", 
-                    "Unincorporated and Unorganized", "West North Central", "West South Central"] 
+regions = Literal["Midwest", "Northeast", "South", "West", 
+                  "Inhabited Territory", "Uninhabited Territory", "Sovereign State"]
+
+divisions = Literal["East North Central", "East South Central", "Mid-Atlantic", "Mountain", 
+                    "New England", "Pacific", "South Atlantic", "West North Central", "West South Central",
+                    "Commonwealth", "Compact of Free Association", "Incorporated and Unorganized", 
+                    "Unincorporated and Unorganized", "Unincorporated and Organized"] 
+
 ombs = Literal["Region I", "Region II", "Region III", "Region IV", "Region IX", "Region V", 
-               "Region VI", "Region VII", "Region VIII", "Region X", "Territory"]
+               "Region VI", "Region VII", "Region VIII", "Region X",
+               "Inhabited Territory", "Uninhabited Territory", "Sovereign State"]
+
 beas = Literal["Far West", "Great Lakes", "Mideast", "New England", "Plains", 
-               "Rocky Mountain", "Southeast", "Southwest", "Territory"]
+               "Rocky Mountain", "Southeast", "Southwest",
+               "Inhabited Territory", "Uninhabited Territory", "Sovereign State"]
+
 returns = Literal["fips","name","abbr","object","dict"]
 
 class USA:
@@ -27,26 +34,25 @@ class USA:
             usa_json = json.load(f)
         return usa_json
     
+    # Getter for all jurisdictions, VALID OR NOT
+    @property 
+    def _all(self):
+        return self._jurisdictions
+
     # Getter for all valid jurisdictions
-    # we will NOT define a setter, do not want overwriting
-    # TODO: update this to only return valid ones once the filter function is written!
     @property
     def jurisdictions(self):
-        return self._jurisdictions
+        return self.filter_valid(True, self._all, "object")
     
     # Getter for all valid states
-    # we will NOT define a setter, do not want overwriting
-    # TODO: update this to only return valid ones once the filter function is written!
     @property
     def states(self):
-        return self._jurisdictions
+        return self.filter_state(True, self.jurisdictions, "object")
     
     # Getter for all valid territories
-    # we will NOT define a setter, do not want overwriting
-    # TODO: update this to only return valid ones once the filter function is written!
     @property
     def territories(self):
-        return self._jurisdictions
+        return self.filter_territory(True, self.jurisdictions, "object")
     
     # Getters to generate distinct values for Region, Division, OMB, and BEA
     # which are useful if you can't recall which options are valid
@@ -234,7 +240,7 @@ class USA:
             else:
                 warnings.warn(f"Invalid abbr filter: {a}. Only strings are considered valid, see documentation for details.")
         # Now we can use the clean input to filter
-        filtered = [j for j in to_filter if self._normalize_string(j["abbr"], case="lower")[:2] in abbr_clean]
+        filtered = [j for j in to_filter if (j["abbr"] is not None and self._normalize_string(j["abbr"], case="lower")[:2] in abbr_clean)]
         # And returning the values
         return self._process_return(filtered, to_return)
 
@@ -280,6 +286,10 @@ class USA:
 
     # Function that processes the returning of a filtered jurisdiction
     def _process_return(self, filter_juris, to_return):
+        # If the length is zero, warn!
+        if filter_juris is None or len(filter_juris) == 0:
+            warnings.warn(f"No matching entities found. Please refer to the documentation and double-check your filters.")
+            return None
         if to_return is None:
             to_return == "_ignore"
         # Available options for to_return include fips, name, and abbr

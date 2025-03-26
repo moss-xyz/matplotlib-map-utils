@@ -791,10 +791,10 @@
         "state": false,
         "contiguous": false,
         "territory": true,
-        "region": "Territory",
+        "region": "Inhabited Territory",
         "division": "Unincorporated and Unorganized",
-        "omb": "Territory",
-        "bea": "Territory",
+        "omb": "Inhabited Territory",
+        "bea": "Inhabited Territory",
         "alias": null
     },
     {
@@ -805,10 +805,10 @@
         "state": false,
         "contiguous": false,
         "territory": true,
-        "region": "Territory",
+        "region": "Sovereign State",
         "division": "Compact of Free Association",
-        "omb": "Territory",
-        "bea": "Territory",
+        "omb": "Sovereign State",
+        "bea": "Sovereign State",
         "alias": "Micronesia"
     },
     {
@@ -819,10 +819,10 @@
         "state": false,
         "contiguous": false,
         "territory": true,
-        "region": "Territory",
+        "region": "Inhabited Territory",
         "division": "Unincorporated and Organized",
-        "omb": "Territory",
-        "bea": "Territory",
+        "omb": "Inhabited Territory",
+        "bea": "Inhabited Territory",
         "alias": null
     },
     {
@@ -833,10 +833,10 @@
         "state": false,
         "contiguous": false,
         "territory": true,
-        "region": "Territory",
+        "region": "Uninhabited Territory",
         "division": "Unincorporated and Unorganized",
-        "omb": "Territory",
-        "bea": "Territory",
+        "omb": "Uninhabited Territory",
+        "bea": "Uninhabited Territory",
         "alias": null
     },
     {
@@ -847,10 +847,10 @@
         "state": false,
         "contiguous": false,
         "territory": true,
-        "region": "Territory",
+        "region": "Sovereign State",
         "division": "Compact of Free Association",
-        "omb": "Territory",
-        "bea": "Territory",
+        "omb": "Sovereign State",
+        "bea": "Sovereign State",
         "alias": "Republic of the Marshall Islands"
     },
     {
@@ -861,10 +861,10 @@
         "state": false,
         "contiguous": false,
         "territory": true,
-        "region": "Territory",
+        "region": "Inhabited Territory",
         "division": "Commonwealth",
-        "omb": "Territory",
-        "bea": "Territory",
+        "omb": "Inhabited Territory",
+        "bea": "Inhabited Territory",
         "alias": null
     },
     {
@@ -875,10 +875,10 @@
         "state": false,
         "contiguous": false,
         "territory": true,
-        "region": "Territory",
+        "region": "Sovereign State",
         "division": "Compact of Free Association",
-        "omb": "Territory",
-        "bea": "Territory",
+        "omb": "Sovereign State",
+        "bea": "Sovereign State",
         "alias": null
     },
     {
@@ -889,11 +889,11 @@
         "state": false,
         "contiguous": false,
         "territory": true,
-        "region": "Territory",
+        "region": "Uninhabited Territory",
         "division": "Unincorporated and Unorganized",
-        "omb": "Territory",
-        "bea": "Territory",
-        "alias": null
+        "omb": "Uninhabited Territory",
+        "bea": "Uninhabited Territory",
+        "alias": "Midway Atoll"
     },
     {
         "fips": "72",
@@ -903,10 +903,10 @@
         "state": false,
         "contiguous": false,
         "territory": true,
-        "region": "Territory",
+        "region": "Inhabited Territory",
         "division": "Commonwealth",
-        "omb": "Territory",
-        "bea": "Territory",
+        "omb": "Inhabited Territory",
+        "bea": "Inhabited Territory",
         "alias": null
     },
     {
@@ -917,10 +917,10 @@
         "state": false,
         "contiguous": false,
         "territory": true,
-        "region": "Territory",
+        "region": "Uninhabited Territory",
         "division": "Unincorporated and Unorganized",
-        "omb": "Territory",
-        "bea": "Territory",
+        "omb": "Uninhabited Territory",
+        "bea": "Uninhabited Territory",
         "alias": null
     },
     {
@@ -931,10 +931,10 @@
         "state": false,
         "contiguous": false,
         "territory": true,
-        "region": "Territory",
+        "region": "Uninhabited Territory",
         "division": "Unincorporated and Unorganized",
-        "omb": "Territory",
-        "bea": "Territory",
+        "omb": "Uninhabited Territory",
+        "bea": "Uninhabited Territory",
         "alias": null
     },
     {
@@ -945,10 +945,10 @@
         "state": false,
         "contiguous": false,
         "territory": true,
-        "region": "Territory",
+        "region": "Inhabited Territory",
         "division": "Unincorporated and Organized",
-        "omb": "Territory",
-        "bea": "Territory",
+        "omb": "Inhabited Territory",
+        "bea": "Inhabited Territory",
         "alias": "Virgin Islands of the U.S."
     },
     {
@@ -959,10 +959,10 @@
         "state": false,
         "contiguous": false,
         "territory": true,
-        "region": "Territory",
+        "region": "Uninhabited Territory",
         "division": "Unincorporated and Unorganized",
-        "omb": "Territory",
-        "bea": "Territory",
+        "omb": "Uninhabited Territory",
+        "bea": "Uninhabited Territory",
         "alias": null
     },
     {
@@ -973,10 +973,10 @@
         "state": false,
         "contiguous": false,
         "territory": true,
-        "region": "Territory",
+        "region": "Uninhabited Territory",
         "division": "Unincorporated and Unorganized",
-        "omb": "Territory",
-        "bea": "Territory",
+        "omb": "Uninhabited Territory",
+        "bea": "Uninhabited Territory",
         "alias": null
     },
     {
@@ -987,10 +987,10 @@
         "state": false,
         "contiguous": false,
         "territory": true,
-        "region": "Territory",
+        "region": "Uninhabited Territory",
         "division": "Unincorporated and Unorganized",
-        "omb": "Territory",
-        "bea": "Territory",
+        "omb": "Uninhabited Territory",
+        "bea": "Uninhabited Territory",
         "alias": null
     },
     {
@@ -1001,10 +1001,10 @@
         "state": false,
         "contiguous": false,
         "territory": true,
-        "region": "Territory",
+        "region": "Uninhabited Territory",
         "division": "Unincorporated and Unorganized",
-        "omb": "Territory",
-        "bea": "Territory",
+        "omb": "Uninhabited Territory",
+        "bea": "Uninhabited Territory",
         "alias": null
     },
     {
@@ -1015,10 +1015,10 @@
         "state": false,
         "contiguous": false,
         "territory": true,
-        "region": "Territory",
+        "region": "Uninhabited Territory",
         "division": "Unincorporated and Unorganized",
-        "omb": "Territory",
-        "bea": "Territory",
+        "omb": "Uninhabited Territory",
+        "bea": "Uninhabited Territory",
         "alias": null
     },
     {
@@ -1029,10 +1029,10 @@
         "state": false,
         "contiguous": false,
         "territory": true,
-        "region": "Territory",
+        "region": "Uninhabited Territory",
         "division": "Incorporated and Unorganized",
-        "omb": "Territory",
-        "bea": "Territory",
+        "omb": "Uninhabited Territory",
+        "bea": "Uninhabited Territory",
         "alias": null
     }
 ]

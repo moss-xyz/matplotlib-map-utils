@@ -12,11 +12,13 @@
 
 `matplotlib_map_utils` is intended to be a package that provides various functions and objects that assist with the the creation of maps using [`matplotlib`](https://matplotlib.org/stable/).
 
-As of `v2.x` (the current version), this includes two tools: 
+As of `v2.x` (the current version), this includes two tools and one utility: 
 
 * `north_arrow.py`, which generates a high quality, context-aware north arrow for a given plot. 
 
 * `scale_bar.py`, which generates a high quality, context-aware scale bar to a given plot. 
+
+* `usa.py`, which contains a class that helps filter for states and territories within the USA based on given characteristics.
 
 Future releases (if the project is continued) might provide a similar tool inset maps, or other functions that I have created myself that give more control in the formatting of maps.
 
@@ -61,6 +63,10 @@ package_name/
 │   ├── __init__.py
 │   ├── north_arrow.py
 │   └── scale_bar.py
+├── utils/
+│   ├── __init__.py
+│   ├── usa.py
+│   └── usa.json
 ```
 
 Where:
@@ -213,6 +219,38 @@ Refer to `docs\howto_scale_bar` for details on how to customize each facet of th
 
 ---
 
+### Utilities
+
+<details>
+<summary><i>Expand instructions</i></summary>
+
+#### Quick Start
+
+Importing the bundled utility functions and classes can be done like so:
+
+```py
+from matplotlib_map_utils.utils import USA
+```
+
+As of `v2.1.0`, there is only one utility class available: `USA`, an object to help quickly filter for subsets of US states and territories. This utility class is still in beta, and might change.
+
+An example:
+
+```python
+# Loading the object
+usa = USA()
+# Getting a list FIPS codes for US States
+usa.filter(states=True, to_return="fips")
+# Getting a list of State Names for states in the South and Midwest regions
+usa.filter(region=["South","Midtwest"], to_return="name")
+```
+
+Refer to `docs\howto_utils` for details on how to use this class, including with `pandas.apply()`.
+
+</details>
+
+---
+
 ### Development Notes
 
 #### Inspiration and Thanks
@@ -230,6 +268,8 @@ Two more projects assisted with the creation of this script:
 - `v2.0.1`: Fixed a bug in the `dual_bars()` function that prevented empty dictionaries to be passed. Also added a warning when auto-calculated bar widths appear to be exceeding the dimension of the axis (usually occurs when the axis is <2 kilometeres or miles long, depending on the units selected).
 
 - `v2.0.2`: Changed f-string formatting to alternate double and single quotes, so as to maintain compatibility with versions of Python before 3.12 (see [here](https://github.com/moss-xyz/matplotlib-map-utils/issues/3)). However, this did reveal that another aspect of the code, namely concatenating `type` in function arguments, requires 3.10, and so the minimum python version was incremented.
+
+- `v2.1.0`: Added a utility class, `USA`, for filtering subsets of US states and territories based on FIPS code, name, abbreviation, region, division, and more. This is considered a beta release, and might be subject to change later on.
 
 #### Future Roadmap
 
@@ -253,7 +293,15 @@ If I continue development of this project, I will be looking to add or fix the f
 
   * Create more styles for the bar, potentiallly including dual boxes and a sawtooth bar
 
-If that goes well, `v3` can then either create a tool for generating inset maps (which `matplotlib` has *some* support for), or the various functions that I have created in the past that assist with formatting a map "properly", such as centering on a given object and coverting FIPS codes.
+* **Utils:**
+
+  * (USA): Stronger fuzzy search mechanics, so that it will accept flexible inputs for FIPS/abbr/name
+
+  * (USA): More integrated class types to allow for a more fully-formed object model (USA being a `Country`, with subclasses related to `State` and `Territory` that have their own classes of attributes, etc.)
+
+  * (USA): Stronger typing options, so you don't have to recall which `region` or `division` types are available, etc.
+
+If that goes well, `v3` can then either create a tool for generating inset maps (which `matplotlib` has *some* support for), or the various functions that I have created in the past that assist with formatting a map "properly", such as centering on a given object.
 
 I am also open to ideas for other extensions to create!
 
