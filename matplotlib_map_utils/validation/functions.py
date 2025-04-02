@@ -131,7 +131,7 @@ def _validate_projection(prop, val, none_ok=False):
             raise Exception(f"Invalid CRS supplied ({val}), please provide a valid CRS input for PyProj instead")
     return val    
 
-# It is specifically to apply another validation function to the items in a list 
+# This is specifically to apply another validation function to the items in a list 
 # Ex. if we want to validate a LIST of colors instead of a single color
 def _validate_iterable(prop, val, func, kwargs=None):
     # Making sure we wrap everything in a list
@@ -148,6 +148,20 @@ def _validate_iterable(prop, val, func, kwargs=None):
             v = func(v)
         return val
     
+# This is to check for the structure of a dictionary-like object 
+def _validate_keys(prop, val, keys, none_ok=False):
+    if none_ok==False and val is None:
+        raise ValueError(f"None is not a valid value for {prop}, please provide a dictionary with keys {keys} instead")
+    elif none_ok==True and val is None:
+        return val
+    elif not isinstance(val, (dict)):
+        raise ValueError(f"{val} is not a valid value for {prop}, please provide a dictionary with keys {keys} instead")
+    else:
+        for k in val.keys():
+            if k not in keys:
+                raise ValueError(f"{k} is not a valid key for the items in {prop}, please provide a dictionary with keys {keys} instead")
+    return val
+
 # This is to apply multiple validation functions to a value, if needed - only one needs to pass
 # Ex. If an item can be a string OR a list of strings, we can use this to validate it
 def _validate_or(prop, val, funcs, kwargs):

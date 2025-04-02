@@ -33,9 +33,15 @@ import matplotlib.rcsetup
 # The types we use in this script
 from typing import Literal
 # The information contained in our helper scripts (validation and defaults)
-# from ..defaults import inset_map as imd
+from ..defaults import inset_map as imd
 from ..validation import inset_map as imt
 from ..validation import functions as imf
+
+### INITIALIZATION ###
+
+# Setting the defaults to the "medium" size, which is roughly optimized for A4/Letter paper
+# Making these as globals is important for the set_size() function to work later
+_DEFAULT_INSET_MAP = imd._DEFAULTS_IM["md"][0]
 
 ### CLASSES ###
 
@@ -46,11 +52,12 @@ class InsetMap(matplotlib.artist.Artist):
     
     ## INITIALIZATION ##
     def __init__(self,
-                 location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="upper right", 
-                 size: imt._TYPE_INSET["size"]=1,
-                 pad: imt._TYPE_INSET["pad"]=0,
+                 location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="lower left", 
+                 size: imt._TYPE_INSET["size"]=None,
+                 pad: imt._TYPE_INSET["pad"]=None,
                  coords: imt._TYPE_INSET["coords"]=None,
                  transform=None,
+                 to_plot=None,
                  **kwargs):
         # Starting up the object with the base properties of a matplotlib Artist
         matplotlib.artist.Artist.__init__(self)
@@ -59,7 +66,14 @@ class InsetMap(matplotlib.artist.Artist):
         self._location = imf._validate(imt._VALIDATE_INSET, "location", location)
         self._size = imf._validate(imt._VALIDATE_INSET, "size", size)
         self._pad = imf._validate(imt._VALIDATE_INSET, "pad", pad)
-        self._coords = imf._validate(imt._VALIDATE_INSET, "coords", coords) 
+        self._coords = imf._validate(imt._VALIDATE_INSET, "coords", coords)
+        self._to_plot = imf._validate(imt._VALIDATE_INSET, "to_plot", to_plot)
+
+        # Checking if we need to override values for size and pad
+        if self._size is None:
+            self._size = _DEFAULT_INSET_MAP["size"]
+        if self._pad is None:
+            self._pad = _DEFAULT_INSET_MAP["pad"]
         
         self._transform = transform # not validated!
         self._kwargs = kwargs # not validated!
@@ -101,8 +115,11 @@ class InsetMap(matplotlib.artist.Artist):
 
     @size.setter
     def size(self, val):
-        val = imf._validate(imt._VALIDATE_INSET, "location", val, return_clean=True, parse_false=False)
-        self._size = val
+        val = imf._validate(imt._VALIDATE_INSET, "location", val)
+        if val is not None:
+            self._size = val
+        else:
+            self._size = _DEFAULT_INSET_MAP["size"]
     
     # pad
     @property
@@ -111,8 +128,11 @@ class InsetMap(matplotlib.artist.Artist):
 
     @pad.setter
     def pad(self, val):
-        val = imf._validate(imt._VALIDATE_INSET, "pad", val, return_clean=True, parse_false=False)
-        self._pad = val
+        val = imf._validate(imt._VALIDATE_INSET, "pad", val)
+        if val is not None:
+            self._pad = val
+        else:
+            self._pad = _DEFAULT_INSET_MAP["pad"]
     
     # coords
     @property
@@ -121,7 +141,7 @@ class InsetMap(matplotlib.artist.Artist):
 
     @coords.setter
     def coords(self, val):
-        val = imf._validate(imt._VALIDATE_INSET, "coords", val, return_clean=True, parse_false=False)
+        val = imf._validate(imt._VALIDATE_INSET, "coords", val)
         self._coords = val
     
     # transform
@@ -140,8 +160,20 @@ class InsetMap(matplotlib.artist.Artist):
 
     @kwargs.setter
     def kwargs(self, val):
-        self._kwargs = self._kwargs | val
+        if isinstance(val, dict):
+            self._kwargs = self._kwargs | val
+        else:
+            raise ValueError("kwargs expects a dictionary, please try again")
     
+    # to_plot
+    @property
+    def to_plot(self):
+        return self._to_plot
+
+    @to_plot.setter
+    def to_plot(self, val):
+        val = imf._validate(imt._VALIDATE_INSET, "to_plot", val)
+        self._to_plot = val
 
     ## COPY FUNCTION ##
     # This is solely to get around matplotlib's restrictions around re-using an artist across multiple axes
@@ -158,43 +190,45 @@ class InsetMap(matplotlib.artist.Artist):
         iax = inset_map(ax=pax, location=self._location, size=self._size,
                         pad=self._pad, coords=self._coords, transform=self._transform,
                         **self._kwargs, **kwargs)
+        
+        for d in self._to_plot:
+            if d is not None:
+                d["data"].plot(ax=iax, **d["kwargs"])
         # Instead of "drawing", we have to return the axis, for further manipulation
         return iax
     
     ## SIZE FUNCTION ##
     # This function will update the default dictionaries used based on the size of map being created
     # See defaults.py for more information on the dictionaries used here
-    # def set_size(size: Literal["xs","xsmall","x-small",
-    #                            "sm","small",
-    #                            "md","medium",
-    #                            "lg","large",
-    #                            "xl","xlarge","x-large"]):
-    #     # Bringing in our global default values to update them
-    #     global _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB
-    #     # Changing the global default values as required
-    #     if size.lower() in ["xs","xsmall","x-small"]:
-    #         _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = imd._DEFAULTS_NA["xs"]
-    #     elif size.lower() in ["sm","small"]:
-    #         _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = imd._DEFAULTS_NA["sm"]
-    #     elif size.lower() in ["md","medium"]:
-    #         _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = imd._DEFAULTS_NA["md"]
-    #     elif size.lower() in ["lg","large"]:
-    #         _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = imd._DEFAULTS_NA["lg"]
-    #     elif size.lower() in ["xl","xlarge","x-large"]:
-    #         _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = imd._DEFAULTS_NA["xl"]
-    #     else:
-    #         raise ValueError("Invalid value supplied, try one of ['xsmall', 'small', 'medium', 'large', 'xlarge'] instead")
+    def set_size(size: Literal["xs","xsmall","x-small",
+                               "sm","small",
+                               "md","medium",
+                               "lg","large",
+                               "xl","xlarge","x-large"]):
+        # Bringing in our global default values to update them
+        global _DEFAULT_INSET_MAP
+        # Changing the global default values as required
+        if size.lower() in ["xs","xsmall","x-small"]:
+            _DEFAULT_INSET_MAP = imd._DEFAULTS_IM["xs"][0]
+        elif size.lower() in ["sm","small"]:
+            _DEFAULT_INSET_MAP = imd._DEFAULTS_IM["sm"][0]
+        elif size.lower() in ["md","medium"]:
+            _DEFAULT_INSET_MAP = imd._DEFAULTS_IM["md"][0]
+        elif size.lower() in ["lg","large"]:
+            _DEFAULT_INSET_MAP = imd._DEFAULTS_IM["lg"][0]
+        elif size.lower() in ["xl","xlarge","x-large"]:
+            _DEFAULT_INSET_MAP = imd._DEFAULTS_IM["xl"][0]
+        else:
+            raise ValueError("Invalid value supplied, try one of ['xsmall', 'small', 'medium', 'large', 'xlarge'] instead")
 
 ### DRAWING FUNCTIONS ###
 
-# TODO: update size/pad to call on default dict
-# TODO: create global set_size() function that updates the sizes for all three object types at once
 # See here for doc: https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.inset_axes.html
 # See here for kwargs: https://matplotlib.org/stable/api/_as_gen/mpl_toolkits.axes_grid1.inset_locator.inset_axes.html#mpl_toolkits.axes_grid1.inset_locator.inset_axes
 def inset_map(ax, 
               location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="upper right", 
-              size: imt._TYPE_INSET["size"]=1,
-              pad: imt._TYPE_INSET["pad"]=0,
+              size: imt._TYPE_INSET["size"]=None,
+              pad: imt._TYPE_INSET["pad"]=None,
               coords: imt._TYPE_INSET["coords"]=None,
               transform=None,
               **kwargs):
@@ -204,6 +238,11 @@ def inset_map(ax,
     size = imf._validate(imt._VALIDATE_INSET, "size", size)
     pad = imf._validate(imt._VALIDATE_INSET, "pad", pad)
     coords = imf._validate(imt._VALIDATE_INSET, "coords", coords)
+
+    if size is None:
+        size = _DEFAULT_INSET_MAP["size"]
+    if pad is None:
+        pad = _DEFAULT_INSET_MAP["pad"]
 
     ## SET-UP ##
     # Getting the figure
