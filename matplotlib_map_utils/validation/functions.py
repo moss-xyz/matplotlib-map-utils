@@ -20,7 +20,7 @@ def _validate_list(prop, val, list, none_ok=False):
         raise ValueError(f"'{val}' is not a valid value for {prop}, please provide a value in this list: {list}")
     return val
 
-def _validate_range(prop, val, min, max, none_ok=False):
+def _validate_range(prop, val, min, max=None, none_ok=False):
     if none_ok==False and val is None:
         raise ValueError(f"None is not a valid value for {prop}, please provide a value between {min} and {max}")
     elif none_ok==True and val is None:
@@ -69,7 +69,7 @@ def _validate_tuple(prop, val, length, types, none_ok=False):
         raise ValueError(f"None is not a valid value for {prop}, please provide a tuple of length {length} instead")
     elif none_ok==True and val is None:
         return val
-    elif type(val)!=tuple:
+    elif not isinstance(val, (tuple, list)):
         raise ValueError(f"{val} is not a valid value for {prop}, please provide a tuple of length {length} instead")
     elif len(val)!=length:
         raise ValueError(f"{val} is not a valid value for {prop}, please provide a tuple of length {length} instead")
@@ -135,7 +135,7 @@ def _validate_projection(prop, val, none_ok=False):
 # Ex. if we want to validate a LIST of colors instead of a single color
 def _validate_iterable(prop, val, func, kwargs=None):
     # Making sure we wrap everything in a list
-    if type(val) not in [tuple, list]:
+    if not isinstance(val, (tuple, list)):
         val = [val]
     # Then, we apply our validation func with optional kwargs to each item in said list, relying on it to return an error value
     if kwargs is not None:
@@ -148,21 +148,43 @@ def _validate_iterable(prop, val, func, kwargs=None):
             v = func(v)
         return val
     
-# This is specifically to apply multiple validation functions to a value, if needed
+# This is to apply multiple validation functions to a value, if needed - only one needs to pass
 # Ex. If an item can be a string OR a list of strings, we can use this to validate it
-# "labels":{"func":_validate_multiple, "kwargs":{"funcs":[_validate_type, _validate_list], "kwargs":[{"match":str, "none_ok":True}, {"list":["major","first_last","minor_all","minor_first"], "none_ok":True}]}}, # any string or any item in the list
-def _validate_multiple(prop, val, funcs, kwargs):
+def _validate_or(prop, val, funcs, kwargs):
+    success = False
     # Simply iterate through each func and kwarg
     for f,k in zip(funcs,kwargs):
         # We wrap the attempts in a try block to suppress the errors
         try:
-            v = f(prop=prop, val=v, **k)
+            val = f(prop=prop, val=val, **k)
              # If we pass, we can stop here and return the value
-            return val
+            success = True 
+            break
         except:
-            continue
-    # If we didn't return a value and exit the loop yet, then the passed value is incorrect, as we raise an error
-    raise ValueError(f"{val} is not a valid value for {prop}, please provide check the documentation")
+            pass
+    if success == False:
+        # If we didn't return a value and exit the loop yet, then the passed value is incorrect, as we raise an error
+        raise ValueError(f"{val} is not a valid value for {prop}, please check the documentation")
+    else:
+        return val
+
+# This is the same, but ALL need to pass
+def _validate_and(prop, val, funcs, kwargs):
+    success = True
+    # Simply iterate through each func and kwarg
+    for f,k in zip(funcs,kwargs):
+        # We wrap the attempts in a try block to suppress the errors
+        try:
+            val = f(prop=prop, val=val, **k)
+        except:
+             # If we fail, we can stop here and return the value
+            success = False
+            break
+    if success == False:
+        # If we didn't return a value and exit the loop yet, then the passed value is incorrect, as we raise an error
+        raise ValueError(f"{val} is not a valid value for {prop}, please check the documentation")
+    else:
+        return val
 
 # This final one is used for keys that are not validated
 def _skip_validation(val, none_ok=False):

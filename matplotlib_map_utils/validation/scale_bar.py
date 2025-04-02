@@ -161,7 +161,7 @@ class _TYPE_AOB(TypedDict, total=False):
     # bbox_transform: None # NOTE: currently unvalidated, use at your own risk!
 
 ### VALIDITY DICTS ###
-# These compile the functions above^, as well as matplotlib's built-in validity functions
+# These compile the functions in validation/functions, as well as matplotlib's built-in validity functions
 # into dictionaries that can be used to validate all the inputs to a dictionary at once
 
 _VALIDATE_PRIMARY = {
