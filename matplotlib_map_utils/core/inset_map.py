@@ -7,29 +7,16 @@
 
 # Default packages
 import warnings
-import math
 import copy
-import re
 # Math packages
 import numpy
 # Geo packages
-import cartopy
 import pyproj
-from great_circle_calculator.great_circle_calculator import distance_between_points
+import shapely
 # Graphical packages
-import PIL.Image
 import matplotlib
 import matplotlib.artist
-import matplotlib.lines
-import matplotlib.pyplot
 import matplotlib.patches
-import matplotlib.patheffects
-import matplotlib.offsetbox
-import matplotlib.transforms
-import matplotlib.font_manager
-from matplotlib.backends.backend_agg import FigureCanvasAgg
-# matplotlib's useful validation functions
-import matplotlib.rcsetup
 # The types we use in this script
 from typing import Literal
 # The information contained in our helper scripts (validation and defaults)
@@ -44,10 +31,10 @@ from ..validation import functions as imf
 _DEFAULT_INSET_MAP = imd._DEFAULTS_IM["md"][0]
 
 ### CLASSES ###
+# Note these are really just to be convenient when storing the 
+# configuration options that are used by the drawing functions instead
 
 # The main object model of the inset map
-# Note this is really just to be convenient when storing the configuration
-# options that are used by the inset_map() function instead
 class InsetMap(matplotlib.artist.Artist):
     
     ## INITIALIZATION ##
@@ -221,6 +208,167 @@ class InsetMap(matplotlib.artist.Artist):
         else:
             raise ValueError("Invalid value supplied, try one of ['xsmall', 'small', 'medium', 'large', 'xlarge'] instead")
 
+# The main object model of the extent indicator
+class ExtentIndicator(matplotlib.artist.Artist):
+    
+    ## INITIALIZATION ##
+    def __init__(self,
+                 to_return: imt._TYPE_EXTENT["to_return"]=None,
+                 straighten: imt._TYPE_EXTENT["straighten"]=True,
+                 pad: imt._TYPE_EXTENT["pad"]=0.05,
+                 plot: imt._TYPE_EXTENT["plot"]=True,
+                 facecolor: imt._TYPE_EXTENT["facecolor"]="red",
+                 linecolor: imt._TYPE_EXTENT["linecolor"]="red",
+                 alpha: imt._TYPE_EXTENT["alpha"]=0.5,
+                 linewidth: imt._TYPE_EXTENT["linewidth"]=1,
+                 **kwargs):
+        # Starting up the object with the base properties of a matplotlib Artist
+        matplotlib.artist.Artist.__init__(self)
+        
+        # Validating each of the passed parameters
+        self._to_return = imf._validate(imt._VALIDATE_EXTENT, "to_return", to_return)
+        self._straighten = imf._validate(imt._VALIDATE_EXTENT, "straighten", straighten)
+        self._pad = imf._validate(imt._VALIDATE_EXTENT, "pad", pad)
+        self._plot = imf._validate(imt._VALIDATE_EXTENT, "plot", plot)
+        self._facecolor = imf._validate(imt._VALIDATE_EXTENT, "facecolor", facecolor)
+        self._linecolor = imf._validate(imt._VALIDATE_EXTENT, "linecolor", linecolor)
+        self._alpha = imf._validate(imt._VALIDATE_EXTENT, "alpha", alpha)
+        self._linewidth = imf._validate(imt._VALIDATE_EXTENT, "linewidth", linewidth)
+
+        self._kwargs = kwargs # not validated!
+    
+    # We do set the zorder for our objects individually,
+    # but we ALSO set it for the entire artist, here
+    # Thank you to matplotlib-scalebar for this tip
+    zorder = 99
+
+    ## INTERNAL PROPERTIES ##
+    # This allows for easy-updating of properties
+    # Each property will have the same pair of functions
+    # 1) calling the property itself returns its value (ExtentIndicator.facecolor will output color)
+    # 2) passing a value will update it (InsetMap.facecolor = color will update it)
+
+    # to_return
+    @property
+    def to_return(self):
+        return self._to_return
+
+    @to_return.setter
+    def to_return(self, val):
+        val = imf._validate(imt._VALIDATE_EXTENT, "to_return", val)
+        self._to_return = val
+
+    # straighten
+    @property
+    def straighten(self):
+        return self._straighten
+
+    @straighten.setter
+    def straighten(self, val):
+        val = imf._validate(imt._VALIDATE_EXTENT, "straighten", val)
+        self._straighten = val
+
+    # pad
+    @property
+    def pad(self):
+        return self._pad
+
+    @pad.setter
+    def pad(self, val):
+        val = imf._validate(imt._VALIDATE_EXTENT, "pad", val)
+        self._pad = val
+
+    # plot
+    @property
+    def plot(self):
+        return self._plot
+
+    @plot.setter
+    def plot(self, val):
+        val = imf._validate(imt._VALIDATE_EXTENT, "plot", val)
+        self._plot = val
+
+    # facecolor
+    @property
+    def facecolor(self):
+        return self._facecolor
+
+    @facecolor.setter
+    def facecolor(self, val):
+        val = imf._validate(imt._VALIDATE_EXTENT, "facecolor", val)
+        self._facecolor = val
+
+    # linecolor
+    @property
+    def linecolor(self):
+        return self._linecolor
+
+    @linecolor.setter
+    def linecolor(self, val):
+        val = imf._validate(imt._VALIDATE_EXTENT, "linecolor", val)
+        self._linecolor = val
+
+    # alpha
+    @property
+    def alpha(self):
+        return self._alpha
+
+    @alpha.setter
+    def alpha(self, val):
+        val = imf._validate(imt._VALIDATE_EXTENT, "alpha", val)
+        self._alpha = val
+
+    # linewidth
+    @property
+    def linewidth(self):
+        return self._linewidth
+
+    @linewidth.setter
+    def linewidth(self, val):
+        val = imf._validate(imt._VALIDATE_EXTENT, "linewidth", val)
+        self._linewidth = val
+
+    # kwargs
+    @property
+    def kwargs(self):
+        return self._kwargs
+
+    @kwargs.setter
+    def kwargs(self, val):
+        if isinstance(val, dict):
+            self._kwargs = self._kwargs | val
+        else:
+            raise ValueError("kwargs expects a dictionary, please try again")
+
+    ## COPY FUNCTION ##
+    # This is solely to get around matplotlib's restrictions around re-using an artist across multiple axes
+    # Instead, you can use add_artist() like normal, but with add_artist(na.copy())
+    # Thank you to the cartopy team for helping fix a bug with this!
+    def copy(self):
+        return copy.deepcopy(self)
+
+    ## CREATE FUNCTION ##
+    # Calling InsetMap.create(ax) will create an inset map with the specified parameters on the given axis
+    # Note that this is different than the way NorthArrows and ScaleBars are rendered (via draw/add_artist())!
+    def create(self,
+               pax: imt._TYPE_EXTENT["pax"],
+               bax: imt._TYPE_EXTENT["bax"],
+               pcrs: imt._TYPE_EXTENT["pcrs"],
+               bcrs: imt._TYPE_EXTENT["bcrs"], **kwargs):
+        
+        # Can re-use the drawing function we already established, but return the object instead
+        exi = indicate_extent(pax=pax, bax=bax, pcrs=pcrs, bcrs=bcrs, 
+                              to_return=self._to_return, straighten=self._straighten,
+                              pad=self._pad, plot=self._plot,
+                              facecolor=self._facecolor, linecolor=self._linecolor,
+                              alpha=self._alpha, linewidth=self._linewidth,
+                              **self._kwargs, **kwargs)
+        
+        # The indicator will be drawn automatically if plot is True
+        # If we have anything to return from to_return, we will do so here
+        if exi is not None:
+            return exi
+
 ### DRAWING FUNCTIONS ###
 
 # See here for doc: https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.inset_axes.html
@@ -333,3 +481,210 @@ def inset_map(ax,
     
     # The new inset axis is returned
     return iax
+
+# This function will display the extent/bounds of one axis on the other
+# This is used both ways, from either parent -> inset and inset -> parent
+# here, PAX means "plotting axis" (where the indicator is plotted) 
+# and BAX means "bounds axis" (where the extent is derived from)
+def indicate_extent(pax: imt._TYPE_EXTENT["pax"],
+                    bax: imt._TYPE_EXTENT["bax"],
+                    pcrs: imt._TYPE_EXTENT["pcrs"],
+                    bcrs: imt._TYPE_EXTENT["bcrs"],
+                    to_return: imt._TYPE_EXTENT["to_return"]=None,
+                    straighten: imt._TYPE_EXTENT["straighten"]=True,
+                    pad: imt._TYPE_EXTENT["pad"]=0.05,
+                    plot: imt._TYPE_EXTENT["plot"]=True,
+                    facecolor: imt._TYPE_EXTENT["facecolor"]="red",
+                    linecolor: imt._TYPE_EXTENT["linecolor"]="red",
+                    alpha: imt._TYPE_EXTENT["alpha"]=0.5,
+                    linewidth: imt._TYPE_EXTENT["linewidth"]=1,
+                    **kwargs):
+    
+    ## VALIDATION ##
+    pax = imf._validate(imt._VALIDATE_EXTENT, "pax", pax)
+    bax = imf._validate(imt._VALIDATE_EXTENT, "bax", bax)
+    pcrs = imf._validate(imt._VALIDATE_EXTENT, "pcrs", pcrs)
+    bcrs = imf._validate(imt._VALIDATE_EXTENT, "bcrs", bcrs)
+    to_return = imf._validate(imt._VALIDATE_EXTENT, "to_return", to_return)
+    straighten = imf._validate(imt._VALIDATE_EXTENT, "straighten", straighten)
+    pad = imf._validate(imt._VALIDATE_EXTENT, "pad", pad)
+    plot = imf._validate(imt._VALIDATE_EXTENT, "plot", plot)
+    facecolor = imf._validate(imt._VALIDATE_EXTENT, "facecolor", facecolor)
+    linecolor = imf._validate(imt._VALIDATE_EXTENT, "linecolor", linecolor)
+    alpha = imf._validate(imt._VALIDATE_EXTENT, "alpha", alpha)
+    linewidth = imf._validate(imt._VALIDATE_EXTENT, "linewidth", linewidth)
+    
+    # Make sure the figure layout is calculated
+    fig = pax.get_figure()
+    fig.draw_without_rendering()
+    
+    # Get the limits of the bounds axis (which will be in its own crs)
+    ymin, ymax = bax.get_ylim()
+    yrange = abs(ymax-ymin)
+    xmin, xmax = bax.get_xlim()
+    xrange = abs(xmax-xmin)
+
+    # Buffering the points, if desired
+    if pad is not None and isinstance(pad, (float, int)):
+        pad_data = min(yrange, xrange)*pad
+    else:
+        pad_data = 0
+
+    # Converting it into a tuple of coordinates
+    # in the order of lower-left, upper-left, upper-right, lower-right
+    extent_corners = [(xmin-pad_data, ymin-pad_data), (xmin-pad_data, ymax+pad_data), 
+                      (xmax+pad_data, ymax+pad_data), (xmax+pad_data, ymin-pad_data)]
+
+    # Converting the points
+    # This is now ready to be plotted on the parent axis, if desired
+    transform_crs = pyproj.Transformer.from_crs(bcrs, pcrs, always_xy=True)
+    extent_points = numpy.array([transform_crs.transform(p[0],p[1]) for p in extent_corners])
+    extent_shape = shapely.Polygon(extent_points)
+
+    # Straightening the points if desired
+    if straighten == True:
+        extent_shape = shapely.envelope(extent_shape)
+
+    # return extent_shape
+    
+    # Plotting, if desired
+    if plot == True:
+        extent_patch = matplotlib.patches.Polygon(list(extent_shape.exterior.coords), transform=pax.transData,
+                                                  facecolor=facecolor, edgecolor=linecolor, 
+                                                  linewidth=linewidth, alpha=alpha, **kwargs)
+        pax.add_artist(extent_patch)
+
+    # Deciding what we need to return
+    if to_return is None:
+        pass
+    elif to_return == "shape":
+        return extent_shape
+    elif to_return == "patch":
+        return extent_patch
+    elif to_return == "fig":
+        return [fig.transFigure.inverted().transform(pax.transData.transform(p)) for p in list(extent_shape.exterior.coords)[::-1]]
+    elif to_return == "ax":
+        return [pax.transAxes.inverted().transform(pax.transData.transform(p)) for p in list(extent_shape.exterior.coords)[::-1]]
+    else:
+        pass
+
+# Detail indicators are for when the inset map shows a zoomed-in section of the parent map
+# here, PAX means "parent axis" (where the indicator is plotted) 
+# and IAX means "inset axis" (which contains the detail/zoomed-in section)
+def indicate_detail(pax: imt._TYPE_EXTENT["pax"], 
+                    iax: imt._TYPE_EXTENT["bax"], 
+                    pcrs: imt._TYPE_EXTENT["pcrs"], 
+                    icrs: imt._TYPE_EXTENT["bcrs"],
+                    to_return: imt._TYPE_DETAIL["to_return"]=None,
+                    straighten: imt._TYPE_EXTENT["straighten"]=True,
+                    pad: imt._TYPE_EXTENT["pad"]=0.05,
+                    plot: imt._TYPE_EXTENT["plot"]=True,
+                    facecolor: imt._TYPE_EXTENT["facecolor"]="none",
+                    linecolor: imt._TYPE_EXTENT["linecolor"]="black",
+                    alpha: imt._TYPE_EXTENT["alpha"]=1,
+                    linewidth: imt._TYPE_EXTENT["linewidth"]=1,
+                    connector_color: imt._TYPE_DETAIL["connector_color"]="black",
+                    connector_width: imt._TYPE_DETAIL["connector_width"]=1,
+                    **kwargs):
+    
+    fig = pax.get_figure()
+    fig.draw_without_rendering()
+
+    ## VALIDATION ##
+    pax = imf._validate(imt._VALIDATE_EXTENT, "pax", pax)
+    iax = imf._validate(imt._VALIDATE_EXTENT, "bax", iax)
+    pcrs = imf._validate(imt._VALIDATE_EXTENT, "pcrs", pcrs)
+    icrs = imf._validate(imt._VALIDATE_EXTENT, "bcrs", icrs)
+    to_return = imf._validate(imt._VALIDATE_DETAIL, "to_return", to_return)
+    straighten = imf._validate(imt._VALIDATE_EXTENT, "straighten", straighten)
+    pad = imf._validate(imt._VALIDATE_EXTENT, "pad", pad)
+    plot = imf._validate(imt._VALIDATE_EXTENT, "plot", plot)
+    facecolor = imf._validate(imt._VALIDATE_EXTENT, "facecolor", facecolor)
+    linecolor = imf._validate(imt._VALIDATE_EXTENT, "linecolor", linecolor)
+    alpha = imf._validate(imt._VALIDATE_EXTENT, "alpha", alpha)
+    linewidth = imf._validate(imt._VALIDATE_EXTENT, "linewidth", linewidth)
+    connector_color = imf._validate(imt._VALIDATE_DETAIL, "connector_color", connector_color)
+    connector_width = imf._validate(imt._VALIDATE_DETAIL, "connector_width", connector_width)
+
+    # Drawing the extent indicator on the main map
+    # Setting to_return="ax" gets us the corners of the patch in pax.transaxes coordinates
+    # We only need the first 4 points - the fifth is a repeated point to enforce "closure"
+    corners_extent = indicate_extent(pax=pax, bax=iax, pcrs=pcrs, bcrs=icrs, 
+                                     straighten=straighten, pad=pad, plot=plot,
+                                     facecolor=facecolor, linecolor=linecolor,
+                                     alpha=alpha, linewidth=linewidth,
+                                     to_return="ax", **kwargs)[:4]
+
+    # Getting the inset axis points and transforming them to the parent axis CRS
+    corners_inset = _inset_corners_to_parent(pax, iax)
+
+    # Getting the center of both the extent and the inset, which we will then use to decide WHICH lines to draw
+    center_extent_x = sum([p[0] for p in corners_extent]) / len(corners_extent)
+    center_extent_y = sum([p[1] for p in corners_extent]) / len(corners_extent)
+    center_inset_x = sum([p[0] for p in corners_inset]) / len(corners_inset)
+    center_inset_y = sum([p[1] for p in corners_inset]) / len(corners_inset)
+
+    # If our extent is horizontally centered with our inset, connect just the left or right edges
+    if (abs(center_extent_y - center_inset_y) / abs(center_inset_y)) <= 0.15:
+        if center_extent_x > center_inset_x:
+            # extent lefts + inset rights
+            connections = [[corners_extent[0], corners_inset[3]], [corners_extent[1], corners_inset[2]]]
+        else:
+            # extent rights + inset lefts
+            connections = [[corners_extent[3], corners_inset[0]], [corners_extent[2], corners_inset[1]]]
+    # If instead our extent is vertically centered, connect just the top or bottom edges
+    elif (abs(center_extent_x - center_inset_x) / abs(center_inset_x)) <= 0.15:
+        if center_extent_y > center_inset_y:
+            # extent bottoms + inset tops
+            connections = [[corners_extent[0], corners_inset[1]], [corners_extent[3], corners_inset[2]]]
+        else:
+            # extent tops + inset bottoms
+            connections = [[corners_extent[1], corners_inset[0]], [corners_extent[2], corners_inset[3]]]
+    # The most common cases will be when the inset is in the corner...
+    elif center_extent_x > center_inset_x and center_extent_y > center_inset_y:
+        # top-left and bottom-right corners for each
+        connections = [[corners_extent[1], corners_inset[1]], [corners_extent[3], corners_inset[3]]]
+    elif center_extent_x <= center_inset_x and center_extent_y > center_inset_y:
+        # top-right and bottom-left corners for each
+        connections = [[corners_extent[2], corners_inset[2]], [corners_extent[0], corners_inset[0]]]
+    elif center_extent_x > center_inset_x and center_extent_y <= center_inset_y:
+        # bottom-left and top-right corners for each
+        connections = [[corners_extent[0], corners_inset[0]], [corners_extent[2], corners_inset[2]]]
+    elif center_extent_x <= center_inset_x and center_extent_y <= center_inset_y:
+        # top-right and bottom-left corners for each
+        connections = [[corners_extent[2], corners_inset[2]], [corners_extent[0], corners_inset[0]]]
+
+    if plot == True:
+        for c in connections:
+            pax.plot([c[0][0], c[1][0]], [c[0][1], c[1][1]], 
+                    color=connector_color, linewidth=connector_width, transform=pax.transAxes)
+    
+    if to_return is None:
+        pass 
+    elif to_return == "connectors" or to_return == "lines":
+        return connections
+    else:
+        pass
+
+### HELPING FUNCTIONS ###
+
+# This retrieves the position of the inset axes (iax)
+# in the coordinates of its parent axis 
+def _inset_corners_to_parent(pax, iax):
+    # Make sure the figure layout is calculated
+    fig = pax.get_figure()
+    fig.draw_without_rendering()
+    
+    # Get positions as Bbox objects in figure coordinates (0-1)
+    iax_pos = iax.get_position()
+    
+    # Extract corners in figure coordinates
+    figure_corners = numpy.array([(iax_pos.x0, iax_pos.y0), (iax_pos.x0, iax_pos.y1), 
+                                  (iax_pos.x1, iax_pos.y1), (iax_pos.x1, iax_pos.y0)])
+    
+    # Convert to parent axes coordinates (0-1, as a fraction of each axis)
+    parent_corners = pax.transAxes.inverted().transform(
+        fig.transFigure.transform(figure_corners)
+    )
+
+    return parent_corners

@@ -117,7 +117,7 @@ def _validate_crs(prop, val, rotation_dict, none_ok=False):
         try:
             val = pyproj.CRS.from_user_input(val)
         except:
-            raise Exception(f"Invalid CRS supplied ({val}), please provide a valid CRS input for PyProj instead")
+            raise Exception(f"Invalid CRS supplied ({val}), please provide a valid CRS input that PyProj can use instead")
     return val
 
 # A simpler validation function for CRSs
@@ -128,7 +128,7 @@ def _validate_projection(prop, val, none_ok=False):
         try:
             val = pyproj.CRS.from_user_input(val)
         except:
-            raise Exception(f"Invalid CRS supplied ({val}), please provide a valid CRS input for PyProj instead")
+            raise Exception(f"Invalid CRS supplied ({val}) for {prop}, please provide a valid CRS input that PyProj can use instead")
     return val    
 
 # This is specifically to apply another validation function to the items in a list 
