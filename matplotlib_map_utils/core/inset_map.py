@@ -369,6 +369,193 @@ class ExtentIndicator(matplotlib.artist.Artist):
         if exi is not None:
             return exi
 
+# The main object model of the detail indicator
+class DetailIndicator(matplotlib.artist.Artist):
+    
+    ## INITIALIZATION ##
+    def __init__(self,
+                 to_return: imt._TYPE_DETAIL["to_return"]=None,
+                 straighten: imt._TYPE_EXTENT["straighten"]=True,
+                 pad: imt._TYPE_EXTENT["pad"]=0.05,
+                 plot: imt._TYPE_EXTENT["plot"]=True,
+                 facecolor: imt._TYPE_EXTENT["facecolor"]="none",
+                 linecolor: imt._TYPE_EXTENT["linecolor"]="black",
+                 alpha: imt._TYPE_EXTENT["alpha"]=1,
+                 linewidth: imt._TYPE_EXTENT["linewidth"]=1,
+                 connector_color: imt._TYPE_DETAIL["connector_color"]="black",
+                 connector_width: imt._TYPE_DETAIL["connector_width"]=1,
+                 **kwargs):
+        # Starting up the object with the base properties of a matplotlib Artist
+        matplotlib.artist.Artist.__init__(self)
+        
+        # Validating each of the passed parameters
+        self._straighten = imf._validate(imt._VALIDATE_EXTENT, "straighten", straighten)
+        self._pad = imf._validate(imt._VALIDATE_EXTENT, "pad", pad)
+        self._plot = imf._validate(imt._VALIDATE_EXTENT, "plot", plot)
+        self._facecolor = imf._validate(imt._VALIDATE_EXTENT, "facecolor", facecolor)
+        self._linecolor = imf._validate(imt._VALIDATE_EXTENT, "linecolor", linecolor)
+        self._alpha = imf._validate(imt._VALIDATE_EXTENT, "alpha", alpha)
+        self._linewidth = imf._validate(imt._VALIDATE_EXTENT, "linewidth", linewidth)
+        self._to_return = imf._validate(imt._VALIDATE_DETAIL, "to_return", to_return)
+        self._connector_color = imf._validate(imt._VALIDATE_DETAIL, "connector_color", connector_color)
+        self._connector_width = imf._validate(imt._VALIDATE_DETAIL, "connector_width", connector_width)
+
+        self._kwargs = kwargs # not validated!
+    
+    # We do set the zorder for our objects individually,
+    # but we ALSO set it for the entire artist, here
+    # Thank you to matplotlib-scalebar for this tip
+    zorder = 99
+
+    ## INTERNAL PROPERTIES ##
+    # This allows for easy-updating of properties
+    # Each property will have the same pair of functions
+    # 1) calling the property itself returns its value (ExtentIndicator.facecolor will output color)
+    # 2) passing a value will update it (InsetMap.facecolor = color will update it)
+
+    # to_return
+    @property
+    def to_return(self):
+        return self._to_return
+
+    @to_return.setter
+    def to_return(self, val):
+        val = imf._validate(imt._VALIDATE_DETAIL, "to_return", val)
+        self._to_return = val
+
+    # straighten
+    @property
+    def straighten(self):
+        return self._straighten
+
+    @straighten.setter
+    def straighten(self, val):
+        val = imf._validate(imt._VALIDATE_EXTENT, "straighten", val)
+        self._straighten = val
+
+    # pad
+    @property
+    def pad(self):
+        return self._pad
+
+    @pad.setter
+    def pad(self, val):
+        val = imf._validate(imt._VALIDATE_EXTENT, "pad", val)
+        self._pad = val
+
+    # plot
+    @property
+    def plot(self):
+        return self._plot
+
+    @plot.setter
+    def plot(self, val):
+        val = imf._validate(imt._VALIDATE_EXTENT, "plot", val)
+        self._plot = val
+
+    # facecolor
+    @property
+    def facecolor(self):
+        return self._facecolor
+
+    @facecolor.setter
+    def facecolor(self, val):
+        val = imf._validate(imt._VALIDATE_EXTENT, "facecolor", val)
+        self._facecolor = val
+
+    # linecolor
+    @property
+    def linecolor(self):
+        return self._linecolor
+
+    @linecolor.setter
+    def linecolor(self, val):
+        val = imf._validate(imt._VALIDATE_EXTENT, "linecolor", val)
+        self._linecolor = val
+
+    # alpha
+    @property
+    def alpha(self):
+        return self._alpha
+
+    @alpha.setter
+    def alpha(self, val):
+        val = imf._validate(imt._VALIDATE_EXTENT, "alpha", val)
+        self._alpha = val
+
+    # linewidth
+    @property
+    def linewidth(self):
+        return self._linewidth
+
+    @linewidth.setter
+    def linewidth(self, val):
+        val = imf._validate(imt._VALIDATE_EXTENT, "linewidth", val)
+        self._linewidth = val
+
+    # connector_color
+    @property
+    def connector_color(self):
+        return self._connector_color
+
+    @connector_color.setter
+    def connector_color(self, val):
+        val = imf._validate(imt._VALIDATE_DETAIL, "connector_color", val)
+        self._connector_color = val
+
+    # connector_width
+    @property
+    def connector_width(self):
+        return self._connector_width
+
+    @connector_width.setter
+    def connector_width(self, val):
+        val = imf._validate(imt._VALIDATE_DETAIL, "connector_width", val)
+        self._connector_width = val
+
+    # kwargs
+    @property
+    def kwargs(self):
+        return self._kwargs
+
+    @kwargs.setter
+    def kwargs(self, val):
+        if isinstance(val, dict):
+            self._kwargs = self._kwargs | val
+        else:
+            raise ValueError("kwargs expects a dictionary, please try again")
+
+    ## COPY FUNCTION ##
+    # This is solely to get around matplotlib's restrictions around re-using an artist across multiple axes
+    # Instead, you can use add_artist() like normal, but with add_artist(na.copy())
+    # Thank you to the cartopy team for helping fix a bug with this!
+    def copy(self):
+        return copy.deepcopy(self)
+
+    ## CREATE FUNCTION ##
+    # Calling InsetMap.create(ax) will create an inset map with the specified parameters on the given axis
+    # Note that this is different than the way NorthArrows and ScaleBars are rendered (via draw/add_artist())!
+    def create(self,
+               pax: imt._TYPE_EXTENT["pax"],
+               iax: imt._TYPE_EXTENT["bax"],
+               pcrs: imt._TYPE_EXTENT["pcrs"],
+               icrs: imt._TYPE_EXTENT["bcrs"], **kwargs):
+        
+        # Can re-use the drawing function we already established, but return the object instead
+        dti = indicate_detail(pax=pax, iax=iax, pcrs=pcrs, icrs=icrs,
+                              to_return=self._to_return, straighten=self._straighten,
+                              pad=self._pad, plot=self._plot,
+                              facecolor=self._facecolor, linecolor=self._linecolor,
+                              alpha=self._alpha, linewidth=self._linewidth,
+                              connector_color=self._connector_color,
+                              connector_width=self._connector_width,
+                              **self._kwargs, **kwargs)
+        
+        # The indicator will be drawn automatically if plot is True
+        # If we have anything to return from to_return, we will do so here
+        if dti is not None:
+            return dti
+
 ### DRAWING FUNCTIONS ###
 
 # See here for doc: https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.inset_axes.html
