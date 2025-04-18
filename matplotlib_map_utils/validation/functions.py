@@ -257,7 +257,7 @@ def _validate_dict(input_dict, default_dict, functions, to_validate=None, return
 def _validate(validate_dict, prop, val, return_val=True, kwargs={}):
     fd = validate_dict[prop]
     func = fd["func"]
-    # Our custom functions always have this dictionary key in them, so we know what form they take
+    # Most of our custom functions always have this dictionary key in them, so we know what form they take
     if "kwargs" in fd:
         val = func(prop=prop, val=val, **(fd["kwargs"] | kwargs))
     # The matplotlib built-in functions DON'T have that, and only ever take the one value

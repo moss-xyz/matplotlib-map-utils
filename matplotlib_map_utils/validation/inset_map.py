@@ -69,8 +69,8 @@ _VALIDATE_INSET = {
 _VALIDATE_EXTENT = {
     "pax":{"func":vf._validate_type, "kwargs":{"match":matplotlib.axes.Axes}}, # any Matplotlib Axes
     "bax":{"func":vf._validate_type, "kwargs":{"match":matplotlib.axes.Axes}}, # any Matplotlib Axes
-    "pcrs":{"func":vf._validate_projection}, # any valid projection input for PyProj
-    "bcrs":{"func":vf._validate_projection}, # any valid projection input for PyProj
+    "pcrs":{"func":vf._validate_projection, "kwargs":{"none_ok":False}}, # any valid projection input for PyProj
+    "bcrs":{"func":vf._validate_projection, "kwargs":{"none_ok":False}}, # any valid projection input for PyProj
     "straighten":{"func":vf._validate_type, "kwargs":{"match":bool}}, # true or false
     "pad":{"func":vf._validate_range, "kwargs":{"min":0}}, # any positive number
     "plot":{"func":vf._validate_type, "kwargs":{"match":bool}}, # true or false
@@ -78,6 +78,7 @@ _VALIDATE_EXTENT = {
     "linecolor":{"func":matplotlib.rcsetup.validate_color}, # any color value for matplotlib
     "alpha":{"func":vf._validate_range, "kwargs":{"min":0}}, # any positive number
     "linewidth":{"func":vf._validate_range, "kwargs":{"min":0}}, # any positive number
+    "to_return":{"func":vf._validate_list, "kwargs":{"list":["shape", "patch", "fig", "ax"], "none_ok":True}}, # any value in this list
 }
 
 _VALIDATE_DETAIL = {

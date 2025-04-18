@@ -17,6 +17,7 @@ import shapely
 import matplotlib
 import matplotlib.artist
 import matplotlib.patches
+import matplotlib.colors
 # The types we use in this script
 from typing import Literal
 # The information contained in our helper scripts (validation and defaults)
@@ -745,9 +746,10 @@ def indicate_extent(pax: imt._TYPE_EXTENT["pax"],
     
     # Plotting, if desired
     if plot == True:
+        # Note that the alpha ONLY applies to the facecolor!
         extent_patch = matplotlib.patches.Polygon(list(extent_shape.exterior.coords), transform=pax.transData,
-                                                  facecolor=facecolor, edgecolor=linecolor, 
-                                                  linewidth=linewidth, alpha=alpha, **kwargs)
+                                                  facecolor=matplotlib.colors.to_rgba(facecolor, alpha=alpha), 
+                                                  edgecolor=linecolor, linewidth=linewidth, **kwargs)
         pax.add_artist(extent_patch)
 
     # Deciding what we need to return
@@ -777,11 +779,11 @@ def indicate_detail(pax: imt._TYPE_EXTENT["pax"],
                     pad: imt._TYPE_EXTENT["pad"]=0.05,
                     plot: imt._TYPE_EXTENT["plot"]=True,
                     facecolor: imt._TYPE_EXTENT["facecolor"]="none",
-                    linecolor: imt._TYPE_EXTENT["linecolor"]="black",
                     alpha: imt._TYPE_EXTENT["alpha"]=1,
+                    linecolor: imt._TYPE_EXTENT["linecolor"]="black",
                     linewidth: imt._TYPE_EXTENT["linewidth"]=1,
-                    connector_color: imt._TYPE_DETAIL["connector_color"]="black",
-                    connector_width: imt._TYPE_DETAIL["connector_width"]=1,
+                    # connector_color: imt._TYPE_DETAIL["connector_color"]="black",
+                    # connector_width: imt._TYPE_DETAIL["connector_width"]=1,
                     **kwargs):
     
     fig = pax.get_figure()
@@ -797,11 +799,11 @@ def indicate_detail(pax: imt._TYPE_EXTENT["pax"],
     pad = imf._validate(imt._VALIDATE_EXTENT, "pad", pad)
     plot = imf._validate(imt._VALIDATE_EXTENT, "plot", plot)
     facecolor = imf._validate(imt._VALIDATE_EXTENT, "facecolor", facecolor)
-    linecolor = imf._validate(imt._VALIDATE_EXTENT, "linecolor", linecolor)
     alpha = imf._validate(imt._VALIDATE_EXTENT, "alpha", alpha)
+    linecolor = imf._validate(imt._VALIDATE_EXTENT, "linecolor", linecolor)
     linewidth = imf._validate(imt._VALIDATE_EXTENT, "linewidth", linewidth)
-    connector_color = imf._validate(imt._VALIDATE_DETAIL, "connector_color", connector_color)
-    connector_width = imf._validate(imt._VALIDATE_DETAIL, "connector_width", connector_width)
+    # connector_color = imf._validate(imt._VALIDATE_DETAIL, "connector_color", connector_color)
+    # connector_width = imf._validate(imt._VALIDATE_DETAIL, "connector_width", connector_width)
 
     # Drawing the extent indicator on the main map
     # Setting to_return="ax" gets us the corners of the patch in pax.transAxes coordinates
@@ -809,7 +811,7 @@ def indicate_detail(pax: imt._TYPE_EXTENT["pax"],
     corners_extent = indicate_extent(pax=pax, bax=iax, pcrs=pcrs, bcrs=icrs, 
                                      straighten=straighten, pad=pad, plot=plot,
                                      facecolor=facecolor, linecolor=linecolor,
-                                     alpha=alpha, linewidth=linewidth,
+                                     alpha=alpha, linewidth=linewidth*1.25,
                                      to_return="ax", **kwargs)[:4]
 
     # Getting the inset axis points and transforming them to the parent axis CRS
@@ -864,12 +866,12 @@ def indicate_detail(pax: imt._TYPE_EXTENT["pax"],
         for c in connections:
             # This is listed as [extent_x, inset_x], [extent_y, inset_y]
             pax.plot([c[0][0], c[1][0]], [c[0][1], c[1][1]], 
-                    color=connector_color, linewidth=connector_width, transform=pax.transAxes)
+                    color=linecolor, linewidth=linewidth, transform=pax.transAxes)
         
         # Also updating the linewidth and color of the inset map itsef, to match
         for a in ["top","bottom","left","right"]:
-            iax.spines[a].set_linewidth(connector_width*1.2) # making this slightly thicker
-            iax.spines[a].set_edgecolor(connector_color)
+            iax.spines[a].set_linewidth(linewidth*1.2) # making this slightly thicker
+            iax.spines[a].set_edgecolor(linecolor)
     
     # Returning as requested
     if to_return is None:
@@ -880,6 +882,46 @@ def indicate_detail(pax: imt._TYPE_EXTENT["pax"],
         pass
 
 ### HELPING FUNCTIONS ###
+
+# This is a top-level helping function
+# that will return an axis with inset maps drawn for Alaska, Hawaii, DC, and/or Puerto Rico
+# NOTE that as of this initial release, it assumes your map is in CRS 3857 for positioning
+def inset_usa(ax, alaska=True, hawaii=True, dc=True, puerto_rico=True, size=None, pad=None, **kwargs):
+    # This will return all of the axes we create
+    to_return = []
+    
+    # Alaska and Hawaii are positioned relative to each other
+    if alaska == True and hawaii == True:
+        aax = inset_map(ax, "lower left", size, pad, **kwargs)
+        to_return.append(aax)
+        # Need to shift over the hawaii axis by the size of the alaska axis
+        # Note that we add xmax and xmin together here, to account for the padding (xmin is the amount of padding)
+        shift_right = float(aax.get_window_extent().transformed(ax.transAxes.inverted()).xmax) + float(aax.get_window_extent().transformed(ax.transAxes.inverted()).xmin)
+        # also need to shift it up, by the amount of the padding (which we can crib from ymin)
+        shift_up = float(aax.get_window_extent().transformed(ax.transAxes.inverted()).ymin)
+        hax = inset_map(ax, "lower left", size, pad, coords=(shift_right, shift_up), **kwargs)
+        to_return.append(hax)
+    else:
+        if alaska == True:
+            aax = inset_map(ax, "lower_left", size, pad, **kwargs)
+            to_return.append(aax)
+        if hawaii == True:
+            hax = inset_map(ax, "lower left", size, pad, **kwargs)
+            to_return.append(hax)
+
+    # Puerto Rico is positioned off the coast of Florida
+    if puerto_rico == True:
+        pax = inset_map(ax, "lower right", size, pad, **kwargs)
+        to_return.append(pax)
+    
+    # DC is off the coast of DC
+    if dc == True:
+        dax = inset_map(ax, "center right", size, pad, **kwargs)
+        to_return.append(dax)
+    
+    # Finally, returning everything
+    return to_return
+
 
 # This retrieves the position of the inset axes (iax)
 # in the coordinates of its parent axis 

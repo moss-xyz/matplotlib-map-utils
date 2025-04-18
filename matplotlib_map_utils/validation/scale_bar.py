@@ -171,7 +171,7 @@ _VALID_BAR_TICK_LOC = get_args(_TYPE_BAR.__annotations__["tick_loc"])
 _VALID_BAR_MINOR_TYPE = get_args(_TYPE_BAR.__annotations__["minor_type"]) 
 
 _VALIDATE_BAR = {
-    "projection":{"func":vf._validate_projection}, # must be a valid CRS
+    "projection":{"func":vf._validate_projection, "kwargs":{"none_ok":False}}, # must be a valid CRS
     "unit":{"func":vf._validate_list, "kwargs":{"list":list(units_standard.keys()), "none_ok":True}}, # any of the listed unit values are accepted
     "rotation":{"func":vf._validate_range, "kwargs":{"min":-360, "max":360, "none_ok":True}}, # between -360 and 360 degrees
     "max":{"func":vf._validate_range, "kwargs":{"min":0, "max":None, "none_ok":True}}, # between 0 and inf
