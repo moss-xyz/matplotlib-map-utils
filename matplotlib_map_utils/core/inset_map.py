@@ -178,6 +178,7 @@ class InsetMap(matplotlib.artist.Artist):
                         pad=self._pad, coords=self._coords, transform=self._transform,
                         **self._kwargs, **kwargs)
         
+        # If data is passed to to_plot, then we plot that on the newly created axis as well
         for d in self._to_plot:
             if d is not None:
                 d["data"].plot(ax=iax, **d["kwargs"])
@@ -246,7 +247,7 @@ class ExtentIndicator(matplotlib.artist.Artist):
     # This allows for easy-updating of properties
     # Each property will have the same pair of functions
     # 1) calling the property itself returns its value (ExtentIndicator.facecolor will output color)
-    # 2) passing a value will update it (InsetMap.facecolor = color will update it)
+    # 2) passing a value will update it (ExtentIndicator.facecolor = color will update it)
 
     # to_return
     @property
@@ -348,7 +349,7 @@ class ExtentIndicator(matplotlib.artist.Artist):
         return copy.deepcopy(self)
 
     ## CREATE FUNCTION ##
-    # Calling InsetMap.create(ax) will create an inset map with the specified parameters on the given axis
+    # Calling ExtentIndicator.create(ax) will create an inset map with the specified parameters on the given axis
     # Note that this is different than the way NorthArrows and ScaleBars are rendered (via draw/add_artist())!
     def create(self,
                pax: imt._TYPE_EXTENT["pax"],
@@ -410,8 +411,8 @@ class DetailIndicator(matplotlib.artist.Artist):
     ## INTERNAL PROPERTIES ##
     # This allows for easy-updating of properties
     # Each property will have the same pair of functions
-    # 1) calling the property itself returns its value (ExtentIndicator.facecolor will output color)
-    # 2) passing a value will update it (InsetMap.facecolor = color will update it)
+    # 1) calling the property itself returns its value (DetailIndicator.facecolor will output color)
+    # 2) passing a value will update it (DetailIndicator.facecolor = color will update it)
 
     # to_return
     @property
@@ -533,7 +534,7 @@ class DetailIndicator(matplotlib.artist.Artist):
         return copy.deepcopy(self)
 
     ## CREATE FUNCTION ##
-    # Calling InsetMap.create(ax) will create an inset map with the specified parameters on the given axis
+    # Calling DetailIndicator.create(ax) will create an inset map with the specified parameters on the given axis
     # Note that this is different than the way NorthArrows and ScaleBars are rendered (via draw/add_artist())!
     def create(self,
                pax: imt._TYPE_EXTENT["pax"],
@@ -557,9 +558,11 @@ class DetailIndicator(matplotlib.artist.Artist):
             return dti
 
 ### DRAWING FUNCTIONS ###
-
 # See here for doc: https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.inset_axes.html
 # See here for kwargs: https://matplotlib.org/stable/api/_as_gen/mpl_toolkits.axes_grid1.inset_locator.inset_axes.html#mpl_toolkits.axes_grid1.inset_locator.inset_axes
+
+# Function for creating an inset map, independent of the InsetMap object model
+# It is intended to be an easier-to-use API than the default inset_axes
 def inset_map(ax, 
               location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="upper right", 
               size: imt._TYPE_INSET["size"]=None,
@@ -588,23 +591,19 @@ def inset_map(ax,
     # The default inset_axis() function does this as a fraction of the parent axis
     # But the size variable expects dimensions in inches
     
-    # First, casting size to width and height
+    # Casting size to width and height
     if isinstance(size, (tuple, list)):
         inset_width, inset_height = size
     else:
         inset_width = size 
         inset_height = size
 
-    # Getting the current dimensions of the parent axis in inches (ignoring ticks and labels - just the axis)
+    # Getting the current dimensions of the parent axis in inches (ignoring ticks and labels - just the axis itself)
     parent_axis_bbox = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
-    
-    # Expressing the desired height and width of the inset map as a fraction of the parent
-    inset_width = inset_width / parent_axis_bbox.width
-    inset_height = inset_height / parent_axis_bbox.height
 
     ## PADDING ##
-    # Padding is expressed in inches as well
-    # First, casting size to width and height
+    # Padding is expressed in inches here, unlike traditional matplotlib
+    # which expresses it as a fraction of the font size
     if isinstance(pad, (tuple, list)):
         pad_x, pad_y = pad
     else:
@@ -619,14 +618,14 @@ def inset_map(ax,
         if location in ["upper left", "center left", "lower left"]:
             x = pad_x / parent_axis_bbox.width
         elif location in ["upper center", "center", "lower center"]:
-            x = (parent_axis_bbox.width - width) / 2 / parent_axis_bbox.width
+            x = (parent_axis_bbox.width - inset_width) / 2 / parent_axis_bbox.width
         elif location in ["upper right", "center right", "lower right"]:
-            x = ((parent_axis_bbox.width - width - pad_x) / parent_axis_bbox.width)
+            x = ((parent_axis_bbox.width - inset_width - pad_x) / parent_axis_bbox.width)
         # Then the y coordinate
         if location in ["upper left", "upper center", "upper right"]:
-            y = ((parent_axis_bbox.height - height - pad_y) / parent_axis_bbox.height)
+            y = ((parent_axis_bbox.height - inset_height - pad_y) / parent_axis_bbox.height)
         elif location in ["center left", "center", "center right"]:
-            y = (parent_axis_bbox.height - height) / 2 / parent_axis_bbox.height
+            y = (parent_axis_bbox.height - inset_height) / 2 / parent_axis_bbox.height
         elif location in ["lower left", "lower center", "lower right"]:
             y = pad_y / parent_axis_bbox.height
     # If coordinates are passed, calculate references with respect to that
@@ -654,8 +653,16 @@ def inset_map(ax,
             y = coords[1] - inset_height / 2
         elif location in ["lower left", "lower center", "lower right"]:
             y = coords[1]
+    
+    ## DRAWING ##
+    # Expressing the desired height and width of the inset map as a fraction of the parent
+    # We do this because, later on, we're assuming everything is in ax.transAxes
+    # which ranges from 0 to 1, as a fraction of the parent axis
+    inset_width = inset_width / parent_axis_bbox.width
+    inset_height = inset_height / parent_axis_bbox.height
 
     # Creating the new inset map with the specified height, width, and location
+    # by default, inset_axes requires everything to be in ax.transAxes coordinates
     iax = ax.inset_axes([x, y, inset_width, inset_height], **kwargs)
     
     # We also set the anchor here, such that it stays fixed when any resizing takes place
@@ -670,7 +677,8 @@ def inset_map(ax,
     return iax
 
 # This function will display the extent/bounds of one axis on the other
-# This is used both ways, from either parent -> inset and inset -> parent
+# This is can be used on an inset map to show where the bounds of the parent axis lay
+# or, it is called by detail_indicator to show where the bounds of an inset axis lay on the parent
 # here, PAX means "plotting axis" (where the indicator is plotted) 
 # and BAX means "bounds axis" (where the extent is derived from)
 def indicate_extent(pax: imt._TYPE_EXTENT["pax"],
@@ -712,6 +720,7 @@ def indicate_extent(pax: imt._TYPE_EXTENT["pax"],
     xrange = abs(xmax-xmin)
 
     # Buffering the points, if desired
+    # Note that this is treated as a percentage increase/decrease!
     if pad is not None and isinstance(pad, (float, int)):
         pad_data = min(yrange, xrange)*pad
     else:
@@ -756,6 +765,7 @@ def indicate_extent(pax: imt._TYPE_EXTENT["pax"],
         pass
 
 # Detail indicators are for when the inset map shows a zoomed-in section of the parent map
+# This will also, call extent_indicator too, as the two are linked
 # here, PAX means "parent axis" (where the indicator is plotted) 
 # and IAX means "inset axis" (which contains the detail/zoomed-in section)
 def indicate_detail(pax: imt._TYPE_EXTENT["pax"], 
@@ -794,7 +804,7 @@ def indicate_detail(pax: imt._TYPE_EXTENT["pax"],
     connector_width = imf._validate(imt._VALIDATE_DETAIL, "connector_width", connector_width)
 
     # Drawing the extent indicator on the main map
-    # Setting to_return="ax" gets us the corners of the patch in pax.transaxes coordinates
+    # Setting to_return="ax" gets us the corners of the patch in pax.transAxes coordinates
     # We only need the first 4 points - the fifth is a repeated point to enforce "closure"
     corners_extent = indicate_extent(pax=pax, bax=iax, pcrs=pcrs, bcrs=icrs, 
                                      straighten=straighten, pad=pad, plot=plot,
@@ -811,6 +821,11 @@ def indicate_detail(pax: imt._TYPE_EXTENT["pax"],
     center_inset_x = sum([p[0] for p in corners_inset]) / len(corners_inset)
     center_inset_y = sum([p[1] for p in corners_inset]) / len(corners_inset)
 
+    ## CONNECTION ##
+    # This part is quite tricky, and involves connecting the inset map to its extent indicator
+    # To do so, we make an educated guess about which corners we need to connect, 
+    # based on the relative position of each object
+    
     # If our extent is horizontally centered with our inset, connect just the left or right edges
     if (abs(center_extent_y - center_inset_y) / abs(center_inset_y)) <= 0.15:
         if center_extent_x > center_inset_x:
@@ -819,6 +834,7 @@ def indicate_detail(pax: imt._TYPE_EXTENT["pax"],
         else:
             # extent rights + inset lefts
             connections = [[corners_extent[3], corners_inset[0]], [corners_extent[2], corners_inset[1]]]
+    
     # If instead our extent is vertically centered, connect just the top or bottom edges
     elif (abs(center_extent_x - center_inset_x) / abs(center_inset_x)) <= 0.15:
         if center_extent_y > center_inset_y:
@@ -827,7 +843,8 @@ def indicate_detail(pax: imt._TYPE_EXTENT["pax"],
         else:
             # extent tops + inset bottoms
             connections = [[corners_extent[1], corners_inset[0]], [corners_extent[2], corners_inset[3]]]
-    # The most common cases will be when the inset is in the corner...
+    
+    # The most common cases will be when the inset is in a corner...
     elif center_extent_x > center_inset_x and center_extent_y > center_inset_y:
         # top-left and bottom-right corners for each
         connections = [[corners_extent[1], corners_inset[1]], [corners_extent[3], corners_inset[3]]]
@@ -841,11 +858,20 @@ def indicate_detail(pax: imt._TYPE_EXTENT["pax"],
         # top-right and bottom-left corners for each
         connections = [[corners_extent[2], corners_inset[2]], [corners_extent[0], corners_inset[0]]]
 
+    ## PLOTTING ##
     if plot == True:
+        # A manual plot call, to connect the corners to each other
         for c in connections:
+            # This is listed as [extent_x, inset_x], [extent_y, inset_y]
             pax.plot([c[0][0], c[1][0]], [c[0][1], c[1][1]], 
                     color=connector_color, linewidth=connector_width, transform=pax.transAxes)
+        
+        # Also updating the linewidth and color of the inset map itsef, to match
+        for a in ["top","bottom","left","right"]:
+            iax.spines[a].set_linewidth(connector_width*1.2) # making this slightly thicker
+            iax.spines[a].set_edgecolor(connector_color)
     
+    # Returning as requested
     if to_return is None:
         pass 
     elif to_return == "connectors" or to_return == "lines":

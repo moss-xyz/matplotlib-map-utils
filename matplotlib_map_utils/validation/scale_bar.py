@@ -7,12 +7,10 @@
 
 # Geo packages
 import pyproj
-# Graphical packages
-import matplotlib
 # matplotlib's useful validation functions
 import matplotlib.rcsetup
 # The types we use in this script
-from typing import Tuple, TypedDict, Literal, get_args
+from typing import TypedDict, Literal, get_args
 # Finally, the validation functions
 from . import functions as vf
 

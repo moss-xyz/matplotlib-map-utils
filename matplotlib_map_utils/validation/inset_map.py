@@ -6,15 +6,14 @@
 ### IMPORTING PACKAGES ###
 
 # Geo packages
-import matplotlib.axis
-import matplotlib.pyplot
+import matplotlib.axes
 import pyproj
 # Graphical packages
 import matplotlib
 # matplotlib's useful validation functions
 import matplotlib.rcsetup
 # The types we use in this script
-from typing import Tuple, TypedDict, Literal, get_args
+from typing import TypedDict, Literal
 # Finally, the validation functions
 from . import functions as vf
 
@@ -37,8 +36,8 @@ class _TYPE_INSET(TypedDict, total=False):
     coords: tuple[int | float, int | float] | list[int | float, int | float] # each int or float should be between -inf and inf
 
 class _TYPE_EXTENT(TypedDict, total=False):
-    pax: matplotlib.axis.Axis # any Matplotlib Axis
-    bax: matplotlib.axis.Axis # any Matplotlib Axis
+    pax: matplotlib.axes.Axes # any Matplotlib Axes
+    bax: matplotlib.axes.Axes # any Matplotlib Axes
     pcrs: str | int | pyproj.CRS # should be a valid cartopy or pyproj crs, or a string or int that can be converted to that
     bcrs: str | int | pyproj.CRS # should be a valid cartopy or pyproj crs, or a string or int that can be converted to that
     straighten: bool # either true or false
@@ -61,15 +60,15 @@ class _TYPE_DETAIL(TypedDict, total=False):
 
 _VALIDATE_INSET = {
     "location":{"func":vf._validate_list, "kwargs":{"list":["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]}},
-    "size":{"func":vf._validate_or, "kwargs":{"funcs":[vf._validate_range, vf._validate_and], "kwargs":[{"min":0, "none_ok":True}, {"funcs":[vf._validate_tuple, vf._validate_iterable], "kwargs":[{"length":2, "types":[float, int]}, {"func":vf._validate_range, "kwargs":{"min":0}}]}]}},
-    "pad":{"func":vf._validate_or, "kwargs":{"funcs":[vf._validate_range, vf._validate_and], "kwargs":[{"min":0, "none_ok":True}, {"funcs":[vf._validate_tuple, vf._validate_iterable], "kwargs":[{"length":2, "types":[float, int]}, {"func":vf._validate_range, "kwargs":{"min":0}}]}]}},
-    "coords":{"func":vf._validate_tuple, "kwargs":{"length":2, "types":[float, int], "none_ok":True}},
-    "to_plot":{"func":vf._validate_iterable, "kwargs":{"func":vf._validate_keys, "kwargs":{"keys":["data","kwargs"], "none_ok":True}}},
+    "size":{"func":vf._validate_or, "kwargs":{"funcs":[vf._validate_range, vf._validate_and], "kwargs":[{"min":0, "none_ok":True}, {"funcs":[vf._validate_tuple, vf._validate_iterable], "kwargs":[{"length":2, "types":[float, int]}, {"func":vf._validate_range, "kwargs":{"min":0}}]}]}}, # between 0 and inf, or a two-tuple of (x,y) size, each between 0 and inf
+    "pad":{"func":vf._validate_or, "kwargs":{"funcs":[vf._validate_range, vf._validate_and], "kwargs":[{"min":0, "none_ok":True}, {"funcs":[vf._validate_tuple, vf._validate_iterable], "kwargs":[{"length":2, "types":[float, int]}, {"func":vf._validate_range, "kwargs":{"min":0}}]}]}}, # between 0 and inf, or a two-tuple of (x,y) size, each between 0 and inf
+    "coords":{"func":vf._validate_tuple, "kwargs":{"length":2, "types":[float, int], "none_ok":True}}, # a two-tuple of coordinates where you want to place the inset map
+    "to_plot":{"func":vf._validate_iterable, "kwargs":{"func":vf._validate_keys, "kwargs":{"keys":["data","kwargs"], "none_ok":True}}}, # a list of dictionaries, where each contains "data" and "kwargs" keys
 }
 
 _VALIDATE_EXTENT = {
-    "pax":{"func":vf._validate_type, "kwargs":{"match":matplotlib.axis.Axis}}, # any Matplotlib Axis
-    "bax":{"func":vf._validate_type, "kwargs":{"match":matplotlib.axis.Axis}}, # any Matplotlib Axis
+    "pax":{"func":vf._validate_type, "kwargs":{"match":matplotlib.axes.Axes}}, # any Matplotlib Axes
+    "bax":{"func":vf._validate_type, "kwargs":{"match":matplotlib.axes.Axes}}, # any Matplotlib Axes
     "pcrs":{"func":vf._validate_projection}, # any valid projection input for PyProj
     "bcrs":{"func":vf._validate_projection}, # any valid projection input for PyProj
     "straighten":{"func":vf._validate_type, "kwargs":{"match":bool}}, # true or false

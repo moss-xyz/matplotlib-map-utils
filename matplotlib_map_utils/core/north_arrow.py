@@ -15,9 +15,7 @@ import numpy
 import cartopy
 import pyproj
 # Graphical packages
-import matplotlib
 import matplotlib.artist
-import matplotlib.pyplot
 import matplotlib.patches
 import matplotlib.patheffects
 import matplotlib.offsetbox

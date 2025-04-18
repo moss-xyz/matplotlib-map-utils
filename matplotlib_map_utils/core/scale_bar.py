@@ -16,7 +16,6 @@ import pyproj
 from great_circle_calculator.great_circle_calculator import distance_between_points
 # Graphical packages
 import PIL.Image
-import matplotlib
 import matplotlib.artist
 import matplotlib.lines
 import matplotlib.pyplot
