@@ -103,7 +103,7 @@ class InsetMap(matplotlib.artist.Artist):
 
     @size.setter
     def size(self, val):
-        val = imf._validate(imt._VALIDATE_INSET, "location", val)
+        val = imf._validate(imt._VALIDATE_INSET, "size", val)
         if val is not None:
             self._size = val
         else:
@@ -182,7 +182,10 @@ class InsetMap(matplotlib.artist.Artist):
         # If data is passed to to_plot, then we plot that on the newly created axis as well
         for d in self._to_plot:
             if d is not None:
-                d["data"].plot(ax=iax, **d["kwargs"])
+                if "kwargs" in d.keys():
+                    d["data"].plot(ax=iax, **d["kwargs"])
+                else:
+                    d["data"].plot(ax=iax)
         # Instead of "drawing", we have to return the axis, for further manipulation
         return iax
     
@@ -599,9 +602,6 @@ def inset_map(ax,
         inset_width = size 
         inset_height = size
 
-    # Getting the current dimensions of the parent axis in inches (ignoring ticks and labels - just the axis itself)
-    parent_axis_bbox = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
-
     ## PADDING ##
     # Padding is expressed in inches here, unlike traditional matplotlib
     # which expresses it as a fraction of the font size
@@ -610,6 +610,19 @@ def inset_map(ax,
     else:
         pad_x = pad 
         pad_y = pad
+    
+    ## RESIZING ##
+    # Getting the current dimensions of the parent axis in inches (ignoring ticks and labels - just the axis itself)
+    parent_axis_bbox = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+
+    # Expressing the desired height and width of the inset map as a fraction of the parent
+    # We do this because, later on, we're assuming everything is in ax.transAxes
+    # which ranges from 0 to 1, as a fraction of the parent axis
+    inset_width = inset_width / parent_axis_bbox.width
+    inset_height = inset_height / parent_axis_bbox.height
+    # and doing the same for the padding
+    pad_x = pad_x / parent_axis_bbox.width
+    pad_y = pad_y / parent_axis_bbox.height
 
     ## PLACEMENT ##
     # Calculating the start coordinate (which is always the bottom-left corner) of the inset map
@@ -617,18 +630,18 @@ def inset_map(ax,
     if coords is None:
         # First, the x coordinate
         if location in ["upper left", "center left", "lower left"]:
-            x = pad_x / parent_axis_bbox.width
+            x = pad_x
         elif location in ["upper center", "center", "lower center"]:
-            x = (parent_axis_bbox.width - inset_width) / 2 / parent_axis_bbox.width
+            x = (1 - (inset_width + pad_x)) / 2
         elif location in ["upper right", "center right", "lower right"]:
-            x = ((parent_axis_bbox.width - inset_width - pad_x) / parent_axis_bbox.width)
+            x = 1 - (inset_width + pad_x)
         # Then the y coordinate
         if location in ["upper left", "upper center", "upper right"]:
-            y = ((parent_axis_bbox.height - inset_height - pad_y) / parent_axis_bbox.height)
+            y = 1 - (inset_height + pad_y)
         elif location in ["center left", "center", "center right"]:
-            y = (parent_axis_bbox.height - inset_height) / 2 / parent_axis_bbox.height
+            y = (1 - (inset_height + pad_y)) / 2
         elif location in ["lower left", "lower center", "lower right"]:
-            y = pad_y / parent_axis_bbox.height
+            y = pad_y
     # If coordinates are passed, calculate references with respect to that
     # NOTE: in this case, padding is ignored!
     else:
@@ -644,24 +657,18 @@ def inset_map(ax,
         if location in ["upper left", "center left", "lower left"]:
             x = coords[0]
         elif location in ["upper center", "center", "lower center"]:
-            x = coords[0] - inset_width / 2
+            x = coords[0] - (inset_width / 2)
         elif location in ["upper right", "center right", "lower right"]:
             x = coords[0] - inset_width
         # Then the y coordinate
         if location in ["upper left", "upper center", "upper right"]:
             y = coords[1] - inset_height
         elif location in ["center left", "center", "center right"]:
-            y = coords[1] - inset_height / 2
+            y = coords[1] - (inset_height / 2)
         elif location in ["lower left", "lower center", "lower right"]:
             y = coords[1]
     
     ## DRAWING ##
-    # Expressing the desired height and width of the inset map as a fraction of the parent
-    # We do this because, later on, we're assuming everything is in ax.transAxes
-    # which ranges from 0 to 1, as a fraction of the parent axis
-    inset_width = inset_width / parent_axis_bbox.width
-    inset_height = inset_height / parent_axis_bbox.height
-
     # Creating the new inset map with the specified height, width, and location
     # by default, inset_axes requires everything to be in ax.transAxes coordinates
     iax = ax.inset_axes([x, y, inset_width, inset_height], **kwargs)
