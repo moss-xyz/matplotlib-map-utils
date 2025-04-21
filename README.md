@@ -1,10 +1,12 @@
-# matplotlib-map-utils
+![matplotlib_map_utils logo](matplotlib_map_utils/docs/assets/mmu_logo_w_elements.png)
  
 ---
 
-**Documentation**: See `docs` folder
+**Documentation:** See `docs` folder
 
-**Source Code**: [Available on GitHub](https://github.com/moss-xyz/matplotlib-map-utils)
+**Source Code:** [Available on GitHub](https://github.com/moss-xyz/matplotlib-map-utils)
+
+**Feedback:** I welcome any and all feedback! See the *Development Notes* below for more details.
 
 ---
 
@@ -12,15 +14,23 @@
 
 `matplotlib_map_utils` is intended to be a package that provides various functions and objects that assist with the the creation of maps using [`matplotlib`](https://matplotlib.org/stable/).
 
-As of `v2.x` (the current version), this includes two tools and one utility: 
+As of `v3.x` (the current version), this includes three-ish elements: 
 
-* `north_arrow.py`, which generates a high quality, context-aware north arrow for a given plot. 
+* `north_arrow.py`, for adding a north arrow to a given plot. 
 
-* `scale_bar.py`, which generates a high quality, context-aware scale bar to a given plot. 
+* `scale_bar.py`, for adding a scale bar to a given plot. 
+
+* `inset_map.py`, for adding inset maps and detail/extent indicators to a given plot. 
+
+The three elements listed above are all intended to be high-resolution, easily modifiable, and context-aware, relative to your specific plot.
+
+This package also contains a single utility object:
 
 * `usa.py`, which contains a class that helps filter for states and territories within the USA based on given characteristics.
 
-Future releases (if the project is continued) might provide a similar tool inset maps, or other functions that I have created myself that give more control in the formatting of maps.
+Together, these allow for the easy creation of a map such as the following:
+
+![Map with all common elements added](matplotlib_map_utils/docs/assets/readme_bigmap.png)
 
 ---
 
@@ -44,7 +54,8 @@ The requirements for this package are:
 
 ### Package Structure
 
-The package is arrayed in the following way:
+<details>
+<summary><i>The package is arrayed in the following way:</i></summary>
 
 ```bash
 package_name/
@@ -52,17 +63,20 @@ package_name/
 │
 ├── core/
 │   ├── __init__.py
+│   ├── inset_map.py
 │   ├── north_arrow.py
 │   ├── scale_bar.py
 ├── validation/
 │   ├── __init__.py
 │   ├── functions.py
+│   └── inset_map.py
 │   ├── north_arrow.py
 │   └── scale_bar.py
 ├── defaults/
 │   ├── __init__.py
 │   ├── north_arrow.py
 │   └── scale_bar.py
+│   └── inset_map.py
 ├── utils/
 │   ├── __init__.py
 │   ├── usa.py
@@ -77,9 +91,13 @@ Where:
 
 * `defaults` contains default settings for each object at different paper sizes
 
+* `utils` contains utility functions and objects
+
+</details>
+
 ---
 
-### North Arrow
+### 🧭 North Arrow
 
 <details>
 <summary><i>Expand instructions</i></summary>
@@ -90,6 +108,8 @@ Importing the North Arrow functions and classes can be done like so:
 
 ```py
 from matplotlib_map_utils.core.north_arrow import NorthArrow, north_arrow
+from matplotlib_map_utils.core import NorthArrow, north_arrow # also valid
+from matplotlib_map_utils import NorthArrow, north_arrow # also valid
 ```
 
 The quickest way to add a single north arrow to a single plot is to use the `north_arrow` function:
@@ -153,7 +173,7 @@ Instructions for how to do so can be found in `docs\howto_north_arrow`.
 
 ---
 
-### Scale Bar
+### 📏 Scale Bar
 
 <details>
 <summary><i>Expand instructions</i></summary>
@@ -164,6 +184,8 @@ Importing the Scale Bar functions and classes can be done like so:
 
 ```py
 from matplotlib_map_utils.core.scale_bar import ScaleBar, scale_bar
+from matplotlib_map_utils.core import ScaleBar, scale_bar # also valid
+from matplotlib_map_utils import ScaleBar, scale_bar # also valid
 ```
 
 There are two available styles for the scale bars: `boxes` and `ticks`. The quickest way to add one to a single plot is to use the `scale_bar` function:
@@ -183,7 +205,7 @@ An object-oriented approach is also supported:
 fig, ax = matplotlib.pyplot.subplots(1,1, figsize=(5,5), dpi=150)
 # Adding a scale bar to the upper-right corner of the axis, in the same projection as whatever geodata you plotted
 # Here, we change the boxes to "ticks"
-sb = ScaleBar(location="upper right", style="boxes", bar={"projection":3857})
+sb = ScaleBar(location="upper right", style="ticks", bar={"projection":3857})
 # Adding the artist to the plot
 ax.add_artist(sb)
 ```
@@ -219,7 +241,67 @@ Refer to `docs\howto_scale_bar` for details on how to customize each facet of th
 
 ---
 
-### Utilities
+### 🗺️ Inset Map
+
+<details>
+<summary><i>Expand instructions</i></summary>
+
+#### Quick Start
+
+Importing the Inset Map functions and classes can be done like so:
+
+```py
+from matplotlib_map_utils.core.inset_map import InsetMap, inset_map, ExtentIndicator, indicate_extent, DetailIndicator, indicate_detail
+from matplotlib_map_utils.core import InsetMap, inset_map, ExtentIndicator, indicate_extent, DetailIndicator, indicate_detail # also valid
+from matplotlib_map_utils import InsetMap, inset_map, ExtentIndicator, indicate_extent, DetailIndicator, indicate_detail # also valid
+```
+
+The quickest way to add a single inset map to an existing plot is the `inset_map` function:
+
+```python
+# Setting up a plot
+fig, ax = matplotlib.pyplot.subplots(1,1, figsize=(5,5), dpi=150)
+# Adding an inset map to the upper-right corner of the axis
+iax = inset_map(ax=ax, location="upper right", size=0.75, pad=0, xticks=[], yticks=[])
+# You can now plot additional data to iax as desired
+```
+
+An object-oriented approach is also supported:
+
+```python
+# Setting up a plot
+fig, ax = matplotlib.pyplot.subplots(1,1, figsize=(5,5), dpi=150)
+# Creating an object for the inset map
+im = InsetMap(location="upper right", size=0.75, pad=0, xticks=[], yticks=[])
+# Adding the inset map template to the plot
+iax = im.create(ax=ax)
+# You can now plot additional data to iax as desired
+```
+
+Both of these will create an output like the following:
+
+![Example inset map](matplotlib_map_utils/docs/assets/readme_insetmap.png)
+
+#### Extent and Detail Indicators
+
+Inset maps can be paired with either an extent or detail indicator, to provide additional geographic context to the inset map
+
+```python
+indicate_extent(inset_axis, parent_axis, inset_crs, parent_crs, ...)
+indicate_detail(parent_axis, inset_axis, parent_crs, inset_crs, ...)
+```
+
+This will create an output like the following (extent indicator on the left, detail indicator on the right):
+
+![Customized scale bar](matplotlib_map_utils/docs/assets/readme_indicators.png)
+
+Refer to `docs\howto_inset_map` for details on how to customize the inset map and indicators to your liking.
+
+</details>
+
+---
+
+### 🛠️ Utilities
 
 <details>
 <summary><i>Expand instructions</i></summary>
@@ -265,23 +347,31 @@ Two more projects assisted with the creation of this script:
 
 #### Releases
 
-- `v2.0.1`: Fixed a bug in the `dual_bars()` function that prevented empty dictionaries to be passed. Also added a warning when auto-calculated bar widths appear to be exceeding the dimension of the axis (usually occurs when the axis is <2 kilometeres or miles long, depending on the units selected).
+- `v1.0.x`: Initial releases featuring the North Arrow element, along with some minor bug fixes.
+
+- `v2.0.0`: Initial release of the Scale Bar element.
+
+- `v2.0.1`: Fixed a bug in the `dual_bars()` function that prevented empty dictionaries to be passed. Also added a warning when auto-calculated bar widths appear to be exceeding the dimension of the axis (usually occurs when the axis is <2 kilometers or miles long, depending on the units selected).
 
 - `v2.0.2`: Changed f-string formatting to alternate double and single quotes, so as to maintain compatibility with versions of Python before 3.12 (see [here](https://github.com/moss-xyz/matplotlib-map-utils/issues/3)). However, this did reveal that another aspect of the code, namely concatenating `type` in function arguments, requires 3.10, and so the minimum python version was incremented.
 
 - `v2.1.0`: Added a utility class, `USA`, for filtering subsets of US states and territories based on FIPS code, name, abbreviation, region, division, and more. This is considered a beta release, and might be subject to change later on.
 
+- `v3.0.0`: Release of inset map and extent and detail indicator classes and functions.
+
 #### Future Roadmap
 
-With the release of `v2.x`, and the addition of **Scale Bar** tools, this project has achieved the two main objectives that I set out to.
+With the release of `v3.x`, this project has achieved full coverage of the "main" map elements I think are necessary.
 
 If I continue development of this project, I will be looking to add or fix the following features:
+
+* For all: switch to a system based on Pydantic for easier type validation
 
 * **North Arrow:** 
 
   * Copy the image-rendering functionality of the Scale Bar to allow for rotation of the entire object, label and arrow together
   
-  * Create more styles for the arrow, potentiallly including a compass rose and a line-only arrow
+  * Create more styles for the arrow, potentially including a compass rose and a line-only arrow
 
 * **Scale Bar:**
 
@@ -291,7 +381,13 @@ If I continue development of this project, I will be looking to add or fix the f
 
   * Clean up the variable naming scheme (consistency on `loc` vs `position`, `style` vs `type`, etc.)
 
-  * Create more styles for the bar, potentiallly including dual boxes and a sawtooth bar
+  * Create more styles for the bar, potentially including dual boxes and a sawtooth bar
+
+* **Inset Map:**
+
+  * Clean up the way that connectors are drawn for detail indicators
+
+  * New functionality for placing multiple inset maps at once (with context-aware positioning to prevent overlap with each other)
 
 * **Utils:**
 
@@ -301,9 +397,7 @@ If I continue development of this project, I will be looking to add or fix the f
 
   * (USA): Stronger typing options, so you don't have to recall which `region` or `division` types are available, etc.
 
-If that goes well, `v3` can then either create a tool for generating inset maps (which `matplotlib` has *some* support for), or the various functions that I have created in the past that assist with formatting a map "properly", such as centering on a given object.
-
-I am also open to ideas for other extensions to create!
+Future releases (if the project is continued) will probably focus on other functions that I have created myself that give more control in the formatting of maps. I am also open to ideas for other extensions to create!
 
 #### Support and Contributions
 

@@ -7,12 +7,10 @@
 
 # Geo packages
 import pyproj
-# Graphical packages
-import matplotlib
 # matplotlib's useful validation functions
 import matplotlib.rcsetup
 # The types we use in this script
-from typing import Tuple, TypedDict, Literal, get_args
+from typing import TypedDict, Literal, get_args
 # Finally, the validation functions
 from . import functions as vf
 
@@ -161,7 +159,7 @@ class _TYPE_AOB(TypedDict, total=False):
     # bbox_transform: None # NOTE: currently unvalidated, use at your own risk!
 
 ### VALIDITY DICTS ###
-# These compile the functions above^, as well as matplotlib's built-in validity functions
+# These compile the functions in validation/functions, as well as matplotlib's built-in validity functions
 # into dictionaries that can be used to validate all the inputs to a dictionary at once
 
 _VALIDATE_PRIMARY = {
@@ -173,7 +171,7 @@ _VALID_BAR_TICK_LOC = get_args(_TYPE_BAR.__annotations__["tick_loc"])
 _VALID_BAR_MINOR_TYPE = get_args(_TYPE_BAR.__annotations__["minor_type"]) 
 
 _VALIDATE_BAR = {
-    "projection":{"func":vf._validate_projection}, # must be a valid CRS
+    "projection":{"func":vf._validate_projection, "kwargs":{"none_ok":False}}, # must be a valid CRS
     "unit":{"func":vf._validate_list, "kwargs":{"list":list(units_standard.keys()), "none_ok":True}}, # any of the listed unit values are accepted
     "rotation":{"func":vf._validate_range, "kwargs":{"min":-360, "max":360, "none_ok":True}}, # between -360 and 360 degrees
     "max":{"func":vf._validate_range, "kwargs":{"min":0, "max":None, "none_ok":True}}, # between 0 and inf

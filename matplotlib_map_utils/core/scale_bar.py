@@ -9,27 +9,21 @@
 import warnings
 import math
 import copy
-import re
 # Math packages
 import numpy
 # Geo packages
-import cartopy
 import pyproj
 from great_circle_calculator.great_circle_calculator import distance_between_points
 # Graphical packages
 import PIL.Image
-import matplotlib
 import matplotlib.artist
 import matplotlib.lines
 import matplotlib.pyplot
 import matplotlib.patches
 import matplotlib.patheffects
 import matplotlib.offsetbox
-import matplotlib.transforms
 import matplotlib.font_manager
 from matplotlib.backends.backend_agg import FigureCanvasAgg
-# matplotlib's useful validation functions
-import matplotlib.rcsetup
 # The types we use in this script
 from typing import Literal
 # The information contained in our helper scripts (validation and defaults)

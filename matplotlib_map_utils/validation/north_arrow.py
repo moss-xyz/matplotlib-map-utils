@@ -90,7 +90,7 @@ class _TYPE_ROTATION(TypedDict, total=False):
     coords: Tuple[float | int, float | int] # only required if degrees is None: should be a tuple of coordinates in the relevant reference window
 
 ### VALIDITY DICTS ###
-# These compile the functions above^, as well as matplotlib's built-in validity functions
+# These compile the functions in validation/functions, as well as matplotlib's built-in validity functions
 # into dictionaries that can be used to validate all the inputs to a dictionary at once
 
 _VALIDATE_PRIMARY = {

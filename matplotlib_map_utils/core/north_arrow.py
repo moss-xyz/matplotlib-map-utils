@@ -15,14 +15,10 @@ import numpy
 import cartopy
 import pyproj
 # Graphical packages
-import matplotlib
 import matplotlib.artist
-import matplotlib.pyplot
 import matplotlib.patches
 import matplotlib.patheffects
 import matplotlib.offsetbox
-# matplotlib's useful validation functions
-import matplotlib.rcsetup
 # The types we use in this script
 from typing import Literal
 # The information contained in our helper scripts (validation and defaults)

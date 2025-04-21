@@ -20,7 +20,7 @@ def _validate_list(prop, val, list, none_ok=False):
         raise ValueError(f"'{val}' is not a valid value for {prop}, please provide a value in this list: {list}")
     return val
 
-def _validate_range(prop, val, min, max, none_ok=False):
+def _validate_range(prop, val, min, max=None, none_ok=False):
     if none_ok==False and val is None:
         raise ValueError(f"None is not a valid value for {prop}, please provide a value between {min} and {max}")
     elif none_ok==True and val is None:
@@ -69,7 +69,7 @@ def _validate_tuple(prop, val, length, types, none_ok=False):
         raise ValueError(f"None is not a valid value for {prop}, please provide a tuple of length {length} instead")
     elif none_ok==True and val is None:
         return val
-    elif type(val)!=tuple:
+    elif not isinstance(val, (tuple, list)):
         raise ValueError(f"{val} is not a valid value for {prop}, please provide a tuple of length {length} instead")
     elif len(val)!=length:
         raise ValueError(f"{val} is not a valid value for {prop}, please provide a tuple of length {length} instead")
@@ -117,7 +117,7 @@ def _validate_crs(prop, val, rotation_dict, none_ok=False):
         try:
             val = pyproj.CRS.from_user_input(val)
         except:
-            raise Exception(f"Invalid CRS supplied ({val}), please provide a valid CRS input for PyProj instead")
+            raise Exception(f"Invalid CRS supplied ({val}), please provide a valid CRS input that PyProj can use instead")
     return val
 
 # A simpler validation function for CRSs
@@ -128,14 +128,14 @@ def _validate_projection(prop, val, none_ok=False):
         try:
             val = pyproj.CRS.from_user_input(val)
         except:
-            raise Exception(f"Invalid CRS supplied ({val}), please provide a valid CRS input for PyProj instead")
+            raise Exception(f"Invalid CRS supplied ({val}) for {prop}, please provide a valid CRS input that PyProj can use instead")
     return val    
 
-# It is specifically to apply another validation function to the items in a list 
+# This is specifically to apply another validation function to the items in a list 
 # Ex. if we want to validate a LIST of colors instead of a single color
 def _validate_iterable(prop, val, func, kwargs=None):
     # Making sure we wrap everything in a list
-    if type(val) not in [tuple, list]:
+    if not isinstance(val, (tuple, list)):
         val = [val]
     # Then, we apply our validation func with optional kwargs to each item in said list, relying on it to return an error value
     if kwargs is not None:
@@ -148,21 +148,57 @@ def _validate_iterable(prop, val, func, kwargs=None):
             v = func(v)
         return val
     
-# This is specifically to apply multiple validation functions to a value, if needed
+# This is to check for the structure of a dictionary-like object 
+def _validate_keys(prop, val, keys, none_ok=False):
+    if none_ok==False and val is None:
+        raise ValueError(f"None is not a valid value for {prop}, please provide a dictionary with keys {keys} instead")
+    elif none_ok==True and val is None:
+        return val
+    elif not isinstance(val, (dict)):
+        raise ValueError(f"{val} is not a valid value for {prop}, please provide a dictionary with keys {keys} instead")
+    else:
+        for k in val.keys():
+            if k not in keys:
+                raise ValueError(f"{k} is not a valid key for the items in {prop}, please provide a dictionary with keys {keys} instead")
+    return val
+
+# This is to apply multiple validation functions to a value, if needed - only one needs to pass
 # Ex. If an item can be a string OR a list of strings, we can use this to validate it
-# "labels":{"func":_validate_multiple, "kwargs":{"funcs":[_validate_type, _validate_list], "kwargs":[{"match":str, "none_ok":True}, {"list":["major","first_last","minor_all","minor_first"], "none_ok":True}]}}, # any string or any item in the list
-def _validate_multiple(prop, val, funcs, kwargs):
+def _validate_or(prop, val, funcs, kwargs):
+    success = False
     # Simply iterate through each func and kwarg
     for f,k in zip(funcs,kwargs):
         # We wrap the attempts in a try block to suppress the errors
         try:
-            v = f(prop=prop, val=v, **k)
+            val = f(prop=prop, val=val, **k)
              # If we pass, we can stop here and return the value
-            return val
+            success = True 
+            break
         except:
-            continue
-    # If we didn't return a value and exit the loop yet, then the passed value is incorrect, as we raise an error
-    raise ValueError(f"{val} is not a valid value for {prop}, please provide check the documentation")
+            pass
+    if success == False:
+        # If we didn't return a value and exit the loop yet, then the passed value is incorrect, as we raise an error
+        raise ValueError(f"{val} is not a valid value for {prop}, please check the documentation")
+    else:
+        return val
+
+# This is the same, but ALL need to pass
+def _validate_and(prop, val, funcs, kwargs):
+    success = True
+    # Simply iterate through each func and kwarg
+    for f,k in zip(funcs,kwargs):
+        # We wrap the attempts in a try block to suppress the errors
+        try:
+            val = f(prop=prop, val=val, **k)
+        except:
+             # If we fail, we can stop here and return the value
+            success = False
+            break
+    if success == False:
+        # If we didn't return a value and exit the loop yet, then the passed value is incorrect, as we raise an error
+        raise ValueError(f"{val} is not a valid value for {prop}, please check the documentation")
+    else:
+        return val
 
 # This final one is used for keys that are not validated
 def _skip_validation(val, none_ok=False):
@@ -221,7 +257,7 @@ def _validate_dict(input_dict, default_dict, functions, to_validate=None, return
 def _validate(validate_dict, prop, val, return_val=True, kwargs={}):
     fd = validate_dict[prop]
     func = fd["func"]
-    # Our custom functions always have this dictionary key in them, so we know what form they take
+    # Most of our custom functions always have this dictionary key in them, so we know what form they take
     if "kwargs" in fd:
         val = func(prop=prop, val=val, **(fd["kwargs"] | kwargs))
     # The matplotlib built-in functions DON'T have that, and only ever take the one value
