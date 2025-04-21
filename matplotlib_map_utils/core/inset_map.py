@@ -836,7 +836,7 @@ def indicate_detail(pax: imt._TYPE_EXTENT["pax"],
     # based on the relative position of each object
     
     # If our extent is horizontally centered with our inset, connect just the left or right edges
-    if (abs(center_extent_y - center_inset_y) / abs(center_inset_y)) <= 0.15:
+    if (abs(center_extent_y - center_inset_y) / abs(center_inset_y)) <= 0.30:
         if center_extent_x > center_inset_x:
             # extent lefts + inset rights
             connections = [[corners_extent[0], corners_inset[3]], [corners_extent[1], corners_inset[2]]]
@@ -845,7 +845,7 @@ def indicate_detail(pax: imt._TYPE_EXTENT["pax"],
             connections = [[corners_extent[3], corners_inset[0]], [corners_extent[2], corners_inset[1]]]
     
     # If instead our extent is vertically centered, connect just the top or bottom edges
-    elif (abs(center_extent_x - center_inset_x) / abs(center_inset_x)) <= 0.15:
+    elif (abs(center_extent_x - center_inset_x) / abs(center_inset_x)) <= 0.30:
         if center_extent_y > center_inset_y:
             # extent bottoms + inset tops
             connections = [[corners_extent[0], corners_inset[1]], [corners_extent[3], corners_inset[2]]]
