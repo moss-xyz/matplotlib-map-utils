@@ -192,6 +192,8 @@ There are two available styles for the scale bars: `boxes` and `ticks`. The quic
 
 ```python
 # Setting up a plot
+# NOTE: you MUST set the desired DPI here, when the subplots are created
+# so that the scale_bar's DPI matches!
 fig, ax = matplotlib.pyplot.subplots(1,1, figsize=(5,5), dpi=150)
 # Adding a scale bar to the upper-right corner of the axis, in the same projection as whatever geodata you plotted
 # Here, this scale bar will have the "boxes" style
@@ -202,6 +204,8 @@ An object-oriented approach is also supported:
 
 ```python
 # Setting up a plot
+# NOTE: you MUST set the desired DPI here, when the subplots are created
+# so that the scale_bar's DPI matches!
 fig, ax = matplotlib.pyplot.subplots(1,1, figsize=(5,5), dpi=150)
 # Adding a scale bar to the upper-right corner of the axis, in the same projection as whatever geodata you plotted
 # Here, we change the boxes to "ticks"
