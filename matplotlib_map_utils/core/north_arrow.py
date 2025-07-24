@@ -45,7 +45,8 @@ class NorthArrow(matplotlib.artist.Artist):
                        scale: None | float | int=None,
                        base: None | bool | nat._TYPE_BASE = None, fancy: None | bool | nat._TYPE_FANCY = None, 
                        label: None | bool | nat._TYPE_LABEL = None, shadow: None | bool | nat._TYPE_SHADOW = None, 
-                       pack: None | nat._TYPE_PACK = None, aob: None | nat._TYPE_AOB = None, rotation: None | nat._TYPE_ROTATION = None):
+                       pack: None | nat._TYPE_PACK = None, aob: None | nat._TYPE_AOB = None, rotation: None | nat._TYPE_ROTATION = None,
+                       zorder: int=99,):
         # Starting up the object with the base properties of a matplotlib Artist
         matplotlib.artist.Artist.__init__(self)
         
@@ -56,6 +57,9 @@ class NorthArrow(matplotlib.artist.Artist):
         # Location is stored as just a string
         location =  naf._validate(nat._VALIDATE_PRIMARY, "location", location)
         self._location = location
+
+        zorder = naf._validate(nat._VALIDATE_PRIMARY, "zorder", zorder)
+        self._zorder = zorder
 
         # Scale will set to the default size if no value is passed
         scale = naf._validate(nat._VALIDATE_PRIMARY, "scale", scale)
@@ -84,11 +88,6 @@ class NorthArrow(matplotlib.artist.Artist):
         self._aob = aob
         rotation = naf._validate_dict(rotation, _DEFAULT_ROTATION | rotation, nat._VALIDATE_ROTATION, return_clean=True, parse_false=False)
         self._rotation = rotation
-    
-    # We do set the zorder for our objects individually,
-    # but we ALSO set it for the entire artist, here
-    # Thank you to matplotlib-scalebar for this tip
-    zorder = 99
 
     ## INTERNAL PROPERTIES ##
     # This allows for easy-updating of properties
@@ -204,6 +203,16 @@ class NorthArrow(matplotlib.artist.Artist):
         val = naf._validate_type("rotation", val, dict)
         val = naf._validate_dict(val, self._rotation, nat._VALIDATE_ROTATION, return_clean=True, parse_false=False)
         self._rotation = val
+
+    # zorder
+    @property
+    def zorder(self):
+        return self._zorder
+
+    @zorder.setter
+    def zorder(self, val: int):
+        val = naf._validate(nat._VALIDATE_PRIMARY, "zorder", val)
+        self._zorder = val
     
     ## COPY FUNCTION ##
     # This is solely to get around matplotlib's restrictions around re-using an artist across multiple axes
@@ -221,10 +230,12 @@ class NorthArrow(matplotlib.artist.Artist):
         na_artist = north_arrow(ax=self.axes, location=self._location, scale=self._scale, draw=False,
                                 base=self._base, fancy=self._fancy,
                                 label=self._label, shadow=self._shadow,
-                                pack=self._pack, aob=self._aob, rotation=self._rotation)
+                                pack=self._pack, aob=self._aob, rotation=self._rotation,
+                                zorder=self._zorder)
         # This handles the actual drawing
         na_artist.axes = self.axes
         na_artist.set_figure(self.axes.get_figure())
+        na_artist.set_zorder(self._zorder)
         na_artist.draw(renderer)
     
     ## SIZE FUNCTION ##
@@ -264,10 +275,12 @@ def north_arrow(ax, draw=True,
                 shadow: None | bool | nat._TYPE_SHADOW=None,
                 pack: None | nat._TYPE_PACK=None, 
                 aob: None | nat._TYPE_AOB=None, 
-                rotation: None | nat._TYPE_ROTATION=None):
+                rotation: None | nat._TYPE_ROTATION=None,
+                zorder: int=99,):
     
-    # First, validating the two primary inputs
+    # First, validating the three primary inputs
     _location = naf._validate(nat._VALIDATE_PRIMARY, "location", location)
+    _zorder = naf._validate(nat._VALIDATE_PRIMARY, "zorder", zorder)
 
     if scale is None:
         _scale = _DEFAULT_SCALE
@@ -373,6 +386,8 @@ def north_arrow(ax, draw=True,
         rotate_deg = _rotation["degrees"]
     # Then, apply the rotation to the aob box
     _iterative_rotate(aob_box, rotate_deg)
+
+    aob_box.set_zorder(_zorder)
     
     ## DRAWING ##
     # If this option is set to true, we'll draw the final artists as desired

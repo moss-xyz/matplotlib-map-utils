@@ -47,6 +47,7 @@ class ScaleBar(matplotlib.artist.Artist):
                        labels: None | bool | sbt._TYPE_LABELS=None,
                        text: None | bool | sbt._TYPE_TEXT=None,
                        aob: None | bool | sbt._TYPE_AOB=None,
+                       zorder: int=99,
                        ):
         # Starting up the object with the base properties of a matplotlib Artist
         matplotlib.artist.Artist.__init__(self)
@@ -62,8 +63,10 @@ class ScaleBar(matplotlib.artist.Artist):
         # Location is stored as just a string
         location = sbf._validate(sbt._VALIDATE_PRIMARY, "location", location)
         self._location = location
-        
 
+        zorder = sbf._validate(sbt._VALIDATE_PRIMARY, "zorder", zorder)
+        self._zorder = zorder
+        
         # Shared elements for both ticked and boxed bars
         # This validation is dependent on the type of bar we are constructing
         # So we modify the validation dictionary to remove the keys that are not relevant (throwing a warning if they exist in the input)
@@ -84,16 +87,8 @@ class ScaleBar(matplotlib.artist.Artist):
         text = sbf._validate_dict(text, _DEFAULT_TEXT, sbt._VALIDATE_TEXT, return_clean=True, to_validate="input")
         self._text = text
 
-        # pack = sbf._validate_dict(pack, _DEFAULT_PACK, sbt._VALIDATE_PACK, return_clean=True, to_validate="input")
-        # self._pack = pack
-
         aob = sbf._validate_dict(aob, _DEFAULT_AOB, sbt._VALIDATE_AOB, return_clean=True, to_validate="input")
         self._aob = aob
-    
-    # We do set the zorder for our objects individually,
-    # but we ALSO set it for the entire artist, here
-    # Thank you to matplotlib-scalebar for this tip
-    zorder = 99
 
     ## INTERNAL PROPERTIES ##
     # This allows for easy-updating of properties
@@ -188,6 +183,16 @@ class ScaleBar(matplotlib.artist.Artist):
         val = sbf._validate_dict(val, self._aob, sbt._VALIDATE_AOB, return_clean=True, parse_false=False)
         self._aob = val
     
+    # zorder
+    @property
+    def zorder(self):
+        return self._zorder
+
+    @zorder.setter
+    def zorder(self, val: int):
+        val = sbf._validate(sbt._VALIDATE_PRIMARY, "zorder", val)
+        self._zorder = val
+    
     ## COPY FUNCTION ##
     # This is solely to get around matplotlib's restrictions around re-using an artist across multiple axes
     # Instead, you can use add_artist() like normal, but with add_artist(na.copy())
@@ -203,10 +208,12 @@ class ScaleBar(matplotlib.artist.Artist):
         # Can re-use the drawing function we already established, but return the object instead
         sb_artist = scale_bar(ax=self.axes, style=self._style, location=self._location, draw=False,
                                     bar=self._bar, units=self._units, 
-                                    labels=self._labels, text=self._text, aob=self._aob)
+                                    labels=self._labels, text=self._text, aob=self._aob,
+                                    zorder=self._zorder)
         # This handles the actual drawing
         sb_artist.axes = self.axes
         sb_artist.set_figure(self.axes.get_figure())
+        sb_artist.set_zorder(self._zorder)
         sb_artist.draw(renderer)
     
     ## SIZE FUNCTION ##
@@ -242,12 +249,14 @@ def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
                   labels: None | bool | sbt._TYPE_LABELS=None,
                   text: None | bool | sbt._TYPE_TEXT=None,
                   aob: None | bool | sbt._TYPE_AOB=None,
+                  zorder: int=99,
                   return_aob: bool=True
                   ):
 
     ##### VALIDATION #####
     _style = sbf._validate(sbt._VALIDATE_PRIMARY, "style", style)
     _location = sbf._validate(sbt._VALIDATE_PRIMARY, "location", location)
+    _zorder = sbf._validate(sbt._VALIDATE_PRIMARY, "zorder", zorder)
 
     # This works the same as it does with the ScaleBar object(s)
     # If a dictionary is passed to any of the elements, first validate that it is "correct"
@@ -488,6 +497,8 @@ def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
     if _aob["alpha"]:
         aob_img.patch.set_alpha(_aob["alpha"])
         aob_img.patch.set_visible(True)
+    
+    aob_img.set_zorder(_zorder)
 
     # Finally, adding to the axis
     if draw == True:

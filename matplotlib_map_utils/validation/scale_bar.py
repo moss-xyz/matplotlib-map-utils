@@ -165,6 +165,7 @@ class _TYPE_AOB(TypedDict, total=False):
 _VALIDATE_PRIMARY = {
     "style":{"func":vf._validate_list, "kwargs":{"list":["ticks","boxes"]}},
     "location":{"func":vf._validate_list, "kwargs":{"list":["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]}},
+    "zorder":{"func":vf._validate_type, "kwargs":{"match":int}}, # only check that it is an int
 }
 
 _VALID_BAR_TICK_LOC = get_args(_TYPE_BAR.__annotations__["tick_loc"])

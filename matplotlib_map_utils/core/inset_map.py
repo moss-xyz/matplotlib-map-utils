@@ -46,6 +46,7 @@ class InsetMap(matplotlib.artist.Artist):
                  coords: imt._TYPE_INSET["coords"]=None,
                  transform=None,
                  to_plot=None,
+                 zorder: int=99,
                  **kwargs):
         # Starting up the object with the base properties of a matplotlib Artist
         matplotlib.artist.Artist.__init__(self)
@@ -56,6 +57,7 @@ class InsetMap(matplotlib.artist.Artist):
         self._pad = imf._validate(imt._VALIDATE_INSET, "pad", pad)
         self._coords = imf._validate(imt._VALIDATE_INSET, "coords", coords)
         self._to_plot = imf._validate(imt._VALIDATE_INSET, "to_plot", to_plot)
+        self._zorder = imf._validate(imt._VALIDATE_INSET, "zorder", zorder)
 
         # Checking if we need to override values for size and pad
         if self._size is None:
@@ -65,11 +67,6 @@ class InsetMap(matplotlib.artist.Artist):
         
         self._transform = transform # not validated!
         self._kwargs = kwargs # not validated!
-    
-    # We do set the zorder for our objects individually,
-    # but we ALSO set it for the entire artist, here
-    # Thank you to matplotlib-scalebar for this tip
-    zorder = 99
 
     ## INTERNAL PROPERTIES ##
     # This allows for easy-updating of properties
@@ -162,6 +159,16 @@ class InsetMap(matplotlib.artist.Artist):
     def to_plot(self, val):
         val = imf._validate(imt._VALIDATE_INSET, "to_plot", val)
         self._to_plot = val
+    
+    # zorder
+    @property
+    def zorder(self):
+        return self._zorder
+
+    @zorder.setter
+    def zorder(self, val):
+        val = imf._validate(imt._VALIDATE_INSET, "zorder", val)
+        self._zorder = val
 
     ## COPY FUNCTION ##
     # This is solely to get around matplotlib's restrictions around re-using an artist across multiple axes
@@ -176,7 +183,7 @@ class InsetMap(matplotlib.artist.Artist):
     def create(self, pax, **kwargs):
         # Can re-use the drawing function we already established, but return the object instead
         iax = inset_map(ax=pax, location=self._location, size=self._size,
-                        pad=self._pad, coords=self._coords, transform=self._transform,
+                        pad=self._pad, coords=self._coords, transform=self._transform, zorder=self._zorder,
                         **self._kwargs, **kwargs)
         
         # If data is passed to to_plot, then we plot that on the newly created axis as well
@@ -226,6 +233,7 @@ class ExtentIndicator(matplotlib.artist.Artist):
                  linecolor: imt._TYPE_EXTENT["linecolor"]="red",
                  alpha: imt._TYPE_EXTENT["alpha"]=0.5,
                  linewidth: imt._TYPE_EXTENT["linewidth"]=1,
+                 zorder: int=99,
                  **kwargs):
         # Starting up the object with the base properties of a matplotlib Artist
         matplotlib.artist.Artist.__init__(self)
@@ -239,13 +247,9 @@ class ExtentIndicator(matplotlib.artist.Artist):
         self._linecolor = imf._validate(imt._VALIDATE_EXTENT, "linecolor", linecolor)
         self._alpha = imf._validate(imt._VALIDATE_EXTENT, "alpha", alpha)
         self._linewidth = imf._validate(imt._VALIDATE_EXTENT, "linewidth", linewidth)
+        self._zorder = imf._validate(imt._VALIDATE_EXTENT, "zorder", zorder)
 
         self._kwargs = kwargs # not validated!
-    
-    # We do set the zorder for our objects individually,
-    # but we ALSO set it for the entire artist, here
-    # Thank you to matplotlib-scalebar for this tip
-    zorder = 99
 
     ## INTERNAL PROPERTIES ##
     # This allows for easy-updating of properties
@@ -332,6 +336,16 @@ class ExtentIndicator(matplotlib.artist.Artist):
     def linewidth(self, val):
         val = imf._validate(imt._VALIDATE_EXTENT, "linewidth", val)
         self._linewidth = val
+    
+    # zorder
+    @property
+    def zorder(self):
+        return self._zorder
+
+    @zorder.setter
+    def zorder(self, val):
+        val = imf._validate(imt._VALIDATE_EXTENT, "zorder", val)
+        self._zorder = val
 
     # kwargs
     @property
@@ -366,7 +380,7 @@ class ExtentIndicator(matplotlib.artist.Artist):
                               to_return=self._to_return, straighten=self._straighten,
                               pad=self._pad, plot=self._plot,
                               facecolor=self._facecolor, linecolor=self._linecolor,
-                              alpha=self._alpha, linewidth=self._linewidth,
+                              alpha=self._alpha, linewidth=self._linewidth, zorder=self._zorder,
                               **self._kwargs, **kwargs)
         
         # The indicator will be drawn automatically if plot is True
@@ -389,6 +403,7 @@ class DetailIndicator(matplotlib.artist.Artist):
                  linewidth: imt._TYPE_EXTENT["linewidth"]=1,
                  connector_color: imt._TYPE_DETAIL["connector_color"]="black",
                  connector_width: imt._TYPE_DETAIL["connector_width"]=1,
+                 zorder: int=99,
                  **kwargs):
         # Starting up the object with the base properties of a matplotlib Artist
         matplotlib.artist.Artist.__init__(self)
@@ -404,13 +419,9 @@ class DetailIndicator(matplotlib.artist.Artist):
         self._to_return = imf._validate(imt._VALIDATE_DETAIL, "to_return", to_return)
         self._connector_color = imf._validate(imt._VALIDATE_DETAIL, "connector_color", connector_color)
         self._connector_width = imf._validate(imt._VALIDATE_DETAIL, "connector_width", connector_width)
+        self._zorder = imf._validate(imt._VALIDATE_DETAIL, "zorder", zorder)
 
         self._kwargs = kwargs # not validated!
-    
-    # We do set the zorder for our objects individually,
-    # but we ALSO set it for the entire artist, here
-    # Thank you to matplotlib-scalebar for this tip
-    zorder = 99
 
     ## INTERNAL PROPERTIES ##
     # This allows for easy-updating of properties
@@ -517,6 +528,16 @@ class DetailIndicator(matplotlib.artist.Artist):
     def connector_width(self, val):
         val = imf._validate(imt._VALIDATE_DETAIL, "connector_width", val)
         self._connector_width = val
+    
+    # zorder
+    @property
+    def zorder(self):
+        return self._zorder
+
+    @zorder.setter
+    def zorder(self, val):
+        val = imf._validate(imt._VALIDATE_DETAIL, "zorder", val)
+        self._zorder = val
 
     # kwargs
     @property
@@ -544,7 +565,8 @@ class DetailIndicator(matplotlib.artist.Artist):
                pax: imt._TYPE_EXTENT["pax"],
                iax: imt._TYPE_EXTENT["bax"],
                pcrs: imt._TYPE_EXTENT["pcrs"],
-               icrs: imt._TYPE_EXTENT["bcrs"], **kwargs):
+               icrs: imt._TYPE_EXTENT["bcrs"], 
+               **kwargs):
         
         # Can re-use the drawing function we already established, but return the object instead
         dti = indicate_detail(pax=pax, iax=iax, pcrs=pcrs, icrs=icrs,
@@ -554,6 +576,7 @@ class DetailIndicator(matplotlib.artist.Artist):
                               alpha=self._alpha, linewidth=self._linewidth,
                               connector_color=self._connector_color,
                               connector_width=self._connector_width,
+                              zorder=self._zorder,
                               **self._kwargs, **kwargs)
         
         # The indicator will be drawn automatically if plot is True
@@ -573,6 +596,7 @@ def inset_map(ax,
               pad: imt._TYPE_INSET["pad"]=None,
               coords: imt._TYPE_INSET["coords"]=None,
               transform=None,
+              zorder: int=99,
               **kwargs):
     
     ## VALIDATION ##
@@ -580,6 +604,7 @@ def inset_map(ax,
     size = imf._validate(imt._VALIDATE_INSET, "size", size)
     pad = imf._validate(imt._VALIDATE_INSET, "pad", pad)
     coords = imf._validate(imt._VALIDATE_INSET, "coords", coords)
+    zorder = imf._validate(imt._VALIDATE_INSET, "zorder", zorder)
 
     if size is None:
         size = _DEFAULT_INSET_MAP["size"]
@@ -671,7 +696,7 @@ def inset_map(ax,
     ## DRAWING ##
     # Creating the new inset map with the specified height, width, and location
     # by default, inset_axes requires everything to be in ax.transAxes coordinates
-    iax = ax.inset_axes([x, y, inset_width, inset_height], **kwargs)
+    iax = ax.inset_axes([x, y, inset_width, inset_height], zorder=zorder, **kwargs)
     
     # We also set the anchor here, such that it stays fixed when any resizing takes place
     loc_anchors = {
@@ -701,6 +726,7 @@ def indicate_extent(pax: imt._TYPE_EXTENT["pax"],
                     linecolor: imt._TYPE_EXTENT["linecolor"]="red",
                     alpha: imt._TYPE_EXTENT["alpha"]=0.5,
                     linewidth: imt._TYPE_EXTENT["linewidth"]=1,
+                    zorder: int=99,
                     **kwargs):
     
     ## VALIDATION ##
@@ -716,6 +742,7 @@ def indicate_extent(pax: imt._TYPE_EXTENT["pax"],
     linecolor = imf._validate(imt._VALIDATE_EXTENT, "linecolor", linecolor)
     alpha = imf._validate(imt._VALIDATE_EXTENT, "alpha", alpha)
     linewidth = imf._validate(imt._VALIDATE_EXTENT, "linewidth", linewidth)
+    zorder = imf._validate(imt._VALIDATE_EXTENT, "zorder", zorder)
     
     # Make sure the figure layout is calculated
     fig = pax.get_figure()
@@ -748,15 +775,13 @@ def indicate_extent(pax: imt._TYPE_EXTENT["pax"],
     # Straightening the points if desired
     if straighten == True:
         extent_shape = shapely.envelope(extent_shape)
-
-    # return extent_shape
-    
+  
     # Plotting, if desired
     if plot == True:
         # Note that the alpha ONLY applies to the facecolor!
         extent_patch = matplotlib.patches.Polygon(list(extent_shape.exterior.coords), transform=pax.transData,
                                                   facecolor=matplotlib.colors.to_rgba(facecolor, alpha=alpha), 
-                                                  edgecolor=linecolor, linewidth=linewidth, **kwargs)
+                                                  edgecolor=linecolor, linewidth=linewidth, zorder=zorder, **kwargs)
         pax.add_artist(extent_patch)
 
     # Deciding what we need to return
@@ -789,8 +814,7 @@ def indicate_detail(pax: imt._TYPE_EXTENT["pax"],
                     alpha: imt._TYPE_EXTENT["alpha"]=1,
                     linecolor: imt._TYPE_EXTENT["linecolor"]="black",
                     linewidth: imt._TYPE_EXTENT["linewidth"]=1,
-                    # connector_color: imt._TYPE_DETAIL["connector_color"]="black",
-                    # connector_width: imt._TYPE_DETAIL["connector_width"]=1,
+                    zorder: int=99,
                     **kwargs):
     
     fig = pax.get_figure()
@@ -809,8 +833,7 @@ def indicate_detail(pax: imt._TYPE_EXTENT["pax"],
     alpha = imf._validate(imt._VALIDATE_EXTENT, "alpha", alpha)
     linecolor = imf._validate(imt._VALIDATE_EXTENT, "linecolor", linecolor)
     linewidth = imf._validate(imt._VALIDATE_EXTENT, "linewidth", linewidth)
-    # connector_color = imf._validate(imt._VALIDATE_DETAIL, "connector_color", connector_color)
-    # connector_width = imf._validate(imt._VALIDATE_DETAIL, "connector_width", connector_width)
+    zorder = imf._validate(imt._VALIDATE_EXTENT, "zorder", zorder)
 
     # Drawing the extent indicator on the main map
     # Setting to_return="ax" gets us the corners of the patch in pax.transAxes coordinates
@@ -819,7 +842,7 @@ def indicate_detail(pax: imt._TYPE_EXTENT["pax"],
                                      straighten=straighten, pad=pad, plot=plot,
                                      facecolor=facecolor, linecolor=linecolor,
                                      alpha=alpha, linewidth=linewidth*1.25,
-                                     to_return="ax", **kwargs)[:4]
+                                     to_return="ax", zorder=zorder, **kwargs)[:4]
 
     # Getting the inset axis points and transforming them to the parent axis CRS
     corners_inset = _inset_corners_to_parent(pax, iax)
@@ -873,12 +896,13 @@ def indicate_detail(pax: imt._TYPE_EXTENT["pax"],
         for c in connections:
             # This is listed as [extent_x, inset_x], [extent_y, inset_y]
             pax.plot([c[0][0], c[1][0]], [c[0][1], c[1][1]], 
-                    color=linecolor, linewidth=linewidth, transform=pax.transAxes)
+                    color=linecolor, linewidth=linewidth, transform=pax.transAxes, zorder=zorder+1)
         
-        # Also updating the linewidth and color of the inset map itsef, to match
-        for a in ["top","bottom","left","right"]:
-            iax.spines[a].set_linewidth(linewidth*1.2) # making this slightly thicker
-            iax.spines[a].set_edgecolor(linecolor)
+        # Also updating the linewidth and color of the inset map itself, to match
+        iax.spines[:].set_linewidth(linewidth*1.2) # making this slightly thicker
+        iax.spines[:].set_edgecolor(linecolor)
+        iax.set_zorder(zorder+2)
+        iax.spines[:].set_zorder(zorder+2)
     
     # Returning as requested
     if to_return is None:
@@ -893,37 +917,37 @@ def indicate_detail(pax: imt._TYPE_EXTENT["pax"],
 # This is a top-level helping function
 # that will return an axis with inset maps drawn for Alaska, Hawaii, DC, and/or Puerto Rico
 # NOTE that as of this initial release, it assumes your map is in CRS 3857 for positioning
-def inset_usa(ax, alaska=True, hawaii=True, dc=True, puerto_rico=True, size=None, pad=None, **kwargs):
+def inset_usa(ax, alaska=True, hawaii=True, dc=True, puerto_rico=True, size=None, pad=None, zorder: int=99, **kwargs):
     # This will return all of the axes we create
     to_return = []
     
     # Alaska and Hawaii are positioned relative to each other
     if alaska == True and hawaii == True:
-        aax = inset_map(ax, "lower left", size, pad, **kwargs)
+        aax = inset_map(ax, "lower left", size, pad, zorder=zorder, **kwargs)
         to_return.append(aax)
         # Need to shift over the hawaii axis by the size of the alaska axis
         # Note that we add xmax and xmin together here, to account for the padding (xmin is the amount of padding)
         shift_right = float(aax.get_window_extent().transformed(ax.transAxes.inverted()).xmax) + float(aax.get_window_extent().transformed(ax.transAxes.inverted()).xmin)
         # also need to shift it up, by the amount of the padding (which we can crib from ymin)
         shift_up = float(aax.get_window_extent().transformed(ax.transAxes.inverted()).ymin)
-        hax = inset_map(ax, "lower left", size, pad, coords=(shift_right, shift_up), **kwargs)
+        hax = inset_map(ax, "lower left", size, pad, zorder=zorder, coords=(shift_right, shift_up), **kwargs)
         to_return.append(hax)
     else:
         if alaska == True:
-            aax = inset_map(ax, "lower_left", size, pad, **kwargs)
+            aax = inset_map(ax, "lower_left", size, pad, zorder=zorder, **kwargs)
             to_return.append(aax)
         if hawaii == True:
-            hax = inset_map(ax, "lower left", size, pad, **kwargs)
+            hax = inset_map(ax, "lower left", size, pad, zorder=zorder, **kwargs)
             to_return.append(hax)
 
     # Puerto Rico is positioned off the coast of Florida
     if puerto_rico == True:
-        pax = inset_map(ax, "lower right", size, pad, **kwargs)
+        pax = inset_map(ax, "lower right", size, pad, zorder=zorder, **kwargs)
         to_return.append(pax)
     
     # DC is off the coast of DC
     if dc == True:
-        dax = inset_map(ax, "center right", size, pad, **kwargs)
+        dax = inset_map(ax, "center right", size, pad, zorder=zorder, **kwargs)
         to_return.append(dax)
     
     # Finally, returning everything

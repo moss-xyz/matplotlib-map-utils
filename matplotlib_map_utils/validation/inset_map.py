@@ -64,6 +64,7 @@ _VALIDATE_INSET = {
     "pad":{"func":vf._validate_or, "kwargs":{"funcs":[vf._validate_range, vf._validate_and], "kwargs":[{"min":0, "none_ok":True}, {"funcs":[vf._validate_tuple, vf._validate_iterable], "kwargs":[{"length":2, "types":[float, int]}, {"func":vf._validate_range, "kwargs":{"min":0}}]}]}}, # between 0 and inf, or a two-tuple of (x,y) size, each between 0 and inf
     "coords":{"func":vf._validate_tuple, "kwargs":{"length":2, "types":[float, int], "none_ok":True}}, # a two-tuple of coordinates where you want to place the inset map
     "to_plot":{"func":vf._validate_iterable, "kwargs":{"func":vf._validate_keys, "kwargs":{"keys":["data","kwargs"], "none_ok":True}}}, # a list of dictionaries, where each contains "data" and "kwargs" keys
+    "zorder":{"func":vf._validate_type, "kwargs":{"match":int}}, # any int
 }
 
 _VALIDATE_EXTENT = {
@@ -78,6 +79,7 @@ _VALIDATE_EXTENT = {
     "linecolor":{"func":matplotlib.rcsetup.validate_color}, # any color value for matplotlib
     "alpha":{"func":vf._validate_range, "kwargs":{"min":0}}, # any positive number
     "linewidth":{"func":vf._validate_range, "kwargs":{"min":0}}, # any positive number
+    "zorder":{"func":vf._validate_type, "kwargs":{"match":int}}, # any int
     "to_return":{"func":vf._validate_list, "kwargs":{"list":["shape", "patch", "fig", "ax"], "none_ok":True}}, # any value in this list
 }
 
@@ -85,4 +87,5 @@ _VALIDATE_DETAIL = {
     "to_return":{"func":vf._validate_list, "kwargs":{"list":["connectors", "lines"], "none_ok":True}}, # any value in this list
     "connector_color":{"func":matplotlib.rcsetup.validate_color}, # any color value for matplotlib
     "connector_width":{"func":vf._validate_range, "kwargs":{"min":0}}, # any positive number
+    "zorder":{"func":vf._validate_type, "kwargs":{"match":int}}, # any int
 }
