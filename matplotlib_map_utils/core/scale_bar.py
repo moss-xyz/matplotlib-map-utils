@@ -10,6 +10,7 @@ import warnings
 import math
 import copy
 # Math packages
+import matplotlib.transforms
 import numpy
 # Geo packages
 import pyproj
@@ -280,6 +281,13 @@ def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
     ##### CONFIG #####
 
     # Getting the config for the bar (length, text, divs, etc.)
+    if draw:
+        ax.get_figure().draw_without_rendering()
+
+    # window = ax.get_window_extent()
+    # tight = ax.patch.get_tightbbox()
+    # print(f"{draw} Window: width {round(window.width,2)} ({round(ax.get_figure().dpi_scale_trans.inverted().transform([window.width,0])[0],2)}), height {round(window.height,2)} ({round(ax.get_figure().dpi_scale_trans.inverted().transform([0,window.height])[1],2)})")
+    # print(f"{draw} Tight: width {round(tight.width,2)} ({round(ax.get_figure().dpi_scale_trans.inverted().transform([tight.width,0])[0],2)}), height {round(tight.height,2)} ({round(ax.get_figure().dpi_scale_trans.inverted().transform([0,tight.height])[1],2)})")
     bar_max, bar_length, units_label, major_div, minor_div = _config_bar(ax, _bar)
 
     # Getting the config for the segments (width, label, etc.)
@@ -452,7 +460,6 @@ def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
 
     # AOB will contain the final artist
     aob_box = matplotlib.offsetbox.AnchoredOffsetbox(loc="center", child=major_pack, frameon=False, pad=0, borderpad=0)
-
     # Function that will handle invisibly rendering our object, returning an image
     img_scale_bar = _render_as_image(fig_temp, ax_temp, aob_box, _bar["rotation"])
 
@@ -641,6 +648,11 @@ def _config_bar(ax, bar):
     # Literally just getting the figure for the passed axis
 
     fig = ax.get_figure()
+    # fig.draw_without_rendering()
+    # Sets the canvas for the figure to AGG (Anti-Grain Geometry)
+    # canvas = FigureCanvasAgg(fig)
+    # Draws the figure onto the canvas
+    # canvas.draw()
     
     ## ROTATION ##
     # Calculating if the rotation is vertical or horizontal
@@ -651,15 +663,15 @@ def _config_bar(ax, bar):
     # Finding the max length and optimal divisions of the scale bar
 
     # Finding the dimensions of the axis and the limits
-    # get_tightbbox() returns values in pixel coordinates
+    # get_window_extent() returns values in pixel coordinates
     # so dividing by dpi gets us the inches of the axis
     # Vertical scale bars are oriented against the y-axis (height)
     if bar_vertical==True:
-        ax_dim = ax.patch.get_tightbbox().height / fig.dpi
+        ax_dim = ax.patch.get_window_extent().height / fig.dpi
         min_lim, max_lim = ax.get_ylim()
     # Horizontal scale bars are oriented against the x-axis (width)
     else:
-        ax_dim = ax.patch.get_tightbbox().width / fig.dpi
+        ax_dim = ax.patch.get_window_extent().width / fig.dpi
         min_lim, max_lim = ax.get_xlim()
     # This calculates the range from max to min on the axis of interest
     ax_range = abs(max_lim - min_lim)
@@ -1011,7 +1023,7 @@ def _temp_figure(ax, axis=False, visible=False):
     # Getting the figure of the provided axis
     fig = ax.get_figure()
     # Getting the dimensions of the axis
-    ax_bbox = ax.patch.get_tightbbox()
+    ax_bbox = ax.patch.get_window_extent()
     # Converting to inches and rounding up
     ax_dim = math.ceil(max(ax_bbox.height, ax_bbox.width) / fig.dpi)
     # Creating a new temporary figure
