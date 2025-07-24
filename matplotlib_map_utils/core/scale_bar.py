@@ -518,12 +518,14 @@ def dual_bars(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
                   labels: None | bool | sbt._TYPE_LABELS=None,
                   text: None | bool | sbt._TYPE_TEXT=None,
                   aob: None | bool | sbt._TYPE_AOB=None,
+                  zorder: int=99,
                   pad=0, sep=0,
                   return_aob: bool=True
                   ):
     
     _style = sbf._validate(sbt._VALIDATE_PRIMARY, "style", style)
     _location = sbf._validate(sbt._VALIDATE_PRIMARY, "location", location)
+    _zorder = sbf._validate(sbt._VALIDATE_PRIMARY, "zorder", zorder)
 
     ##### CONCATENATION #####
     # NOTE: Probably a better way to do this, will investigate
@@ -635,6 +637,8 @@ def dual_bars(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
     if _aob["alpha"]:
         aob_pack.patch.set_alpha(_aob["alpha"])
         aob_pack.patch.set_visible(True)
+    
+    aob_pack.set_zorder(_zorder)
 
     # Finally, adding to the axis
     if draw == True:
