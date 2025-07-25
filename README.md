@@ -363,6 +363,8 @@ Two more projects assisted with the creation of this script:
 
 - `v3.0.0`: Release of inset map and extent and detail indicator classes and functions.
 
+- `v3.0.1`: Fixed a bug that led to an incorrect Scale Bar being rendered when using the function method (`scale_bar()`) on a plot containing raster data (see [here](https://github.com/moss-xyz/matplotlib-map-utils/issues/10) for details).
+
 #### Future Roadmap
 
 With the release of `v3.x`, this project has achieved full coverage of the "main" map elements I think are necessary.
