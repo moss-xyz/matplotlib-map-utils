@@ -10,7 +10,6 @@ import warnings
 import math
 import copy
 # Math packages
-import matplotlib.transforms
 import numpy
 # Geo packages
 import pyproj
