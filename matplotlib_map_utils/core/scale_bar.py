@@ -654,7 +654,8 @@ def dual_bars(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
 def _del_keys(dict, to_remove):
     return {key: val for key, val in dict.items() if key not in to_remove}
 
-# This function handles the config steps (width, divs, etc)
+# This function handles the configuration steps 
+# (i.e. calculating the length of the bar, its divisions, etc.)
 # that are shared across all the different scale bars
 def _config_bar(ax, bar):
 
@@ -838,7 +839,7 @@ def _config_bar(ax, bar):
 # It is a doozy - needs to handle all the different inputs for minor_type and label_type
 # The output of this function will be a list of dictionaries
 # With each element in the list representing a segment with four keys:
-# width (for the segment, in points), length(for the label, in points), value (numeric value in units), type (major or minor or spacer), and label (either the value (rounded if needed) or None if no label is required)
+# width (for the segment, in points), length (for the label, in points), value (numeric value in units), type (major or minor or spacer), and label (either the value (rounded if needed) or None if no label is required)
 def _config_seg(bar_max, major_width, major_div, minor_div, minor_type, label_style, labels, format_str, format_int):
     segments = []
     ## SEGMENT WIDTHS ##
