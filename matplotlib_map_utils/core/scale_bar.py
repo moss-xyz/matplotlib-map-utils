@@ -250,7 +250,9 @@ def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
                   text: None | bool | sbt._TYPE_TEXT=None,
                   aob: None | bool | sbt._TYPE_AOB=None,
                   zorder: int=99,
-                  return_aob: bool=True
+                  return_aob: bool=True,
+                #   ! TO REMOVE
+                config_mode="old"
                   ):
 
     ##### VALIDATION #####
@@ -288,15 +290,17 @@ def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
     
     ##### CONFIG #####
 
-    # Getting the config for the bar (length, text, divs, etc.)
+    # First, ensuring matplotlib knows the correct dimensions for everything
+    # as we need it to be accurate to calculate out the plots!
     if draw:
         ax.get_figure().draw_without_rendering()
 
-    # window = ax.get_window_extent()
-    # tight = ax.patch.get_tightbbox()
-    # print(f"{draw} Window: width {round(window.width,2)} ({round(ax.get_figure().dpi_scale_trans.inverted().transform([window.width,0])[0],2)}), height {round(window.height,2)} ({round(ax.get_figure().dpi_scale_trans.inverted().transform([0,window.height])[1],2)})")
-    # print(f"{draw} Tight: width {round(tight.width,2)} ({round(ax.get_figure().dpi_scale_trans.inverted().transform([tight.width,0])[0],2)}), height {round(tight.height,2)} ({round(ax.get_figure().dpi_scale_trans.inverted().transform([0,tight.height])[1],2)})")
-    bar_max, bar_length, units_label, major_div, minor_div = _config_bar(ax, _bar)
+    # Getting the config for the bar (length, text, divs, etc.)
+    # ! TO REMOVE AFTER TESTING
+    if config_mode == "old":
+        bar_max, bar_length, units_label, major_div, minor_div = _config_bar_old(ax, _bar)
+    else:
+        bar_max, bar_length, units_label, major_div, minor_div = _config_bar(ax, _bar)
 
     # Getting the config for the segments (width, label, etc.)
     segments = _config_seg(bar_max, bar_length/major_div, major_div, minor_div, 
@@ -600,7 +604,7 @@ def dual_bars(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
 
     ##### PACKING  #####
     # First need to know if we pack vertically or horizontally
-    bar_vertical = _calc_vert(_bar["rotation"])
+    bar_vertical = _config_bar_vert(_bar["rotation"])
     packer = matplotlib.offsetbox.VPacker if bar_vertical == False else matplotlib.offsetbox.HPacker
     if bar["reverse"] == True:
         align = "right" if bar_vertical == False else "top"
@@ -659,20 +663,44 @@ def _del_keys(dict, to_remove):
 # that are shared across all the different scale bars
 def _config_bar(ax, bar):
 
-    ## PLOT INFO ##
-    # Literally just getting the figure for the passed axis
+    ## ROTATION ##
+    # Calculating if the rotation is vertical or horizontal
+    bar_vertical = _config_bar_vert(bar["rotation"])
 
+    ## DIM ##
+    # Finding the size of the axis in inches
+    # The size of the axis in the units requested by the user
+    # and determining the appropriate units label to use
+    ax_inches, ax_units, units_label = _config_bar_dim(ax, bar_vertical, bar["projection"], bar["unit"])
+
+    ## LENGTH ##
+    # Finding the size of the bar in inches
+    # and the size of the bar in the units requested by the user
+    # and the optimal major and minor bar divisions
+    bar_max, bar_length, bar_major_div, bar_minor_div = _config_bar_length(bar["max"], bar["length"], bar["major_mult"], bar["major_div"], ax_inches, ax_units, bar["projection"])
+
+    ## DIVISIONS ##
+    # We've done most of the work here - just need to see if we want a minor div or not
+    # If one is provided, override what we calculated above
+    if bar["minor_div"] is not None:
+        bar_minor_div = bar["minor_div"] 
+    
+    # Returning everything
+    return bar_max, bar_length, units_label, bar_major_div, bar_minor_div
+
+def _config_bar_old(ax, bar):
+
+    # Literally just getting the figure for the passed axis
     fig = ax.get_figure()
-    # fig.draw_without_rendering()
-    # Sets the canvas for the figure to AGG (Anti-Grain Geometry)
-    # canvas = FigureCanvasAgg(fig)
-    # Draws the figure onto the canvas
-    # canvas.draw()
     
     ## ROTATION ##
     # Calculating if the rotation is vertical or horizontal
+    bar_vertical = _config_bar_vert(bar["rotation"])
 
-    bar_vertical = _calc_vert(bar["rotation"])
+    ## AXIS ##
+    # Getting the range of the axis, in the units specified by the user
+    # Will handle conversion between geographic coordinates if needed
+
     
     ## BAR DIMENSIONS ##
     # Finding the max length and optimal divisions of the scale bar
@@ -835,6 +863,222 @@ def _config_bar(ax, bar):
 
     return bar_max, bar_length, units_label, major_div, minor_div
 
+# A small function for calculating the number of 90 degree rotations that are being applied
+# So we know if the bar is in a vertical or a horizontal rotation
+def _config_bar_vert(degrees):
+    # Figuring out how many quarter turns the rotation value is approximately
+    quarters = int(round(degrees/90,0))
+    
+    # EVEN quarter turns (0, 180, 360, -180) are considered horizontal
+    # ODD quarter turns (90, 270, -90, -270) are considered vertical
+    if quarters % 2 == 0:
+        bar_vertical = False
+    else:
+        bar_vertical = True
+    
+    return bar_vertical
+
+# This function determines the dimensions of the relevant axis, in the user's desired units
+def _config_bar_dim(ax, bar_vertical, bar_projection, bar_unit):
+    
+    # Literally just getting the figure for the passed axis
+    fig = ax.get_figure()
+
+    # First, finding the dimensions of the axis and the limits
+    # get_window_extent() returns values in pixel coordinates
+    # so dividing by dpi gets us the inches of the axis
+    # Vertical scale bars are oriented against the y-axis (height)
+    if bar_vertical==True:
+        ax_inches = ax.patch.get_window_extent().height / fig.dpi
+        min_lim, max_lim = ax.get_ylim()
+    # Horizontal scale bars are oriented against the x-axis (width)
+    else:
+        ax_inches = ax.patch.get_window_extent().width / fig.dpi
+        min_lim, max_lim = ax.get_xlim()
+    # This calculates the range from max to min on the axis of interest
+    ax_range = abs(max_lim - min_lim)
+
+
+    # If the user is using one of the custom overrides, we can stop here, basically
+    if bar_projection in ["px","pixel","pixels","pt","point","points","dx","custom","axis"]:
+        # Enforcing an empty units label here
+        units_label = ""
+        if bar_unit is not None:
+            warnings.warn(f"When bar['projection'] is set to '{bar_projection}', bar['unit'] will be ignored; you can set a custom label for the bar via the units argument, see documentation for details.")
+        # If we're in pixels, just need to re-multiply ax_inches back out by fig.dpi
+        if bar_projection in ["px","pixel","pixels"]:
+            ax_units = ax_inches * fig.dpi
+        # If we're in points, need to multiply by 72
+        elif bar_projection in ["pt","point","points"]:
+            ax_units = ax_inches * 72
+        # If we're using the axis, then we can just use that directly!
+        elif bar_projection in ["dx","custom","axis"]:
+            ax_units = ax_range
+    
+    # Otherwise, we have more work to do!
+    else:
+        # Capturing the unit from the projection
+        # (We use bar_vertical to index; 0 is for east-west axis, 1 is for north-south)
+        units_proj = pyproj.CRS(bar_projection).axis_info[bar_vertical].unit_name
+        # If the provided units are in degrees, we will convert ax_range to meters first
+        if units_proj=="degree":
+            warnings.warn(f"Provided CRS {bar_projection} uses degrees. An attempt will be made at conversion, but there will be accuracy issues: it is recommended that you use a projected CRS instead.")
+            ylim = ax.get_ylim()
+            xlim = ax.get_xlim()
+            # Using https://github.com/seangrogan/great_circle_calculator/blob/master/great_circle_calculator/great_circle_calculator.py
+            # If the bar is vertical, we use the midpoint of the longitude (x-axis) and the max and min of the latitude (y-axis)
+            if bar_vertical==True:
+                ax_range = distance_between_points(((xlim[0]+xlim[1])/2, ylim[0]), ((xlim[0]+xlim[1])/2, ylim[1]))
+            # Otherwise, the opposite
+            else:
+                ax_range = distance_between_points((xlim[0], (ylim[0]+ylim[1])/2), (xlim[1], (ylim[0]+ylim[1])/2))
+            # Setting units_proj to meters now
+            units_proj = "m"
+            
+        # If a projected CRS is provided instead...
+        else:
+            # Standardizing the projection unit
+            try:
+                units_proj = sbt.units_standard[units_proj]
+            except:
+                warnings.warn(f"Units for specified projection ({units_proj}) are considered invalid; please use a different projection that conforms to an expected unit value (such as US survey feet or metres)")
+                return None
+
+        # Standardizing the units specified by the user
+        # This means we will also handle conversion if necessary
+        try:
+            units_user = sbt.units_standard.get(bar_unit)
+        except:
+            warnings.warn(f"Desired output units selected by user ({bar_unit}) are considered invalid; please use one of the units specified in the units_standard dictionary in defaults.py")
+            units_user = None
+
+        # Converting
+
+        # First, the case where the user doesn't provide any units
+        # In this instance, we just use the units from the projection
+        if units_user is None:
+            units_label = units_proj
+            # If necessary, scaling "small" units to "large" units
+            # Meters to km
+            if units_proj == "m" and ax_range > (1000*5):
+                ax_units = ax_range / 1000
+                units_label = "km"
+            # Feet to mi
+            elif units_proj == "ft" and ax_range > (5280*5):
+                ax_units = ax_range / 5280
+                units_label = "mi"
+
+        # Otherwise, if the user supplied a unit of some sort, then handle conversion
+        else:
+            units_label = units_user
+            # We only need to do so if the units are different, however!
+            if units_user != units_proj:
+                # This works by finding the ratios between the two units, using meters as the base
+                ax_units = ax_range * (sbt.convert_dict[units_proj] / sbt.convert_dict[units_user])
+    
+    return ax_inches, ax_units, units_label
+
+# This function calculates the optimal length of the entire bar in inches and the user's units
+def _config_bar_length(bar_max, bar_length, bar_major_mult, bar_major_div, ax_inches, ax_units, bar_projection):
+
+    # First checking that the user is providing valid values
+    if bar_length is not None and bar_max is not None:
+        warnings.warn(f"Both bar['max'] and bar['length'] are provided; bar['length'] will be ignored. Please reference the documentation to understand why both may not be set at the same time.")
+    elif (bar_max is not None or bar_length is not None) and bar_major_mult is not None:
+        warnings.warn(f"Either bar['max'] or bar['length'] are provided, along with bar['major_mult']; bar['major_mult'] will be ignored. Please reference the documentation to understand why both may not be set at the same time.")
+    elif bar_length is not None and bar_major_div is not None:
+        warnings.warn(f"Both bar['length'] and bar['major_div'] are provided; bar['major_div'] will be ignored, and instead an optimal value will be calculated. Please reference the documentation to understand why both may not be set at the same time.")
+    elif bar_length is not None and bar_length > ax_inches:
+        warnings.warn(f"Provided bar length ({bar_length}) is greater than the axis length ({ax_inches} inches); setting bar length to default (25% of axis length).")
+        bar_length = 0.25
+    elif bar_projection in ["px","pixel","pixels","pt","point","points","dx","custom","axis"] and bar_length is not None:
+        warnings.warn(f"Providing a bar length is incompatible with a bar['projection'] value of ${bar_projection}, please use either bar['max'] or bar['major_mult'] instead.")
+    elif bar_major_mult is not None and bar_major_div is None:
+        warnings.warn(f"bar['major_div'] must be supplied alongside bar['major_mult']. Reverting to default behavior (bar['length'] = 0.25).")
+        bar_length = 0.25
+    
+    # Then, seeing if we need to use the default behavior (if everything is none)
+    if bar_max is None and bar_length is None and bar_major_mult is None and bar_major_div is None:
+        bar_length = 0.25
+    
+    # Deriving the length of the bar
+    # First, with bar_max, if provided - it is the length of the bar in UNITS
+    if bar_max is not None:
+        # Only need to update the bar_length here, then
+        bar_length = ax_inches * (bar_max / ax_units)
+        
+        # If we don't have a bar_major_div, set one
+        if bar_major_div is None:
+            if bar_max % 3 == 0:
+                bar_major_div = 3
+            elif bar_max % 2 == 0:
+                bar_major_div = 2
+            else:
+                bar_major_div = 1
+        # Same for minor
+        if bar_major_div % 2 == 0:
+            bar_minor_div = 2
+        else:
+            bar_minor_div = 1
+    
+    # Otherwise, if bar_length is provided - it is the length of the bar in INCHES
+    elif bar_length is not None:
+        # Converting, if bar length is expressed as a fraction of the axis
+        if bar_length < 1:
+            bar_length = ax_inches * bar_length
+        
+        # Calculating bar_max based on this length
+        bar_max = ax_units * (bar_length / ax_inches)
+
+        # We will also optimize it, so that it rounds to a "nice" number
+        # Scaling the max down to just the important digits
+        for units_mag in range(0,23):
+            if bar_max / (10 ** (units_mag+1)) > 1.5:
+                units_mag += 1
+            else:
+                break
+        
+        # Getting a list of "optimal" numbers we want to aim for
+        preferred_maxes = list(sbt.preferred_divs.keys())
+        # Finding the RMS/distance between each perferred max and our actual max
+        max_rms = [math.sqrt((m - (bar_max/(10**units_mag)))**2) for m in preferred_maxes]
+        # Sorting for the "best" number
+        # Sorted() works on the first item in the tuple contained in the list
+        # Note that we reverse m,r and r,m here, just to keep things confusing
+        sorted_breaks = [(m,r) for r,m in sorted(zip(max_rms, preferred_maxes))]
+
+        # Saving the values
+        bar_max_best = sorted_breaks[0][0]
+        bar_max = bar_max_best * 10**units_mag
+
+        # Going back and re-calculating the length (it'll be slightly more/less now)
+        bar_length = ax_inches * (bar_max / ax_units)
+
+        # And finally picking out the major div from this
+        bar_major_div, bar_minor_div = sbt.preferred_divs[bar_max_best]
+    
+    # Otherwise, if BOTH bar_major_mult and bar_major_div are provided, using that
+    # bar_major_mult is expressed in UNITS
+    elif bar_major_div is not None and bar_major_mult is not None:
+        bar_max = bar_major_mult * bar_major_div
+        bar_length = ax_inches * (bar_max / ax_units)
+        # And we set bar_minor_div based on major_div
+        if bar_major_div % 2 == 0:
+            bar_minor_div = 2
+        else:
+            bar_minor_div = 1
+    
+    # Generic catch to throw a warning of any other situation
+    else:
+        warnings.warn("Error in calculating bar length, please re-check your values for bar['max'], bar['length'], bar['major_mult'], and/or bar['major_div']. If error persists when values appear correct, please file an issue on GitHub with a code sample.")
+        return None
+
+    # Another final check just to make sure our final calculations aren't too wonky     
+    if ((bar_length / ax_inches) > 0.9) or (bar_max > (ax_units * 0.9)):
+        warnings.warn(f"The auto-calculated dimensions of the bar are too large for the axis. This usually happens when the height or width of your map is ~1 to 2 miles or kilometres (depending on your selected unit). This will result in a bar close to or longer than your axis, extending beyond your frame. Consider either manually specifying a 'max' and 'major_div' value less than 2, or switching your units to feet/metres as necessary.")
+    
+    return bar_max, bar_length, bar_major_div, bar_minor_div
+
 # This function handles the creation of the segments and their labels
 # It is a doozy - needs to handle all the different inputs for minor_type and label_type
 # The output of this function will be a list of dictionaries
@@ -932,12 +1176,12 @@ def _config_seg(bar_max, major_width, major_div, minor_div, minor_type, label_st
             warnings.warn(f"Fewer labels were provided ({len(labels)}) than needed ({num_labels}). The last {num_labels-len(labels)} will be set to None.")
         labels = _expand_list(labels, num_labels, "nfill")
         # Keeping track of how many labels we have applied
+        # So we can map the labels list to the list of segments with labels
         i = 0
         for s in segments:
             if s["label"] is not None:
-                if labels[i] == True or type(labels[i])==int or type(labels[i])==float:
-                    s["label"] = _format_numeric(s["label"], format_str, format_int)
-                    pass
+                if labels[i] == True or isinstance(labels[i], (int, float)):
+                    s["label"] = _format_numeric(labels[i], format_str, format_int)
                 elif labels[i] == False or labels[i] is None:
                     s["label"] = None
                 else:
@@ -953,21 +1197,6 @@ def _config_seg(bar_max, major_width, major_div, minor_div, minor_type, label_st
 
     # Returning everything at the end
     return segments
-
-# A small function for calculating the number of 90 degree rotations that are being applied
-# So we know if the bar is in a vertical or a horizontal rotation
-def _calc_vert(degrees):
-    # Figuring out how many quarter turns the rotation value is approximately
-    quarters = int(round(degrees/90,0))
-    
-    # EVEN quarter turns (0, 180, 360, -180) are considered horizontal
-    # ODD quarter turns (90, 270, -90, -270) are considered vertical
-    if quarters % 2 == 0:
-        bar_vertical = False
-    else:
-        bar_vertical = True
-    
-    return bar_vertical
 
 # A small function for expanding a list a potentially uneven number of times
 # Ex. ['black','white'] -> ['black','white','black','white''black']

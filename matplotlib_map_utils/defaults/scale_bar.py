@@ -28,6 +28,7 @@ _BAR_XS = {
     "minor_div":None,
     "minor_frac":0.66,
     "minor_type":"none",
+    "major_mult":None,
     "facecolors":["black","white"],
     "edgecolors":"black",
     "edgewidth":0.5, # changed
@@ -99,6 +100,7 @@ _BAR_SM = {
     "minor_div":None,
     "minor_frac":0.66,
     "minor_type":"none",
+    "major_mult":None,
     "facecolors":["black","white"],
     "edgecolors":"black",
     "edgewidth":0.75, # changed
@@ -170,6 +172,7 @@ _BAR_MD = {
     "minor_div":None,
     "minor_frac":0.66,
     "minor_type":"first",
+    "major_mult":None,
     "facecolors":["black","white"],
     "edgecolors":"black",
     "edgewidth":1, # changed
@@ -241,6 +244,7 @@ _BAR_LG = {
     "minor_div":None,
     "minor_frac":0.66,
     "minor_type":"first",
+    "major_mult":None,
     "facecolors":["black","white"],
     "edgecolors":"black",
     "edgewidth":2, # changed
@@ -312,6 +316,7 @@ _BAR_XL = {
     "minor_div":None,
     "minor_frac":0.66,
     "minor_type":"first",
+    "major_mult":None,
     "facecolors":["black","white"],
     "edgecolors":"black",
     "edgewidth":4, # changed

@@ -243,17 +243,17 @@ Refer to `docs\howto_scale_bar` for details on how to customize each facet of th
 
 #### Specifying Length
 
-There are XYZ main ways of specifying the length of a scale bar:
+There are three main ways of specifying the length of a scale bar:
 
 - `length` is used to set the total length of the bar, either in _inches_ (for values >= 1) or as a _fraction of the axis_ (for values < 1).
   - The default value of the scale bar utilizes this method, with a `length` value of `0.25` (meaning 25% of the axis).
   - It will automatically orient itself against the horizontal or vertical axis when calculating its fraction, based on the value supplied for `rotation`.
-  - Note that any values here will be rounded to a "nice" whole integer, so the length will *always be approximate*; ex., if 2 inches is 9,128 units, your scale bar will end up being 9,000 units, and therefore a little less than two inches.
+  - Note that any values here will be rounded to a "nice" whole integer, so the length will *always be approximate*; ex., if two inches is 9,128 units, your scale bar will end up being 9,000 units, and therefore a little less than two inches.
   - Values `major_div` and `minor_div` are ignored, while a value for `max` will _override_ `length`.
 
 - `max` is used to define the total length of the bar, _in the same units as your map_, as determined by the value of `projection` and `unit`.
-  - Ex: If you are using a projection in feet, and give a `max` of `1000`, your scale bar will be representative of 1000 feet.
-  - Ex: If you are using a projection in feet, but provide a value of `meter` to `unit`, and give a `max` of `1000`, your scale bar will be representative of 1000 meters.
+  - Ex: If you are using a projection in feet, and give a `max` of `1000`, your scale bar will be representative of 1,000 feet.
+  - Ex: If you are using a projection in feet, but provide a value of `meter` to `unit`, and give a `max` of `1000`, your scale bar will be representative of 1,000 meters.
   - Will _override_ any value provided for `length`, and give a warning that it is doing so!
   - Values can be optionally be provided for `major_div` and `minor_div`, to subdivide the bar into major or minor segments as you desire; if left blank, values for these will be calculated automatically (see `preferred_divs` in `validation/scale_bar.py` for the values used).
 
@@ -271,7 +271,7 @@ All of the above cases expect a valid CRS to be supplied to the `projection` par
 
 - If `projection` is set to `dx`, `custom`, or `axis`, then values for `max` and `major_mult` are interpreted as being in _the units of the x or y axis_ (so a `max` of 1,000 will result in a bar equal to 1,000 units of the x-axis (if orientated horizontally))
 
-The intent of these additional methods is to provide an alternative interface for defining the bar, in the case of non-standard projections, or for non-cartographic use cases (in particular, this is inspired by the `dx` implementation of `matplotlib-scalebar`, which). However, this puts the onus on the user to know how big their bar should be - you also cannot pass a value to `unit` to convert! Note you can provide custom label text to the bar via the `labels` and `units` arguments (ex. if you need to label "inches" or something).
+The intent of these additional methods is to provide an alternative interface for defining the bar, in the case of non-standard projections, or for non-cartographic use cases (in particular, this is inspired by the `dx` implementation of `matplotlib-scalebar`). However, this puts the onus on the user to know how big their bar should be - you also cannot pass a value to `unit` to convert! Note you can provide custom label text to the bar via the `labels` and `units` arguments (ex. if you need to label "inches" or something).
 
 </details>
 
@@ -360,7 +360,7 @@ usa = USA()
 # Getting a list FIPS codes for US States
 usa.filter(states=True, to_return="fips")
 # Getting a list of State Names for states in the South and Midwest regions
-usa.filter(region=["South","Midtwest"], to_return="name")
+usa.filter(region=["South","Midwest"], to_return="name")
 ```
 
 Refer to `docs\howto_utils` for details on how to use this class, including with `pandas.apply()`.
@@ -402,6 +402,8 @@ Two more projects assisted with the creation of this script:
 - `v3.0.0`: Release of inset map and extent and detail indicator classes and functions.
 
 - `v3.0.1`: Fixed a bug that led to an incorrect Scale Bar being rendered when using the function method (`scale_bar()`) on a plot containing raster data (see [here](https://github.com/moss-xyz/matplotlib-map-utils/issues/10) for details).
+
+- `v3.1.0`: Overhauled the functionality for specifying the the length of a scale bar, including support for custom units/projections (similar to `matplotlib-scalebar`'s `dx` argument) and to specify the length of a major division instead of the entire scale bar, as requested [here](https://github.com/moss-xyz/matplotlib-map-utils/issues/10). Added ability to set artist-level `zorder` variables for all elements, with both the function and class method approaches, as requested [here](https://github.com/moss-xyz/matplotlib-map-utils/issues/9) and [here](https://github.com/moss-xyz/matplotlib-map-utils/issues/10). Also fixed a bug related to custom division labels on the scale bar.
 
 #### Future Roadmap
 
