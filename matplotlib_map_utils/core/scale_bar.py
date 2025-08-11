@@ -250,10 +250,7 @@ def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
                   text: None | bool | sbt._TYPE_TEXT=None,
                   aob: None | bool | sbt._TYPE_AOB=None,
                   zorder: int=99,
-                  return_aob: bool=True,
-                #   ! TO REMOVE
-                config_mode="old"
-                  ):
+                  return_aob: bool=True,):
 
     ##### VALIDATION #####
     _style = sbf._validate(sbt._VALIDATE_PRIMARY, "style", style)
@@ -296,11 +293,7 @@ def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
         ax.get_figure().draw_without_rendering()
 
     # Getting the config for the bar (length, text, divs, etc.)
-    # ! TO REMOVE AFTER TESTING
-    if config_mode == "old":
-        bar_max, bar_length, units_label, major_div, minor_div = _config_bar_old(ax, _bar)
-    else:
-        bar_max, bar_length, units_label, major_div, minor_div = _config_bar(ax, _bar)
+    bar_max, bar_length, units_label, major_div, minor_div = _config_bar(ax, _bar)
 
     # Getting the config for the segments (width, label, etc.)
     segments = _config_seg(bar_max, bar_length/major_div, major_div, minor_div, 
@@ -688,181 +681,6 @@ def _config_bar(ax, bar):
     # Returning everything
     return bar_max, bar_length, units_label, bar_major_div, bar_minor_div
 
-def _config_bar_old(ax, bar):
-
-    # Literally just getting the figure for the passed axis
-    fig = ax.get_figure()
-    
-    ## ROTATION ##
-    # Calculating if the rotation is vertical or horizontal
-    bar_vertical = _config_bar_vert(bar["rotation"])
-
-    ## AXIS ##
-    # Getting the range of the axis, in the units specified by the user
-    # Will handle conversion between geographic coordinates if needed
-
-    
-    ## BAR DIMENSIONS ##
-    # Finding the max length and optimal divisions of the scale bar
-
-    # Finding the dimensions of the axis and the limits
-    # get_window_extent() returns values in pixel coordinates
-    # so dividing by dpi gets us the inches of the axis
-    # Vertical scale bars are oriented against the y-axis (height)
-    if bar_vertical==True:
-        ax_dim = ax.patch.get_window_extent().height / fig.dpi
-        min_lim, max_lim = ax.get_ylim()
-    # Horizontal scale bars are oriented against the x-axis (width)
-    else:
-        ax_dim = ax.patch.get_window_extent().width / fig.dpi
-        min_lim, max_lim = ax.get_xlim()
-    # This calculates the range from max to min on the axis of interest
-    ax_range = abs(max_lim - min_lim)
-
-    ## UNITS ##
-    # Now, calculating the proportion of the dimension axis that we need
-    
-    # Capturing the unit from the projection
-    # (We use bar_vertical to index; 0 is for east-west axis, 1 is for north-south)
-    units_proj = pyproj.CRS(bar["projection"]).axis_info[bar_vertical].unit_name
-    # If the provided units are in degrees, we will convert to meters first
-    # This will recalculate the ax_range
-    if units_proj=="degree":
-        warnings.warn(f"Provided CRS {bar['projection']} uses degrees. An attempt will be made at conversion, but there will be accuracy issues: it is recommended that you use a projected CRS instead.")
-        ylim = ax.get_ylim()
-        xlim = ax.get_xlim()
-        # Using https://github.com/seangrogan/great_circle_calculator/blob/master/great_circle_calculator/great_circle_calculator.py
-        # If the bar is vertical, we use the midpoint of the longitude (x-axis) and the max and min of the latitude (y-axis)
-        if bar_vertical==True:
-            ax_range = distance_between_points(((xlim[0]+xlim[1])/2, ylim[0]), ((xlim[0]+xlim[1])/2, ylim[1]))
-        # Otherwise, the opposite
-        else:
-            ax_range = distance_between_points((xlim[0], (ylim[0]+ylim[1])/2), (xlim[1], (ylim[0]+ylim[1])/2))
-        # Setting units_proj to meters now
-        units_proj = "m"
-        
-    # If a projected CRS is provided instead...
-    else:
-        # Standardizing the projection unit
-        try:
-            units_proj = sbt.units_standard[units_proj]
-        except:
-            warnings.warn(f"Units for specified projection ({units_proj}) are considered invalid; please use a different projection that conforms to an expected unit value (such as US survey feet or metres)")
-            return None
-
-    # Standardizing the units specified by the user
-    # This means we will also handle conversion if necessary
-    try:
-        units_user = sbt.units_standard.get(bar["unit"])
-    except:
-        warnings.warn(f"Desired output units selected by user ({bar['unit']}) are considered invalid; please use one of the units specified in the units_standard dictionary in defaults.py")
-        units_user = None
-
-    # Converting
-
-    # First, the case where the user doesn't provide any units
-    # In this instance, we just use the units from the projection
-    if units_user is None:
-        units_label = units_proj
-        # If necessary, scaling "small" units to "large" units
-        # Meters to km
-        if units_proj == "m" and ax_range > (1000*5):
-            ax_range = ax_range / 1000
-            units_label = "km"
-        # Feet to mi
-        elif units_proj == "ft" and ax_range > (5280*5):
-            ax_range = ax_range / 5280
-            units_label = "mi"
-
-    # Otherwise, if the user supplied a unit of some sort, then handle conversion
-    else:
-        units_label = units_user
-        # We only need to do so if the units are different, however!
-        if units_user != units_proj:
-            # This works by finding the ratios between the two units, using meters as the base
-            ax_range = ax_range * (sbt.convert_dict[units_proj] / sbt.convert_dict[units_user])
-    
-    ## BAR LENGTH AND MAX VALUE ##
-    # bar_max is the length of the bar in UNITS, not INCHES
-    # If it is not provided, the optimal value is calculated
-    if bar["max"] is None:
-        # If no bar length is provided, set to ~25% of the limit
-        if bar["length"] is None:
-            bar_max = 0.25 * ax_range
-        # If the value is less than 1, set to that proportion of the limit
-        elif bar["length"] < 1:
-            bar_max = bar["length"] * ax_range
-        # Otherwise, assume the value is already in inches, and calculate the fraction relative to the axis
-        # Then find the proportion of the limit
-        else:
-            if bar["length"] < ax_dim:
-                bar_max = (bar["length"] / ax_dim) * ax_range
-            else:
-                warnings.warn(f"Provided bar length ({bar['length']}) is greater than the axis length ({ax_dim}); setting bar length to default (25% of axis length).")
-                bar_max = 0.25 * ax_range
-    # If bar["max"] is provided, don't need to go through all of this effort
-    else:
-        if bar["length"] is not None:
-            warnings.warn("Both bar['max'] and bar['length'] were set, so the value for bar['length'] will be ignored. Please reference the documentation to understand why both may not be set at the same time.")
-        bar_max = bar["max"]
-
-
-    ## BAR DIVISIONS ##
-    # If both a max bar value and the # of breaks is provided, will not need to auto calculate
-    if bar["max"] is not None and bar["major_div"] is not None:
-        bar_max = bar["max"]
-        bar_length = (bar_max / ax_range) * ax_dim
-        major_div = bar["major_div"]
-        # If we don't want minor divs, 1 is the default value to auto-hide it
-        if bar.get("minor_type","none") == "none":
-            minor_div = 1
-        # Else, if the minor div is not provided, will generate a default
-        elif bar["minor_div"] is None:
-            # If major div is divisible by 2, then 2 is a good minor div
-            if major_div % 2 == 0:
-                minor_div = 2
-            # Otherwise, will basically auto-hide the minor div
-            else:
-                minor_div = 1
-        else:
-            minor_div = bar["minor_div"]
-
-    # If none, or only one, is provided, need to auto calculate optimal values
-    else:
-        # First, if a max bar value IS provided, but not the # of breaks, provide a warning that the value might be changed
-        if bar["max"] is not None or bar["major_div"] is not None:
-            warnings.warn(f"As one of bar['max'] and bar['major_div'] were not set, the values will be calculated automatically. This may result in different values from your input.")
-        # Finding the magnitude of the max of the bar
-        for units_mag in range(0,23):
-            if bar_max / (10 ** (units_mag+1)) > 1.5:
-                units_mag += 1
-            else:
-                break
-        
-        # Calculating the RMS for each preferred max number we have
-        major_breaks = list(sbt.preferred_divs.keys())
-        major_rms = [math.sqrt((m - (bar_max/(10**units_mag)))**2) for m in major_breaks]
-
-        # Sorting for the "best" number
-        # Sorted() works on the first item in the tuple contained in the list
-        sorted_breaks = [(m,r) for r,m in sorted(zip(major_rms, major_breaks))]
-
-        # Saving the values
-        bar_max_best = sorted_breaks[0][0]
-        bar_max = bar_max_best * 10**units_mag
-        bar_length = (bar_max / ax_range) * ax_dim
-        major_div = sbt.preferred_divs[bar_max_best][0]
-        if bar.get("minor_type","none") == "none":
-            minor_div = 1
-        else:
-            minor_div = sbt.preferred_divs[bar_max_best][1]
-        
-        # Doing a quick check of the calculated value, to see if it is "too long"
-        if (bar_length / ax_dim > 0.9) or (bar_max > ax_range * 0.9):
-            warnings.warn(f"The auto-calculated dimensions of the bar are too large for the axis. This usually happens when the height or width of your map is ~1 to 2 miles or kilometres (depending on your selected unit). This will result in a bar close to or longer than your axis, extending beyond your frame. Consider either manually specifying a 'max' and 'major_div' value less than 2, or switching your units to feet/metres as necessary.")
-
-    return bar_max, bar_length, units_label, major_div, minor_div
-
 # A small function for calculating the number of 90 degree rotations that are being applied
 # So we know if the bar is in a vertical or a horizontal rotation
 def _config_bar_vert(degrees):
@@ -1088,30 +906,31 @@ def _config_seg(bar_max, major_width, major_div, minor_div, minor_type, label_st
     segments = []
     ## SEGMENT WIDTHS ##
     # Starting with the minor boxes, if any
-    if minor_div > 1:
-        # If minor_type is first, we only need to append minor boxes for the first set of major divisions
-        if minor_type == "first":
-            # Minor
-            segments += [{"width":(major_width/minor_div), "length":(major_width/minor_div), "value":(d*(bar_max/major_div/minor_div)), "type":"minor"} for d in range(0,minor_div)]
-            # The edge between minor and major needs to have the width of a major div, but the lenght if a minor one
-            segments += [{"width":(major_width), "length":(major_width/minor_div), "value":(bar_max/major_div), "type":"major"}]
-            # After this we need to add a spacer! Otherwise our major divisions are offset
-            # I figured out the ((minor_div-1)/2) part by trial and error, but it seems to work well enough for now
-            segments += [{"width":(major_width/minor_div*((minor_div-1)/2)), "length":(major_width/minor_div*((minor_div-1)/2)), "value":-1, "type":"spacer", "label":None}]
-            # All the major divs (if any) after this are normal
-            if major_div > 1:
-                segments += [{"width":(major_width),"length":(major_width), "value":(d*(bar_max/major_div)), "type":"major"} for d in range(2,major_div+1)]
-        # If minor_type is all, we append minor boxes for every major division, and no major boxes at all
-        else:
-            # Here, we have to do another correction for the minor divs that fall on what would be a major division
-            segments += [{"width":(major_width/minor_div), "length":(major_width/minor_div), "value":(d*(bar_max/(major_div*minor_div))), "type":"major"} 
-                            if ((d*(bar_max/(major_div*minor_div))) % (bar_max/major_div) == 0) else 
-                         {"width":(major_width/minor_div), "length":(major_width/minor_div), "value":(d*(bar_max/(major_div*minor_div))), "type":"minor"} 
-                            for d in range(0,(minor_div*major_div)+1)]
     # If you don't have minor divs, you only make boxes for the major divs, and you start at the zeroeth position
-    else:
+    if minor_div <= 1 or minor_type == "none":
         segments += [{"width":(major_width), "length":(major_width), "value":(d*(bar_max/major_div)), "type":"major"} for d in range(0,major_div+1)]
-    
+    else:
+        if minor_div > 1:
+            # If minor_type is first, we only need to append minor boxes for the first set of major divisions
+            if minor_type == "first":
+                # Minor
+                segments += [{"width":(major_width/minor_div), "length":(major_width/minor_div), "value":(d*(bar_max/major_div/minor_div)), "type":"minor"} for d in range(0,minor_div)]
+                # The edge between minor and major needs to have the width of a major div, but the lenght if a minor one
+                segments += [{"width":(major_width), "length":(major_width/minor_div), "value":(bar_max/major_div), "type":"major"}]
+                # After this we need to add a spacer! Otherwise our major divisions are offset
+                # I figured out the ((minor_div-1)/2) part by trial and error, but it seems to work well enough for now
+                segments += [{"width":(major_width/minor_div*((minor_div-1)/2)), "length":(major_width/minor_div*((minor_div-1)/2)), "value":-1, "type":"spacer", "label":None}]
+                # All the major divs (if any) after this are normal
+                if major_div > 1:
+                    segments += [{"width":(major_width),"length":(major_width), "value":(d*(bar_max/major_div)), "type":"major"} for d in range(2,major_div+1)]
+            # If minor_type is all, we append minor boxes for every major division, and no major boxes at all
+            else:
+                # Here, we have to do another correction for the minor divs that fall on what would be a major division
+                segments += [{"width":(major_width/minor_div), "length":(major_width/minor_div), "value":(d*(bar_max/(major_div*minor_div))), "type":"major"} 
+                                if ((d*(bar_max/(major_div*minor_div))) % (bar_max/major_div) == 0) else 
+                            {"width":(major_width/minor_div), "length":(major_width/minor_div), "value":(d*(bar_max/(major_div*minor_div))), "type":"minor"} 
+                                for d in range(0,(minor_div*major_div)+1)]
+        
     # For all segments, we make sure that the first and last types are set to major
     segments[0]["type"] = "major"
     segments[-1]["type"] = "major"

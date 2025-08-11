@@ -37,7 +37,7 @@ preferred_divs = {
     7:[2,1],
     8:[4,2],
     9:[3,3],
-    10:[5,2],
+    10:[2,1],
 }
 
 # For converting between units
