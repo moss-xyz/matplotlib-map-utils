@@ -10,7 +10,7 @@
 
 ---
 
-### Introduction
+### 👋 Introduction
 
 `matplotlib_map_utils` is intended to be a package that provides various functions and objects that assist with the the creation of maps using [`matplotlib`](https://matplotlib.org/stable/).
 
@@ -34,7 +34,7 @@ Together, these allow for the easy creation of a map such as the following:
 
 ---
 
-### Installation
+### 💾 Installation
 
 This package is available on PyPi, and can be installed like so:
 
@@ -52,7 +52,7 @@ The requirements for this package are:
 
 ---
 
-### Package Structure
+### 📦 Package Structure
 
 <details>
 <summary><i>The package is arrayed in the following way:</i></summary>
@@ -241,6 +241,38 @@ This will create an output like the following:
 
 Refer to `docs\howto_scale_bar` for details on how to customize each facet of the scale bar.
 
+#### Specifying Length
+
+There are three main ways of specifying the length of a scale bar:
+
+- `length` is used to set the total length of the bar, either in _inches_ (for values >= 1) or as a _fraction of the axis_ (for values < 1).
+  - The default value of the scale bar utilizes this method, with a `length` value of `0.25` (meaning 25% of the axis).
+  - It will automatically orient itself against the horizontal or vertical axis when calculating its fraction, based on the value supplied for `rotation`.
+  - Note that any values here will be rounded to a "nice" whole integer, so the length will *always be approximate*; ex., if two inches is 9,128 units, your scale bar will end up being 9,000 units, and therefore a little less than two inches.
+  - Values `major_div` and `minor_div` are ignored, while a value for `max` will _override_ `length`.
+
+- `max` is used to define the total length of the bar, _in the same units as your map_, as determined by the value of `projection` and `unit`.
+  - Ex: If you are using a projection in feet, and give a `max` of `1000`, your scale bar will be representative of 1,000 feet.
+  - Ex: If you are using a projection in feet, but provide a value of `meter` to `unit`, and give a `max` of `1000`, your scale bar will be representative of 1,000 meters.
+  - Will _override_ any value provided for `length`, and give a warning that it is doing so!
+  - Values can be optionally be provided for `major_div` and `minor_div`, to subdivide the bar into major or minor segments as you desire; if left blank, values for these will be calculated automatically (see `preferred_divs` in `validation/scale_bar.py` for the values used).
+
+- `major_mult` can be used alongside `major_div` to _derive_ the total length: `major_mult` is the _length of a **single** major division_, in the _same units as your map_ (as determined by the value of `projection` and `unit`), which is then multiplied out by `major_div` to arrive at the desired length of the bar.
+  - Ex: If you set `major_mult` to 1,000, and `major_div` to 3, your bar will be 3,000 units long, divided into three 1,000 segments.
+  - This is the _only_ use case for `major_mult` - using it anywhere else will result in warnings and/or errors!
+  - Specifying either `max` or `length` will override this method!
+  - `minor_div` can still be _optionally_ provided.
+
+All of the above cases expect a valid CRS to be supplied to the `projection` parameter, to correctly calculate the relative size of the bar with respect to the map's underlying units. However, three _additional_ values may be passed to `projection`, to override this behavior entirely:
+
+- If `projection` is set to `px`, `pixel`, or `pixels`, then values for `max` and `major_mult` are interpreted as being in _pixels_ (so a `max` of 1,000 will result in a bar 1,000 pixels long)
+
+- If `projection` is set to `pt`, `point`, or `points`, then values for `max` and `major_mult` are interpreted as being in _points_ (so a `max` of 1,000 will result in a bar 1,000 points long (a point is 1/72 of an inch))
+
+- If `projection` is set to `dx`, `custom`, or `axis`, then values for `max` and `major_mult` are interpreted as being in _the units of the x or y axis_ (so a `max` of 1,000 will result in a bar equal to 1,000 units of the x-axis (if orientated horizontally))
+
+The intent of these additional methods is to provide an alternative interface for defining the bar, in the case of non-standard projections, or for non-cartographic use cases (in particular, this is inspired by the `dx` implementation of `matplotlib-scalebar`). However, this puts the onus on the user to know how big their bar should be - you also cannot pass a value to `unit` to convert! Note you can provide custom label text to the bar via the `labels` and `units` arguments (ex. if you need to label "inches" or something).
+
 </details>
 
 ---
@@ -328,7 +360,7 @@ usa = USA()
 # Getting a list FIPS codes for US States
 usa.filter(states=True, to_return="fips")
 # Getting a list of State Names for states in the South and Midwest regions
-usa.filter(region=["South","Midtwest"], to_return="name")
+usa.filter(region=["South","Midwest"], to_return="name")
 ```
 
 Refer to `docs\howto_utils` for details on how to use this class, including with `pandas.apply()`.
@@ -337,7 +369,7 @@ Refer to `docs\howto_utils` for details on how to use this class, including with
 
 ---
 
-### Development Notes
+### 📝 Development Notes
 
 #### Inspiration and Thanks
 
@@ -351,6 +383,9 @@ Two more projects assisted with the creation of this script:
 
 #### Releases
 
+<details>
+<summary><i>See prior release notes</i></summary>
+
 - `v1.0.x`: Initial releases featuring the North Arrow element, along with some minor bug fixes.
 
 - `v2.0.0`: Initial release of the Scale Bar element.
@@ -361,15 +396,21 @@ Two more projects assisted with the creation of this script:
 
 - `v2.1.0`: Added a utility class, `USA`, for filtering subsets of US states and territories based on FIPS code, name, abbreviation, region, division, and more. This is considered a beta release, and might be subject to change later on.
 
+</details>
+<br>
+
 - `v3.0.0`: Release of inset map and extent and detail indicator classes and functions.
 
 - `v3.0.1`: Fixed a bug that led to an incorrect Scale Bar being rendered when using the function method (`scale_bar()`) on a plot containing raster data (see [here](https://github.com/moss-xyz/matplotlib-map-utils/issues/10) for details).
+
+- `v3.1.0`: Overhauled the functionality for specifying the the length of a scale bar, including support for custom units/projections (similar to `matplotlib-scalebar`'s `dx` argument) and to specify the length of a major division instead of the entire scale bar, as requested [here](https://github.com/moss-xyz/matplotlib-map-utils/issues/10). Added ability to set artist-level `zorder` variables for all elements, with both the function and class method approaches, as requested [here](https://github.com/moss-xyz/matplotlib-map-utils/issues/9) and [here](https://github.com/moss-xyz/matplotlib-map-utils/issues/10). Also fixed a bug related to custom division labels on the scale bar.
 
 #### Future Roadmap
 
 With the release of `v3.x`, this project has achieved full coverage of the "main" map elements I think are necessary.
 
-If I continue development of this project, I will be looking to add or fix the following features:
+<details>
+<summary><i>If I continue development of this project, I will be looking to add or fix the following features:</i></summary>
 
 * For all: switch to a system based on Pydantic for easier type validation
 
@@ -405,14 +446,18 @@ If I continue development of this project, I will be looking to add or fix the f
 
 Future releases (if the project is continued) will probably focus on other functions that I have created myself that give more control in the formatting of maps. I am also open to ideas for other extensions to create!
 
+</details>
+
 #### Support and Contributions
 
 If you notice something is not working as intended or if you'd like to add a feature yourself, I welcome PRs - just be sure to be descriptive as to what you are changing and why, including code examples!
 
 If you are having issues using this script, feel free to leave a post explaining your issue, and I will try and assist, though I have no guaranteed SLAs as this is just a hobby project.
 
+I am open to contributions, especially to help tackle the roadmap above!
+
 ---
 
-### License
+### ⚖️ License
 
 I know nothing about licensing, so I went with the GPL license. If that is incompatible with any of the dependencies, please let me know.

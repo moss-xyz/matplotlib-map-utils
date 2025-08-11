@@ -96,6 +96,7 @@ class _TYPE_ROTATION(TypedDict, total=False):
 _VALIDATE_PRIMARY = {
     "location":{"func":vf._validate_list, "kwargs":{"list":["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]}},
     "scale":{"func":vf._validate_range, "kwargs":{"min":0, "max":None, "none_ok":True}}, # between 0 and inf
+    "zorder":{"func":vf._validate_type, "kwargs":{"match":int}}, # any int
 }
 
 _VALIDATE_BASE = {

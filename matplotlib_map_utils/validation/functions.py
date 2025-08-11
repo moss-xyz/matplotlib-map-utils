@@ -174,8 +174,8 @@ def _validate_or(prop, val, funcs, kwargs):
              # If we pass, we can stop here and return the value
             success = True 
             break
-        except:
-            pass
+        except Exception as e:
+            continue
     if success == False:
         # If we didn't return a value and exit the loop yet, then the passed value is incorrect, as we raise an error
         raise ValueError(f"{val} is not a valid value for {prop}, please check the documentation")
@@ -223,7 +223,7 @@ def _validate_dict(input_dict, default_dict, functions, to_validate=None, return
         # Pre-checking that no invalid keys are passed
         invalid = [key for key in values.keys() if key not in functions.keys() and key not in ["bbox_to_anchor", "bbox_transform"]]
         if len(invalid) > 0:
-            print(f"Warning: Invalid keys detected ({invalid}). These will be ignored.")
+            warnings.warn(f"Warning: Invalid keys detected ({invalid}). These will be ignored.")
         # First, trimming our values to only those we need to validate
         if to_validate == "input":
             values = {key: val for key, val in values.items() if (key in input_dict.keys() and key in functions.keys())} # have to check against both here
@@ -241,9 +241,6 @@ def _validate_dict(input_dict, default_dict, functions, to_validate=None, return
             # NOTE: This is messy but the only way to get the rotation value to the crs function
             if key=="crs":
                 _ = func(prop=key, val=val, rotation_dict=values, **fd["kwargs"])
-            # NOTE: This is messy but the only way to check the projection dict without keywords
-            elif key=="projection":
-                _ = func(prop=key, val=val)
             # Our custom functions always have this dictionary key in them, so we know what form they take
             elif "kwargs" in fd:
                 _ = func(prop=key, val=val, **fd["kwargs"])

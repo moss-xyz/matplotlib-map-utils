@@ -37,7 +37,7 @@ preferred_divs = {
     7:[2,1],
     8:[4,2],
     9:[3,3],
-    10:[5,2],
+    10:[2,1],
 }
 
 # For converting between units
@@ -89,6 +89,7 @@ class _TYPE_BAR(TypedDict, total=False):
     minor_div: int # the number of minor divisions on the bar
     minor_frac: float # the fraction of the major division that the minor division should be (e.g. 0.5 = half the size of the major division)
     minor_type: Literal["all","first","none"] # whether the minor divisions should be drawn on all major divisions or just the first one
+    major_mult: float | int # used in conjunction with major_div to define the length of the bar, if desired
     # Boxes only
     facecolors: list | tuple | str # a color or list of colors to use for the faces of the boxes
     edgecolors: list | tuple | str # a color or list of colors to use for the edges of the boxes
@@ -165,13 +166,14 @@ class _TYPE_AOB(TypedDict, total=False):
 _VALIDATE_PRIMARY = {
     "style":{"func":vf._validate_list, "kwargs":{"list":["ticks","boxes"]}},
     "location":{"func":vf._validate_list, "kwargs":{"list":["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]}},
+    "zorder":{"func":vf._validate_type, "kwargs":{"match":int}}, # only check that it is an int
 }
 
 _VALID_BAR_TICK_LOC = get_args(_TYPE_BAR.__annotations__["tick_loc"])
 _VALID_BAR_MINOR_TYPE = get_args(_TYPE_BAR.__annotations__["minor_type"]) 
 
 _VALIDATE_BAR = {
-    "projection":{"func":vf._validate_projection, "kwargs":{"none_ok":False}}, # must be a valid CRS
+    "projection":{"func":vf._validate_or, "kwargs":{"funcs":[vf._validate_projection, vf._validate_list], "kwargs":[{"none_ok":False}, {"list":["px","pixel","pixels","pt","point","points","dx","custom","axis"], "none_ok":False}]}}, # between 0 and inf, or a two-tuple of (x,y) size, each between 0 and inf
     "unit":{"func":vf._validate_list, "kwargs":{"list":list(units_standard.keys()), "none_ok":True}}, # any of the listed unit values are accepted
     "rotation":{"func":vf._validate_range, "kwargs":{"min":-360, "max":360, "none_ok":True}}, # between -360 and 360 degrees
     "max":{"func":vf._validate_range, "kwargs":{"min":0, "max":None, "none_ok":True}}, # between 0 and inf
@@ -179,10 +181,11 @@ _VALIDATE_BAR = {
     "height":{"func":vf._validate_range, "kwargs":{"min":0, "max":None, "none_ok":True}}, # between 0 and inf
     "reverse":{"func":vf._validate_type, "kwargs":{"match":bool}}, # any bool
 
-    "major_div":{"func":vf._validate_range, "kwargs":{"min":1, "max":None, "none_ok":True}}, # between 0 and inf
+    "major_div":{"func":vf._validate_range, "kwargs":{"min":1, "max":None, "none_ok":True}}, # between 1 and inf
     "minor_div":{"func":vf._validate_range, "kwargs":{"min":0, "max":None, "none_ok":True}}, # between 0 and inf
     "minor_frac":{"func":vf._validate_range, "kwargs":{"min":0, "max":1, "none_ok":True}}, # ticks only: between 0 and 1
     "minor_type":{"func":vf._validate_list, "kwargs":{"list":_VALID_BAR_MINOR_TYPE, "none_ok":True}}, # any item in the list, or None (for no minor)
+    "major_mult":{"func":vf._validate_range, "kwargs":{"min":0, "max":None, "none_ok":True}}, # between 0 and inf
 
     "facecolors":{"func":vf._validate_iterable, "kwargs":{"func":matplotlib.rcsetup.validate_color}}, # boxes only: any color value for matplotlib
     "edgecolors":{"func":vf._validate_iterable, "kwargs":{"func":matplotlib.rcsetup.validate_color}}, # boxes only: any color value for matplotlib
@@ -202,7 +205,7 @@ _VALID_LABELS_FONTWEIGHT = get_args(_TYPE_LABELS.__annotations__["fontweight"])
 _VALID_LABELS_ROTATION_MODE = get_args(_TYPE_LABELS.__annotations__["rotation_mode"])
 
 _VALIDATE_LABELS = {
-    "labels":{"func":vf._validate_iterable, "kwargs":{"func":vf._validate_types,"kwargs":{"matches":[str,bool], "none_ok":True}}}, # any list of strings
+    "labels":{"func":vf._validate_iterable, "kwargs":{"func":vf._validate_types,"kwargs":{"matches":[str,bool,int,float], "none_ok":True}}}, # any list of strings
     "format":{"func":vf._validate_type, "kwargs":{"match":str}}, # only check that it is a string, not that it is a valid format string
     "format_int":{"func":vf._validate_type, "kwargs":{"match":bool}}, # any bool
     "style":{"func":vf._validate_list, "kwargs":{"list":_VALID_LABELS_STYLE}}, # any item in the list
