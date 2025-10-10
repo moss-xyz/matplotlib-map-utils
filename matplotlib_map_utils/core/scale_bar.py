@@ -771,7 +771,6 @@ def _config_bar_dim(ax, bar_vertical, bar_projection, bar_unit):
             units_user = None
 
         # Converting
-
         # First, the case where the user doesn't provide any units
         # In this instance, we just use the units from the projection
         if units_user is None:
@@ -785,6 +784,9 @@ def _config_bar_dim(ax, bar_vertical, bar_projection, bar_unit):
             elif units_proj == "ft" and ax_range > (5280*5):
                 ax_units = ax_range / 5280
                 units_label = "mi"
+            # Otherwise, if no scaling is necessary...
+            else:
+                ax_units = ax_range
 
         # Otherwise, if the user supplied a unit of some sort, then handle conversion
         else:
@@ -793,6 +795,9 @@ def _config_bar_dim(ax, bar_vertical, bar_projection, bar_unit):
             if units_user != units_proj:
                 # This works by finding the ratios between the two units, using meters as the base
                 ax_units = ax_range * (sbt.convert_dict[units_proj] / sbt.convert_dict[units_user])
+            # Otherwise, if the units are the same
+            else: 
+                ax_units = ax_range
     
     return ax_inches, ax_units, units_label
 

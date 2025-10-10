@@ -160,7 +160,9 @@ This will create an output like the following:
 
 ![Customized north arrow](matplotlib_map_utils/docs/assets/readme_northarrow_customization.png)
 
-Refer to `docs\howto_north_arrow` for details on how to customize each facet of the north arrow.
+Refer to `docs\howto_north_arrow` for details on how to customize each facet of the north arrow. 
+
+_Note: only add a north arrow **after** adding all of your geodata and changing your axis limits!_
 
 #### Rotation
 
@@ -241,6 +243,8 @@ This will create an output like the following:
 
 Refer to `docs\howto_scale_bar` for details on how to customize each facet of the scale bar.
 
+_Note: only add a scale bar **after** adding all of your geodata and changing your axis limits!_
+
 #### Specifying Length
 
 There are three main ways of specifying the length of a scale bar:
@@ -272,7 +276,6 @@ All of the above cases expect a valid CRS to be supplied to the `projection` par
 - If `projection` is set to `dx`, `custom`, or `axis`, then values for `max` and `major_mult` are interpreted as being in _the units of the x or y axis_ (so a `max` of 1,000 will result in a bar equal to 1,000 units of the x-axis (if orientated horizontally))
 
 The intent of these additional methods is to provide an alternative interface for defining the bar, in the case of non-standard projections, or for non-cartographic use cases (in particular, this is inspired by the `dx` implementation of `matplotlib-scalebar`). However, this puts the onus on the user to know how big their bar should be - you also cannot pass a value to `unit` to convert! Note you can provide custom label text to the bar via the `labels` and `units` arguments (ex. if you need to label "inches" or something).
-
 </details>
 
 ---
@@ -332,7 +335,6 @@ This will create an output like the following (extent indicator on the left, det
 ![Customized scale bar](matplotlib_map_utils/docs/assets/readme_indicators.png)
 
 Refer to `docs\howto_inset_map` for details on how to customize the inset map and indicators to your liking.
-
 </details>
 
 ---
@@ -364,7 +366,6 @@ usa.filter(region=["South","Midwest"], to_return="name")
 ```
 
 Refer to `docs\howto_utils` for details on how to use this class, including with `pandas.apply()`.
-
 </details>
 
 ---
@@ -395,15 +396,15 @@ Two more projects assisted with the creation of this script:
 - `v2.0.2`: Changed f-string formatting to alternate double and single quotes, so as to maintain compatibility with versions of Python before 3.12 (see [here](https://github.com/moss-xyz/matplotlib-map-utils/issues/3)). However, this did reveal that another aspect of the code, namely concatenating `type` in function arguments, requires 3.10, and so the minimum python version was incremented.
 
 - `v2.1.0`: Added a utility class, `USA`, for filtering subsets of US states and territories based on FIPS code, name, abbreviation, region, division, and more. This is considered a beta release, and might be subject to change later on.
-
 </details>
-<br>
 
 - `v3.0.0`: Release of inset map and extent and detail indicator classes and functions.
 
 - `v3.0.1`: Fixed a bug that led to an incorrect Scale Bar being rendered when using the function method (`scale_bar()`) on a plot containing raster data (see [here](https://github.com/moss-xyz/matplotlib-map-utils/issues/10) for details).
 
 - `v3.1.0`: Overhauled the functionality for specifying the the length of a scale bar, including support for custom units/projections (similar to `matplotlib-scalebar`'s `dx` argument) and to specify the length of a major division instead of the entire scale bar, as requested [here](https://github.com/moss-xyz/matplotlib-map-utils/issues/10). Added ability to set artist-level `zorder` variables for all elements, with both the function and class method approaches, as requested [here](https://github.com/moss-xyz/matplotlib-map-utils/issues/9) and [here](https://github.com/moss-xyz/matplotlib-map-utils/issues/10). Also fixed a bug related to custom division labels on the scale bar.
+
+- `v3.1.1`: Fixed a bug that led to errors when creating a `scale_bar` at resolutions below 5km or 1 mile, due to a bug in the backend configuration functions (namely, `_config_bar_dim()`), which was fixed by correctly instantiating the necessary variable `ax_units` in other cases via an `else` statement (see [here](https://github.com/moss-xyz/matplotlib-map-utils/issues/14) for details).
 
 #### Future Roadmap
 
