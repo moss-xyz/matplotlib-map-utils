@@ -203,7 +203,7 @@ _VALIDATE_BAR = {
     "interpolation":{"func":vf._validate_type, "kwargs":{"match":str, "none_ok":True}},
     "dpi_cor":{"func":vf._validate_type, "kwargs":{"match":bool}},
     "resample":{"func":vf._validate_type, "kwargs":{"match":bool}},
-    "raster_dpi":{"func":vf._validate_range, "kwargs":{"min":0.0001, "max":None, "none_ok":True}},
+    "raster_dpi":{"func":vf._validate_range, "kwargs":{"min":1, "max":None, "none_ok":True}},
     "raster_dpi_scale":{"func":vf._validate_range, "kwargs":{"min":0.0001, "max":None, "none_ok":True}},
 }
 
