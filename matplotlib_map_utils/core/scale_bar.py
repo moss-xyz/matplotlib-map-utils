@@ -205,9 +205,14 @@ class ScaleBar(matplotlib.artist.Artist):
     # THANK YOU to matplotlib-scalebar for figuring this out
     # Note that we never specify the renderer - the axis takes care of it!
     def draw(self, renderer, *args, **kwargs):
+        # Prefer renderer dpi for class-based artists so exports stay sharp
+        # when savefig(dpi=...) differs from the figure construction dpi.
+        _bar = copy.deepcopy(self._bar)
+        if _bar.get("raster_dpi", None) is None:
+            _bar["raster_dpi"] = renderer.dpi
         # Can re-use the drawing function we already established, but return the object instead
         sb_artist = scale_bar(ax=self.axes, style=self._style, location=self._location, draw=False,
-                                    bar=self._bar, units=self._units, 
+                                    bar=_bar, units=self._units,
                                     labels=self._labels, text=self._text, aob=self._aob,
                                     zorder=self._zorder)
         # This handles the actual drawing
@@ -272,6 +277,14 @@ def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
     _text = sbf._validate_dict(text, copy.deepcopy(_DEFAULT_TEXT), sbt._VALIDATE_TEXT, return_clean=True) # this one has to be a deepcopy due to dictionary immutability
     _aob = sbf._validate_dict(aob, _DEFAULT_AOB, sbt._VALIDATE_AOB, return_clean=True)
 
+    # Raster controls for the temporary rendered image.
+    # These are kept explicit so output quality is not coupled to external rc state.
+    _fig = ax.get_figure()
+    _raster_dpi = _bar.get("raster_dpi", None)
+    if _raster_dpi is None:
+        _raster_dpi = _fig.dpi
+    _raster_dpi = _raster_dpi * _bar.get("raster_dpi_scale", 1)
+
     ##### CONFIGURING TEXT #####
     # First need to convert each string font size (if any) to a point size
     for d in [_text, _labels, _units]:
@@ -290,7 +303,7 @@ def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
     # First, ensuring matplotlib knows the correct dimensions for everything
     # as we need it to be accurate to calculate out the plots!
     if draw:
-        ax.get_figure().draw_without_rendering()
+        _fig.draw_without_rendering()
 
     # Getting the config for the bar (length, text, divs, etc.)
     bar_max, bar_length, units_label, major_div, minor_div = _config_bar(ax, _bar)
@@ -308,7 +321,7 @@ def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
         units_label = _units["label"]
 
     # Creating a temporary figure and axis for rendering later
-    fig_temp, ax_temp = _temp_figure(ax)
+    fig_temp, ax_temp = _temp_figure(ax, dpi=_raster_dpi)
 
     ##### BAR CONSTRUCTION #####
 
@@ -472,7 +485,14 @@ def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
 
     # Placing the image in an OffsetBox, while rotating if desired
     # We have to set the zoom level to be relative to the DPI as well (image is in pixels)
-    offset_img = matplotlib.offsetbox.OffsetImage(img_scale_bar, origin="upper", zoom=72/fig_temp.dpi)
+    offset_img = matplotlib.offsetbox.OffsetImage(
+        img_scale_bar,
+        origin="upper",
+        zoom=72/fig_temp.dpi,
+        interpolation=_bar.get("interpolation", "none"),
+        dpi_cor=_bar.get("dpi_cor", True),
+        resample=_bar.get("resample", False),
+    )
     # If desired, we can just return the rendered image in the final OffsetImage
     # This will override any aob or draw selections! Only the OffsetImage is returned!
     if return_aob==False:
@@ -1087,15 +1107,18 @@ def _format_numeric(val, fmt, integer_override=True):
             return f"{val:{fmt}}"
 
 # A small function for creating a temporary figure based on a provided axis
-def _temp_figure(ax, axis=False, visible=False):
+def _temp_figure(ax, axis=False, visible=False, dpi=None):
     # Getting the figure of the provided axis
     fig = ax.get_figure()
+    # If no dpi is passed, fall back to the figure dpi
+    if dpi is None:
+        dpi = fig.dpi
     # Getting the dimensions of the axis
     ax_bbox = ax.patch.get_window_extent()
     # Converting to inches and rounding up
     ax_dim = math.ceil(max(ax_bbox.height, ax_bbox.width) / fig.dpi)
     # Creating a new temporary figure
-    fig_temp, ax_temp = matplotlib.pyplot.subplots(1,1, figsize=(ax_dim*1.5, ax_dim*1.5), dpi=fig.dpi)
+    fig_temp, ax_temp = matplotlib.pyplot.subplots(1,1, figsize=(ax_dim*1.5, ax_dim*1.5), dpi=dpi)
     # Turning off the x and y labels if desired
     if axis == False:
         ax_temp.axis("off")

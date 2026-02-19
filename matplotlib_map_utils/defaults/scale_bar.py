@@ -35,7 +35,12 @@ _BAR_XS = {
     "tick_loc":"above",
     "basecolors":["black"],
     "tickcolors":["black"],
-    "tickwidth":0.5 # changed
+    "tickwidth":0.5, # changed
+    "interpolation":"none",
+    "dpi_cor":True,
+    "resample":False,
+    "raster_dpi":None,
+    "raster_dpi_scale":1,
 }
 
 # Labels
@@ -107,7 +112,12 @@ _BAR_SM = {
     "tick_loc":"above",
     "basecolors":["black"],
     "tickcolors":["black"],
-    "tickwidth":0.75 # changed
+    "tickwidth":0.75, # changed
+    "interpolation":"none",
+    "dpi_cor":True,
+    "resample":False,
+    "raster_dpi":None,
+    "raster_dpi_scale":1,
 }
 
 # Labels
@@ -179,7 +189,12 @@ _BAR_MD = {
     "tick_loc":"above",
     "basecolors":["black"],
     "tickcolors":["black"],
-    "tickwidth":1.5 # changed
+    "tickwidth":1.5, # changed
+    "interpolation":"none",
+    "dpi_cor":True,
+    "resample":False,
+    "raster_dpi":None,
+    "raster_dpi_scale":1,
 }
 
 # Labels
@@ -251,7 +266,12 @@ _BAR_LG = {
     "tick_loc":"above",
     "basecolors":["black"],
     "tickcolors":["black"],
-    "tickwidth":3 # changed
+    "tickwidth":3, # changed
+    "interpolation":"none",
+    "dpi_cor":True,
+    "resample":False,
+    "raster_dpi":None,
+    "raster_dpi_scale":1,
 }
 
 # Labels
@@ -323,7 +343,12 @@ _BAR_XL = {
     "tick_loc":"above",
     "basecolors":["black"],
     "tickcolors":["black"],
-    "tickwidth":5 # changed
+    "tickwidth":5, # changed
+    "interpolation":"none",
+    "dpi_cor":True,
+    "resample":False,
+    "raster_dpi":None,
+    "raster_dpi_scale":1,
 }
 
 # Labels
