@@ -320,9 +320,6 @@ def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
     if _units["label"] is not None:
         units_label = _units["label"]
 
-    # Creating a temporary figure and axis for rendering later
-    fig_temp, ax_temp = _temp_figure(ax, dpi=_raster_dpi)
-
     ##### BAR CONSTRUCTION #####
 
     # Defining the height and width of the bar
@@ -472,6 +469,30 @@ def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
         major_pack = matplotlib.offsetbox.VPacker(children=units_elements, sep=_units["sep"], pad=_units["pad"], align=units_align)
 
     ##### RENDERING #####
+    # If no rotation is requested and an AnchoredOffsetBox is expected,
+    # keep the packed artists vectorized for crisp text/edges at any export DPI.
+    _rotation = _bar.get("rotation", 0) or 0
+    if return_aob==True and math.isclose(_rotation % 360, 0, abs_tol=1e-9):
+        aob_img = matplotlib.offsetbox.AnchoredOffsetbox(loc=_location, child=major_pack, **_del_keys(_aob, ["facecolor","edgecolor","alpha"]))
+        if _aob["facecolor"] is not None:
+            aob_img.patch.set_facecolor(_aob["facecolor"])
+            aob_img.patch.set_visible(True)
+        if _aob["edgecolor"] is not None:
+            aob_img.patch.set_edgecolor(_aob["edgecolor"])
+            aob_img.patch.set_visible(True)
+        if _aob["alpha"]:
+            aob_img.patch.set_alpha(_aob["alpha"])
+            aob_img.patch.set_visible(True)
+        aob_img.set_zorder(_zorder)
+        if draw == True:
+            _ = ax.add_artist(aob_img)
+            return
+        else:
+            return aob_img
+
+    # For rotated bars (or explicit OffsetImage return), render to raster.
+    fig_temp, ax_temp = _temp_figure(ax, dpi=_raster_dpi)
+
     # Here, we have to render the scale bar as an image on the temporary fig and ax we made
     # This is because it is honestly too difficult to keep the image as-is and apply our rotations
     # Mainly because Matplotlib doesn't let you place a nested OffsetBox inside of an AuxTransformBox with a rotation applied
