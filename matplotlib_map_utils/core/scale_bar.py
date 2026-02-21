@@ -256,6 +256,22 @@ def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
                   aob: None | bool | sbt._TYPE_AOB=None,
                   zorder: int=99,
                   return_aob: bool=True,):
+    # For the default function mode, dispatch to the Artist class so final
+    # rasterization happens at draw-time with the active renderer dpi.
+    if draw == True and return_aob == True:
+        _ = ax.add_artist(
+            ScaleBar(
+                style=style,
+                location=location,
+                bar=bar,
+                units=units,
+                labels=labels,
+                text=text,
+                aob=aob,
+                zorder=zorder,
+            )
+        )
+        return
 
     ##### VALIDATION #####
     _style = sbf._validate(sbt._VALIDATE_PRIMARY, "style", style)
