@@ -1309,9 +1309,9 @@ def _render_as_image(fig, ax, artist, rotation, add=True, remove=True, close=Tru
     # If needed, adding the artist to the axis
     if add == True:
         ax.add_artist(artist)
-    # Draw the figure, but without showing it, to place all the elements
-    fig.draw_without_rendering()
-    # Sets the canvas for the figure to AGG (Anti-Grain Geometry)
+    # Render directly with Agg; a prior draw_without_rendering() can override
+    # temporary figure DPI in some wrappers (e.g., UltraPlot), which makes
+    # raster_dpi ineffective.
     canvas = FigureCanvasAgg(fig)
     # Draws the figure onto the canvas
     canvas.draw()
