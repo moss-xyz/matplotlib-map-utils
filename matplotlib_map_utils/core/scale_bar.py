@@ -35,6 +35,18 @@ from ..validation import functions as sbf
 
 _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = sbd._DEFAULTS_SB["md"]
 
+
+def _resolve_raster_dpi(bar, fig, renderer=None):
+    """
+    Resolve base raster DPI and raster scale for temporary rendering.
+    """
+    raster_dpi = bar.get("raster_dpi", None)
+    if raster_dpi is None:
+        raster_dpi = renderer.dpi if renderer is not None else fig.dpi
+    raster_dpi_scale = bar.get("raster_dpi_scale", 1)
+    return raster_dpi, raster_dpi_scale
+
+
 ### CLASSES ###
 
 class ScaleBar(matplotlib.artist.Artist):
@@ -209,7 +221,10 @@ class ScaleBar(matplotlib.artist.Artist):
         # when savefig(dpi=...) differs from the figure construction dpi.
         _bar = copy.deepcopy(self._bar)
         if _bar.get("raster_dpi", None) is None:
-            _bar["raster_dpi"] = renderer.dpi
+            _raster_dpi, _ = _resolve_raster_dpi(
+                _bar, self.axes.get_figure(), renderer=renderer
+            )
+            _bar["raster_dpi"] = _raster_dpi
         # Can re-use the drawing function we already established, but return the object instead
         sb_artist = scale_bar(ax=self.axes, style=self._style, location=self._location, draw=False,
                                     bar=_bar, units=self._units,
@@ -296,10 +311,8 @@ def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
     # Raster controls for the temporary rendered image.
     # These are kept explicit so output quality is not coupled to external rc state.
     _fig = ax.get_figure()
-    _raster_dpi = _bar.get("raster_dpi", None)
-    if _raster_dpi is None:
-        _raster_dpi = _fig.dpi
-    _raster_dpi = _raster_dpi * _bar.get("raster_dpi_scale", 1)
+    _raster_dpi, _raster_dpi_scale = _resolve_raster_dpi(_bar, _fig)
+    _raster_dpi = _raster_dpi * _raster_dpi_scale
 
     ##### CONFIGURING TEXT #####
     # First need to convert each string font size (if any) to a point size
