@@ -99,6 +99,11 @@ class _TYPE_BAR(TypedDict, total=False):
     basecolors: list | tuple | str # a color or list of colors to use for the bottom bar
     tickcolors: list | tuple | str # a color or list of colors to use for the ticks
     tickwidth: float | int # the line thickness of the bottom bar and ticks
+    interpolation: str | None # interpolation method used by OffsetImage; e.g. "none", "nearest", "bilinear"
+    dpi_cor: bool # whether OffsetImage should be corrected for renderer dpi (matplotlib default behavior)
+    resample: bool # whether OffsetImage should use image resampling during scaling
+    raster_dpi: float | int | None # explicit dpi for temporary rasterization step, None uses figure/renderer dpi
+    raster_dpi_scale: float | int # multiplier applied to raster_dpi for supersampling
 
 
 class _TYPE_LABELS(TypedDict, total=False):
@@ -195,6 +200,11 @@ _VALIDATE_BAR = {
     "basecolors":{"func":vf._validate_iterable, "kwargs":{"func":matplotlib.rcsetup.validate_color}}, # ticks only: any color value for matplotlib
     "tickcolors":{"func":vf._validate_iterable, "kwargs":{"func":matplotlib.rcsetup.validate_color}}, # ticks only: any color value for matplotlib
     "tickwidth":{"func":vf._validate_range, "kwargs":{"min":0, "max":None, "none_ok":True}}, # ticks only: between 0 and inf
+    "interpolation":{"func":vf._validate_type, "kwargs":{"match":str, "none_ok":True}},
+    "dpi_cor":{"func":vf._validate_type, "kwargs":{"match":bool}},
+    "resample":{"func":vf._validate_type, "kwargs":{"match":bool}},
+    "raster_dpi":{"func":vf._validate_range, "kwargs":{"min":1, "max":None, "none_ok":True}},
+    "raster_dpi_scale":{"func":vf._validate_range, "kwargs":{"min":0.0001, "max":None, "none_ok":True}},
 }
 
 _VALID_LABELS_STYLE = get_args(_TYPE_LABELS.__annotations__["style"])
