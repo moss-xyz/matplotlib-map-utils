@@ -406,6 +406,8 @@ Two more projects assisted with the creation of this script:
 
 - `v3.1.1`: Fixed a bug that led to errors when creating a `scale_bar` at resolutions below 5km or 1 mile, due to a bug in the backend configuration functions (namely, `_config_bar_dim()`), which was fixed by correctly instantiating the necessary variable `ax_units` in other cases via an `else` statement (see [here](https://github.com/moss-xyz/matplotlib-map-utils/issues/14) for details).
 
+- `v3.1.2`: Fixed a compatibility issue with [Ultraplot](https://github.com/Ultraplot/UltraPlot), primarily affecting the `ScaleBar` element, where text would rasterize at a low resolution (see [here](https://github.com/moss-xyz/matplotlib-map-utils/issues/16) and [here](https://github.com/moss-xyz/matplotlib-map-utils/pull/17) for details). A big thank you to cvanelteren on the Ultraplot team for identifying and implementing the necessary fixes, as well as making adjustments to the Ultraplot package to improve compatibility!
+
 #### Future Roadmap
 
 With the release of `v3.x`, this project has achieved full coverage of the "main" map elements I think are necessary.
