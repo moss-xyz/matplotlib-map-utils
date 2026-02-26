@@ -36,17 +36,6 @@ from ..validation import functions as sbf
 _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = sbd._DEFAULTS_SB["md"]
 
 
-def _resolve_raster_dpi(bar, fig, renderer=None):
-    """
-    Resolve base raster DPI and raster scale for temporary rendering.
-    """
-    raster_dpi = bar.get("raster_dpi", None)
-    if raster_dpi is None:
-        raster_dpi = renderer.dpi if renderer is not None else fig.dpi
-    raster_dpi_scale = bar.get("raster_dpi_scale", 1)
-    return raster_dpi, raster_dpi_scale
-
-
 ### CLASSES ###
 
 class ScaleBar(matplotlib.artist.Artist):
@@ -1344,3 +1333,14 @@ def _render_as_image(fig, ax, artist, rotation, add=True, remove=True, close=Tru
         matplotlib.pyplot.close(fig)
     # Returning the image
     return img
+
+
+def _resolve_raster_dpi(bar, fig, renderer=None):
+    """
+    Resolve base raster DPI and raster scale for temporary rendering.
+    """
+    raster_dpi = bar.get("raster_dpi", None)
+    if raster_dpi is None:
+        raster_dpi = renderer.dpi if renderer is not None else fig.dpi
+    raster_dpi_scale = bar.get("raster_dpi_scale", 1)
+    return raster_dpi, raster_dpi_scale
