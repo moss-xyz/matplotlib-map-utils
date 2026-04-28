@@ -1,0 +1,40 @@
+/* Changes the font colour of code blocks that exist in the first column
+   which is what I use for tables of attributes / parameters */
+.md-typeset td:first-child > code {
+	color: var(--md-accent-fg-color)
+}
+
+.strong-fg {
+	color: var(--md-accent-fg-color); 
+	font-weight: bold;
+}
+
+.strong-ac {
+	color: var(--md-typeset-a-color); 
+	font-weight: bold;
+}
+
+.emphasis-fg {
+	color: var(--md-accent-fg-color); 
+	font-style: italic;
+}
+
+.emphasis-ac {
+	color: var(--md-typeset-a-color); 
+	font-style: italic;
+}
+
+a.nav-xul {
+	text-decoration: none;
+	color: var(--md-typeset-color);
+	font-weight: normal;
+}
+
+a.nav-xul:hover {
+	text-decoration: none;
+	color: var(--md-typeset-a-color);
+}
+
+.code-inline {
+	font-family: var(--md-code-font-family);
+}

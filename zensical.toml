@@ -1,0 +1,154 @@
+[project]
+
+site_name = "matplotlib_map_utils"
+site_description = "Documentation for using matplotlib_map_utils to generate maps in Python"
+site_author = "@moss_xyz"
+site_url = "https://moss_xyz.github.io/matplotlib_map_utils"
+
+repo_url = "https://github.com/moss_xyz/matplotlib_map_utils"
+repo_name = "moss_xyz/matplotlib_map_utils"
+
+copyright = """
+Copyright &copy; 2026 @moss_xyz
+"""
+
+nav = [
+	{"Home" = "index.md"},
+	{"Quick Start" = "quick.md"},
+	{"Package Info" = "package.md"},
+	{"Guides" = [
+		{"North Arrows" = "north_arrows.md"},
+		{"Scale Bars" = "scale_bars.md"},
+		{"Inset Maps" = "inset_maps.md"},
+		{"Utilities" = "utilities.md"}
+	]},
+]
+
+extra_css = ["stylesheets/extra.css"]
+
+# ----------------------------------------------------------------------------
+# Section for configuring theme options
+# ----------------------------------------------------------------------------
+[project.theme]
+
+variant = "modern"
+favicon = "assets/map.svg"
+language = "en"
+
+features = [
+    "content.code.annotate",
+		"content.code.copy",
+		"content.code.select",
+
+    "content.footnote.tooltips",
+    "content.tooltips",
+
+    "navigation.footer",
+    "navigation.indexes",
+    "navigation.instant",
+    "navigation.instant.prefetch",
+    "navigation.path",
+    "navigation.sections",
+    "navigation.top",
+    "navigation.tracking",
+    "search.highlight",
+
+    "toc.follow",
+    #"toc.integrate",
+]
+
+[project.theme.icon]
+logo = "lucide/map"
+repo = "fontawesome/brands/github"
+
+# Palette toggle for light mode
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to dark mode"
+primary = "orange"
+accent = "green"
+
+# Palette toggle for dark mode
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
+toggle.icon = "lucide/moon"
+toggle.name = "Switch to light mode"
+primary = "green"
+accent = "orange"
+
+[project.theme.font]
+text = "Inter"
+code = "Jetbrains Mono"
+
+# ----------------------------------------------------------------------------
+# "Extra" options
+# ----------------------------------------------------------------------------
+[[project.extra.social]]
+icon = "fontawesome/brands/github"
+link = "https://github.com/moss_xyz/matplotlib_map_utils"
+
+# ----------------------------------------------------------------------------
+# You can configure your own logo to be shown in the header using the "logo"
+# option in the "theme" subsection. The logo must be a relative path to a file
+# in your "docs_dir", e.g., to use `docs/assets/logo.png` you would set:
+# ----------------------------------------------------------------------------
+#logo = "assets/logo.png"
+
+# ----------------------------------------------------------------------------
+# In the "font" subsection you can configure the fonts used. By default, fonts
+# are loaded from Google Fonts, giving you a wide range of choices from a set
+# of suitably licensed fonts. There are options for a normal text font and for
+# a monospaced font used in code blocks.
+# ----------------------------------------------------------------------------
+
+
+
+# ----------------------------------------------------------------------------
+# In this section you can configure the Markdown extensions that are used when
+# rendering your documentation. We enable the most useful extensions by default,
+# but you can customize this list to your needs.
+#
+# Read more:
+# - https://zensical.org/docs/setup/extensions/
+# ----------------------------------------------------------------------------
+[project.markdown_extensions.abbr]
+[project.markdown_extensions.admonition]
+[project.markdown_extensions.attr_list]
+[project.markdown_extensions.def_list]
+[project.markdown_extensions.footnotes]
+[project.markdown_extensions.md_in_html]
+[project.markdown_extensions.toc]
+permalink = true
+[project.markdown_extensions.pymdownx.arithmatex]
+generic = true
+[project.markdown_extensions.pymdownx.betterem]
+[project.markdown_extensions.pymdownx.caret]
+[project.markdown_extensions.pymdownx.details]
+[project.markdown_extensions.pymdownx.emoji]
+emoji_generator = "zensical.extensions.emoji.to_svg"
+emoji_index = "zensical.extensions.emoji.twemoji"
+[project.markdown_extensions.pymdownx.highlight]
+anchor_linenums = true
+line_spans = "__span"
+pygments_lang_class = true
+[project.markdown_extensions.pymdownx.inlinehilite]
+[project.markdown_extensions.pymdownx.keys]
+[project.markdown_extensions.pymdownx.magiclink]
+[project.markdown_extensions.pymdownx.mark]
+[project.markdown_extensions.pymdownx.smartsymbols]
+[project.markdown_extensions.pymdownx.superfences]
+custom_fences = [
+  { name = "mermaid", class = "mermaid", format = "pymdownx.superfences.fence_code_format" }
+]
+[project.markdown_extensions.pymdownx.tabbed]
+alternate_style = true
+combine_header_slug = true
+[project.markdown_extensions.pymdownx.tabbed.slugify]
+object = "pymdownx.slugs.slugify"
+kwds = { case = "lower" }
+[project.markdown_extensions.pymdownx.tasklist]
+custom_checkbox = true
+[project.markdown_extensions.pymdownx.tilde]
