@@ -24,7 +24,7 @@ dependencies = [
 ]
 
 [tool.setuptools.packages.find]
-exclude = ["matplotlib_map_utils.scratch*"]
+exclude = ["matplotlib_map_utils.scratch*", "site*", "docs*"]
 
 [tool.setuptools.package-data]
 "matplotlib_map_utils.utils" = ["*.json"]
