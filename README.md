@@ -2,7 +2,7 @@
  
 ---
 
-**Documentation:** See `docs` folder
+**Documentation:** Available at [https://moss-xyz.github.io/matplotlib-map-utils/](https://moss-xyz.github.io/matplotlib-map-utils/)
 
 **Source Code:** [Available on GitHub](https://github.com/moss-xyz/matplotlib-map-utils)
 
