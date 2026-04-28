@@ -5,7 +5,7 @@ icon: lucide/mouse-pointer-2
 
 This guide is structured like a tutorial, in order to showcase the various options and methods available; if you would like to follow along, a few additional packages and set-up steps are required:
 
-## **Set-Up**
+## Set-Up
 
 ```python
 # Packages used by this tutorial
@@ -43,7 +43,7 @@ from matplotlib_map_utils import NorthArrow, north_arrow
 
 ## Creating a North Arrow
 
-### **Using the** `north_arrow()` **function**
+### Using the `north_arrow()` function
 The quickest and easiest way to add a north arrow to a single plot is using the `north_arrow()` function. This will automatically create the artist _and_ apply it to the supplied axis.
 
 ```python
@@ -59,7 +59,7 @@ north_arrow(ax=ax, location="upper right", rotation={"degrees":0})
 
 ![a plot of Georgia with a north arrow added](assets/north_arrows/north_arrow_func.png)
 		
-### **Using the** ``NorthArrow`` **class**
+### Using the `NorthArrow` class
 Alternatively, a `NorthArrow` class (based on `matplotlib.artist.Artist`) is also provided that allows the same arrow to be rendered like so:
 
 ```python
@@ -80,7 +80,7 @@ ax.add_artist(na)
 
 ![a plot of Georgia with a north arrow added](assets/north_arrows/north_arrow_class.png)
 
-#### **Re-using Objects**
+#### Re-using Objects
 The benefit of the NorthArrow object is that <span class="strong-fg">it can be re-used across multiple plots without copy-pasting the function call</span>. This is particularly beneficial for highly-customized arrows: you can simply set it up once, and then add it to each axis you want.
 
 The caveat to this is that instead of using `ax.add_artist(NorthArrow)`, you have to use `ax.add_artist(NorthArrow.copy())`, as `matplotlib` does not let you add the same artist to multiple axes, so you have to add a *copy* of the artist.
@@ -130,7 +130,7 @@ The caveat to this is that instead of using `ax.add_artist(NorthArrow)`, you hav
 	![a plot of Texas with a north arrow added](assets/north_arrows/reuse_arrow_tx.png)
 	</div>
 
-#### **Updating Objects**
+#### Updating Objects
 The customization options of the NorthArrow can be accessed using dot notation (like `na.base`, `na.label`, etc.). They can also be updated from this dot notation by passing a valid style dictionary (see next section for details).
 
 === "Accessing Values"
@@ -220,11 +220,11 @@ for ax,s,l in zip(axs.flatten(), shapes, labels):
 
 ---
 
-## **Customizing the North Arrow**
+## Customizing the North Arrow
 
 Both the functional and object-oriented approach use the same primitive style dictionaries, so you can treat the following information as valid for both.
 
-### **Primary Settings**
+### Primary Settings
 
 There are three primary settings that must be supplied each time a north arrow is created:
 
@@ -285,10 +285,10 @@ There are three primary settings that must be supplied each time a north arrow i
 
 	![comparison of different zorder values for the north arrow](assets/north_arrows/zorder.png)
 
-### **Visible Components**
+### Visible Components
 There are four "visible" components to the north arrow. Each of these is separately customisable, and can be turned off entirely by passing a value of `False` to the function or object creation (passing `None` uses default values).
 
-#### **Base**
+#### Base
 `base` is the bottom-most visible layer and the most important component. 
 
 | Attribute | Description | Accepts |
@@ -319,7 +319,7 @@ for ax,m in zip(axs.flatten(), modifications):
 
 ![comparison of different base options](assets/north_arrows/base.png)
 
-#### **Fancy**
+#### Fancy
 `fancy` is the half-shape patch on top of the `base` (in the examples above, it appears as black). 
 
 | Attribute | Description | Accepts |
@@ -348,7 +348,7 @@ for ax,m in zip(axs.flatten(), modifications):
 
 ![comparison of different fancy options](assets/north_arrows/fancy.png)
 
-#### **Label**
+#### Label
 `label` is the text that appears appears around the arrow.
 
 | Attribute | Description | Accepts |
@@ -391,7 +391,7 @@ for ax,m in zip(axs.flatten(), modifications):
 
 ![comparison of different label options](assets/north_arrows/label.png)
 
-#### **Shadow**
+#### Shadow
 `shadow` is the path effect on the `base` patch that creates the shadow effect - it is applied using [`matplotlib.patheffects.withSimplePatchShadow`](https://matplotlib.org/stable/api/patheffects_api.html#matplotlib.patheffects.SimplePatchShadow).
 
 | Attribute | Description | Accepts |
@@ -424,10 +424,10 @@ for ax,m in zip(axs.flatten(), modifications):
 
 ![comparison of different shadow options](assets/north_arrows/shadow.png)
 
-### **Formatting Components**
+### Formatting Components
 There are three "invisible" components to the north arrow - so called because they are mainly there to help position the arrow and its individual components. Unlike the "visible" components, these cannot be turned off, but they are still separately customisable.
 
-#### **Pack**
+#### Pack
 `pack` customizes the [`HPacker`](https://matplotlib.org/stable/api/offsetbox_api.html#matplotlib.offsetbox.HPacker) or [`VPacker`](https://matplotlib.org/stable/api/offsetbox_api.html#matplotlib.offsetbox.VPacker) object that handles the positioning of the `label` relative to the `base` patch (and `fancy` patch if it is included). Whether or not it is an `HPacker` or `VPacker` is used is dependent on the `position` option from the `label`, but the settings are the same for both.
 
 | Attribute | Description | Accepts |
@@ -462,7 +462,7 @@ for ax,m in zip(axs.flatten(), modifications):
 
 ![comparison of different pack options](assets/north_arrows/pack.png)
 
-#### **AOB**
+#### AOB
 `aob` customizes the [`AnchoredOffsetBox`](https://matplotlib.org/stable/api/offsetbox_api.html#matplotlib.offsetbox.AnchoredOffsetbox) object that handles the positioning of the final north arrow object with respect to the *plot*. Note that `facecolor`, `edgecolor`, and `alpha` are non-standard options.
 
 | Attribute | Description | Accepts |
@@ -497,7 +497,7 @@ for ax,m in zip(axs.flatten(), modifications):
 
 ![comparison if different AOB options](assets/north_arrows/aob.png)
 
-#### **Rotation**
+#### Rotation
 `rotation` controls how the north arrow is rotated so that it points upwards (towards true north). There are two ways to customize this:
 
 === "Automatic Calculation"
@@ -547,9 +547,9 @@ for ax,m in zip(axs.flatten(), modifications):
 
 ---
 
-## **Tips and Tricks**
+## Tips and Tricks
 
-### **Setting Size**
+### Setting Size
 While the north arrow can nominally have its size changed by changing the `scale` attribute, doing so doesn't change the other, related components, such as the sizes of the text, the shadow's offset, the stroke widths, and so on.
 
 However, given that there are standardized paper sizes that most graphics are made towards, a specific function, `set_size()`, is provided that will batch-update the default values of the north arrow to approximate what looks best at each size. The function takes in only one input, which is the size you want to update the arrow to be:
@@ -579,7 +579,7 @@ for l,s in zip([0.1, 0.2, 0.35, 0.55, 0.85], ["xs","sm","md","lg","xl"]):
 		
 ![using set_size() to control the size of the north arrow](assets/north_arrows/set_size.png)
 
-### **Placing Arrows Outside of Axis**
+### Placing Arrows Outside of Axis
 Sometimes it is more desireable to place the arrow outside of the plot entirely, which can be accomplished using `bbox_to_anchor` and `bbox_transform` from the `aob`component settings. This works the same way it does for [`matplotlib.pyplot.legend`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html#matplotlib.pyplot.legend).
 
 

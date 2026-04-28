@@ -5,7 +5,7 @@ icon: lucide/ruler
 
 This guide is structured like a tutorial, in order to showcase the various options and methods available; if you would like to follow along, a few additional packages and set-up steps are required:
 
-## **Set-Up**
+## Set-Up
 
 ```python
 # Packages used by this tutorial
@@ -43,13 +43,13 @@ from matplotlib_map_utils import ScaleBar, scale_bar
 
 ---
 
-## **Creating a Scale Bar**
+## Creating a Scale Bar
 
 ??? warning "Don't Change Figure DPI After Creation"
 
 	Your desired DPI *must* be set upon creation of the subplots/axes (ex., when calling `matplotlib.pyplot.subplots(... dpi=##)`), and *not* changed when saving the figure (e.x. when calling `matplotlib.pyplot.savefig(... dpi=##)`). This is because the scale bar is rasterized to match the current DPI of the figure upon creation - changing it later will mess up the scale and make the bar blurry (see [this issue](https://github.com/moss-xyz/matplotlib-map-utils/issues/7) for more details).
 
-### **Using the** `scale_bar()` **function**
+### Using the `scale_bar()` function
 The quickest and easiest way to add a scale bar to a single plot is using the `scale_bar()` function. This will automatically create the artist _and_ apply it to the supplied axis.
 
 ```python
@@ -65,7 +65,7 @@ scale_bar(ax=ax, location="upper right", style="boxes", bar={"projection":3857,"
 
 ![a plot of Georgia with a scale bar added](assets/scale_bars/scale_bar_func.png)
 
-### **Using the** ``ScaleBar`` **class**
+### Using the ``ScaleBar`` class
 Alternatively, a `ScaleBar` class (based on `matplotlib.artist.Artist`) is also provided that allows the same bar to be rendered like so:
 
 ```python
@@ -85,7 +85,7 @@ ax.add_artist(sb)
 
 ![a plot of Georgia with a scale bar added](assets/scale_bars/scale_bar_class.png)
 
-#### **Re-using Objects**
+#### Re-using Objects
 The benefit of the `ScaleBar` object is that <span class="strong-fg">it can be re-used across multiple plots without copy-pasting the function call</span>. This is particularly beneficial for highly-customized bars: you can simply set it up once, and then add it to each axis you want.
 
 The caveat to this is that instead of using `ax.add_artist(ScaleBar)`, you have to use `ax.add_artist(ScaleBar.copy())`; as `matplotlib` does not let you add the same artist to multiple axes, you have to add a *copy* of the artist.
@@ -136,7 +136,7 @@ The caveat to this is that instead of using `ax.add_artist(ScaleBar)`, you have 
 
 As you can see from the valid example, the bar updates its context across each plot it is applied to - the length and divisions updated to reflect the fact that Texas is a bigger state, but the formatting and appearance stayed the same.
 
-#### **Updating Objects**
+#### Updating Objects
 The customization options of the `ScaleBar` can be accessed using dot notation (like `sb.base`, `sb.label`, etc.). They can also be updated from this dot notation by passing a valid style dictionary (see next section for details).
 
 === "Accessing Values"
@@ -202,11 +202,11 @@ for ax,s,f in zip(axs.flatten(), shapes, families):
 
 ---
 
-## **Customizing the Scale Bar**
+## Customizing the Scale Bar
 
 Both the functional and object-oriented approach use the same primitive style dictionaries, so you can treat the following information as valid for both.
 
-### **Specifying Length**
+### Specifying Length
 
 There are three main ways of specifying the length of a scale bar, which utilizes the `bar` argument of the construction function or class method (see under _Visible Components_, below):
 
@@ -272,7 +272,7 @@ All of the above cases expect a valid CRS to be supplied to the `projection` par
 	This alternative interface for defining the bar is inspired by the `dx` implementation of `matplotlib-scalebar`. _However_, this puts the onus on the user to know how big their bar should be - you also cannot pass a value to `unit` to convert! Note that you _can_ provide custom label text to the bar via the `labels` and `units` arguments (ex. if you need to label "inches" or something).
 
 
-### **Primary Settings**
+### Primary Settings
 There are three primary settings that must be supplied each time a scale bar is created:
 
 | Attribute | Description | Accepts |
@@ -338,10 +338,10 @@ There are three primary settings that must be supplied each time a scale bar is 
 
 	![comparison of different zorder values for the scale bar](assets/scale_bars/zorder.png)
 
-### **Visible Components**
+### Visible Components
 There are three "visible" components to the scale bar. Each of these is separately customisable, but **unlike** the NorthArrow object, they **cannot** can be turned off entirely by passing a value of `False` to the function or during object, as each component is necessary for a `ScaleBar` (passing `None` still uses default values).
 
-#### **Bar**
+#### Bar
 `bar` is the most important component, and has the most customisation options. 
 
 | Attribute | Description | Accepts |
@@ -453,7 +453,7 @@ Some additional options are also available based on the the selected `style` of 
 
 	![array of different visible component settings for ticks bars](assets/scale_bars/bar_ticks.png)
 
-#### **Labels**
+#### Labels
 `labels` modifies the text that appears on the divisions of the scale bar (i.e. _not_ including the units text).
 
 | Attribute | Description | Accepts |
@@ -526,7 +526,7 @@ Some additional options are also available based on the the selected `style` of 
 
 	![array of text formatting options](assets/scale_bars/labels.png)
 
-#### **Units**
+#### Units
 
 `units` modifies the units *label* for the scale bar - <span class="emphasis-ac">it does not change the units of the scale bar itself</span>, as that is instead controlled by `bar["unit"]`. By default, it uses the shorthand of the units of the scale bar (`m` for meters, `ft` for feet, etc.), but this can be manually overridden.
 
@@ -605,10 +605,10 @@ If `loc` is set to `opposite`, you can control its positioning independently:
 
 	![array of unit label formatting options](assets/scale_bars/units.png)
 
-### **Formatting Components**
+### Formatting Components
 There are two "invisible" components to the scale bar - so called because they are mainly there to help alter the position or formatting of the components, but are not directly tied to an individual component.
 
-#### **Text**
+#### Text
 `text` is a shorthand way of changing shared settings for the `label` and `units` *together*. This is useful, for example, if you want to change the fontsize, color, or family for both components, without having to set each setting twice.
 
 | Attribute | Description | Accepts |
@@ -644,7 +644,7 @@ for ax,m in zip(axs.flatten(), modifications):
 	
 ![array of text formatting options](assets/scale_bars/text.png)
 
-#### **AOB**
+#### AOB
 `aob` customizes the [`AnchoredOffsetBox`](https://matplotlib.org/stable/api/offsetbox_api.html#matplotlib.offsetbox.AnchoredOffsetbox) object that handles the positioning of the final scale bar object with respect to the *plot*. Note that `facecolor`, `edgecolor`, and `alpha` are non-standard options.
 
 | Attribute | Description | Accepts |
@@ -684,7 +684,7 @@ for ax,m in zip(axs.flatten(), modifications):
 
 ---
 
-## **Tips and Tricks**
+## Tips and Tricks
 
 ### Recreating `matplotlib-scalebar`
 The initial inspiration for creating this package was [`matplotlib-scalebar`](https://github.com/ppinard/matplotlib-scalebar/tree/master), which has not been updated in a while, and was generally found to be insufficient for geographic needs in particular. However, for those who want to recreate the look of the scalebars created by the package, there is a trick for doing so: if `label["style"]=="last_only"` *and* `major_div==1` *and* `minor_div==1`, then the label will be drawn *centered* underneath the 1-div bar.
@@ -704,7 +704,7 @@ scale_bar(ax=ax, location="upper right", style="boxes",
 
 ![a recreation of matplotlib-scalebar](assets/scale_bars/matplotlib_scalebar.png)
 
-### **Setting Size**
+### Setting Size
 While the scale bar can nominally have its size changed by changing the `length` attribute, doing so doesn't change the other, related components, such as the sizes of the text, the the box dimensions, the stroke widths, and so on.
 
 However, given that there are standardized paper sizes that most graphics are made towards, a specific function, `set_size()`, is provided that will batch-update the default values of the scale bar to approximate what looks best at each size. The function takes in only one input, which is the size you want to update the bar to be:
@@ -741,7 +741,7 @@ ScaleBar.set_size(size="sm")
 
 ![comparison of default scale bar sizes](assets/scale_bars/set_size.png)
 
-### **Placing Scale Bars Outside of Axis**
+### Placing Scale Bars Outside of Axis
 Sometimes it is more desireable to place the scale bar outside of the plot entirely, which can be accomplished using `bbox_to_anchor` and `bbox_transform` from the `aob`component settings. This works the same way it does for [`matplotlib.pyplot.legend`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html#matplotlib.pyplot.legend).
 
 ```python
@@ -756,7 +756,7 @@ scale_bar(ax=ax, location="upper center", style="boxes", labels={"style":"major"
 		
 ![placement of the scale bar outside of the main axis](assets/scale_bars/external_placement.png)
 
-### **Dual Scale Bars**
+### Dual Scale Bars
 One common form for scale bars is to present two of them side-by-side, with different units of measurement (such as kilometres and miles). This can be accomplished in two ways:
 
 === "dual_bars()"
@@ -826,7 +826,7 @@ One common form for scale bars is to present two of them side-by-side, with diff
 
 	![dual scale bars via manual placement](assets/scale_bars/dual_manual.png)
 
-### **Accessing Artists**
+### Accessing Artists
 
 Unlike the North Arrow, the the `rotation` option is meant to affect *all* of the subcomponents: boxes/ticks and labels. As far as I can tell, this is not possible with an `AnchoredOffsetBox` (which contains all the subcomponents) placed inside of an `AuxTransformBox` (which can apply a rotation transformation) - I tried *many* times to debug this, if you know how to make it work then let me know.
 

@@ -7,7 +7,7 @@ While `matplotlib` *does* come with the ability to draw inset maps natively, via
 
 The approach taken by this package is to provide an interface on top of these functions that is more intuitive to the average end-user, at the expense of some less flexiblity.
 
-## **Set-Up**
+## Set-Up
 
 This guide is structured like a tutorial, in order to showcase the various options and methods available; if you would like to follow along, a few additional packages and set-up steps are required:
 
@@ -59,9 +59,9 @@ from matplotlib_map_utils import InsetMap, inset_map, ExtentIndicator, indicate_
 
 ---
 
-## **Creating an Inset Map**
+## Creating an Inset Map
 
-### **Using the** `inset_map()` **function**
+### Using the `inset_map()` function
 The quickest and easiest way to add an inset map to a single plot is using the `inset_map()` function. This function returns a `matplotlib.axes.Axes` object that can then be manipulated as usual, including plotting additional data.
 
 ```python
@@ -78,7 +78,7 @@ alaska.plot(ax=iax)
 	
 ![map of the USA and an inset for Alaska](assets/inset_maps/usa_w_alaska_func.png)
 
-### **Using the** ``InsetMap`` **class**
+### Using the ``InsetMap`` class
 Alternatively, an `InsetMap` class is also provided that allows the same inset axis to be rendered like so:
 
 ```python
@@ -98,12 +98,12 @@ iax = im.create(ax)
 		
 ![map of the USA and an inset for Hawaii](assets/inset_maps/usa_w_hawaii_class.png)
 
-#### **Re-using Objects**
+#### Re-using Objects
 The benefit of the InsetMap object is that <span class="strong-fg">it can be re-used across multiple plots without copy-pasting the function call</span>. This is particularly beneficial for highly-customized insets: you can simply set it up once, and then add it to each axis you want.
 
 Unlike with `ScaleBar` and `NorthArrow` objects, you do *not* need to use the `.copy()` call to create a deepcopy of an object before attaching it to an axis - the `.create()` function removes the need for this (and is useful enough that I am thinking of re-doing `ScaleBar` and `NorthArrow` to do the same thing).
 
-#### **Updating Objects**
+#### Updating Objects
 The customization options of the `InsetMap` can be accessed using dot notation (like `im.base`, `im.label`, etc.). They can also be updated from this dot notation by passing a valid value (see next section for details).
 
 === "Accessing Values"
@@ -142,10 +142,10 @@ The customization options of the `InsetMap` can be accessed using dot notation (
 
 ---
 
-## **Customizing the Inset Map**
+## Customizing the Inset Map
 Both the functional and object-oriented approach use the same inputs, so you can treat the following information as valid for both
 
-### **Primary Settings**
+### Primary Settings
 There are four primary settings that must be supplied each time an inset map is created:
 
 | Attribute | Description | Accepts |
@@ -209,10 +209,10 @@ There are four primary settings that must be supplied each time an inset map is 
 
 	![comparison of different zorder values for the inset map](assets/inset_maps/zorder.png)
 
-### **Advanced Options**
+### Advanced Options
 There are three sets of more advanced options that can be used to modify the inset map upon creation.
 
-#### **Positioning**
+#### Positioning
 Two optional arguments exist for specifying the position of the inset map with greater granularity than the `location` method shown above:
 
 | Attribute | Description | Accepts |
@@ -237,7 +237,7 @@ inset_map(ax=axs[2], location="upper left", size=0.8, pad=0.05, coords=(-9353446
 		
 ![examples showing advanced positioning of the inset map](assets/inset_maps/advanced_positioning.png)
 
-#### **Plotting**
+#### Plotting
 The `InsetMap` object accepts a unique keyword argument, which is not available to `inset_map()`: `to_plot`. 
 
 `to_plot` allows you to pass a *list of dictionaries* containing (a) data you want plotted on the map upon creation, and (b) the keyword arguments you want to pass to plot that data (i.e. for styling purposes). This helps in particular when you are re-using inset maps across multiple distinct plots - instead of having to create the inset and then plot + style the data each time, you can specify the data you want plotted once, and then just call `.create()` each time you want to display it!
@@ -276,7 +276,7 @@ for ax in axs:
 
 ![multiple different plots with a pre-populated and duplicated inset map](assets/inset_maps/to_plot.png)
 
-#### **Kwargs**
+#### Kwargs
 Finally, both `InsetMap` and `inset_map` can accept any other keyword argument (kwarg) and pass it along to the `inset_axes` creation function used internally. The examples above have actually been showing this already: I use `xticks=[], yticks=[]` as kwargs to turn off the x and y ticks of the inset.
 
 A full list of available kwargs can be found [here](https://matplotlib.org/stable/api/_as_gen/mpl_toolkits.axes_grid1.inset_locator.inset_axes.html#mpl_toolkits.axes_grid1.inset_locator.inset_axes).
@@ -297,9 +297,9 @@ alaska.plot(ax=iax)
 
 ---
 
-## **Tips and Tricks**
+## Tips and Tricks
 
-### **Multiple Inset Maps**
+### Multiple Inset Maps
 Theoretically, there is no limit to the number of inset maps you can place - you'll just need a separate function call or object for each one!
 
 ```python
@@ -317,7 +317,7 @@ iax = inset_map(ax, location="center right", size=0.25, pad=0.1, xticks=[], ytic
 
 ![a plot with multiple inset maps added](assets/inset_maps/multiple_insets.png)
 
-### **USA Inset Maps**
+### USA Inset Maps
 A common map of the US will display the contiguous United States on the "parent" axis, and then use insets for some combination of Alaska, Hawaii, Puerto Rico, and/or Washington, DC. To facilitate the creation of these types a map, a specific function is available: `inset_usa()`.
 
 ```python
@@ -340,7 +340,7 @@ washington_dc.plot(ax=dax)
 
 ![a map of the contiguous US with inset maps for each non-contiguous area](assets/inset_maps/usa_w_all.png)
 
-### **Inset Graphs**
+### Inset Graphs
 While the function and object are technically called `InsetMap` and `inset_map`, the returned object is a `matplotlib` `Axes` object - meaning it can be used to insert *graphs* just as easily as another map, as shown below.
 
 ```python
@@ -366,7 +366,7 @@ gax.bar(x=range(5), height=jenks_land.counts, color=matplotlib.colormaps["Blues"
 
 ![a map of the US with an inset histgram showing land area](assets/inset_maps/inset_graph.png)
 
-### **Setting Size**
+### Setting Size
 While the inset map can nominally have its size changed by changing the relevant attribute, this can be tedious if you have to set it for every map.
 
 Given that there are standardized paper sizes that most graphics are made towards, a specific function, `set_size()`, is provided that will batch-update the default values of the inset map to approximate what looks best at each size. The function takes in only one input, which is the size you want to update the inset to be:
@@ -402,7 +402,7 @@ InsetMap.set_size(size="sm")
 
 ---
 
-## **Inset Map Indicators**
+## Inset Map Indicators
 A common complementary element to an inset map is an *indicator*, an additional element that places the inset map in context relevant to the parent axes in which the inset axes resides.
 
 While [Wikipedia](https://en.wikipedia.org/wiki/Map_layout#Inset_map) lists 4 types of inset maps, only two require indicators: <span class="emphasis-fg">Locators</span> (called <span class="emphasis-fg">Extent</span> indicators here) and <span class="emphasis-ac">Detail</span>.
@@ -410,7 +410,7 @@ While [Wikipedia](https://en.wikipedia.org/wiki/Map_layout#Inset_map) lists 4 ty
 !!! note
 	The following sections are somewhat abbreviated, skipping the class/function division between elements in the name of brevity. I would recommend reading the Inset Map tutorial at the top of this page if you haven't already to understand more, as it functions practically the same as each of the following indicators.
 
-### **Extent Indicators**
+### Extent Indicators
 Extent indicators can be used to show the extent of one axis on another. This is most often used with an inset map that is a "zoomed-out" version of the parent axis, with the indicator showing the bounds of the parent axis on the smaller inset map, as shown below.
 
 ```python
@@ -480,7 +480,7 @@ for ax,m in zip(axs.flatten(), modifications):
 
 ---
 
-### **Detail Indicators**
+### Detail Indicators
 In all of the examples above, the extent indicator was plotted _on the inset map_. This does not _have_ to be the case: the function will work just as well in the opposite manner.
 
 ```python
