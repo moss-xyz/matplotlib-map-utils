@@ -121,7 +121,7 @@ The north arrow object is also capable of pointing towards "true north", given a
 
 ![Rotated north arrow](assets/quick/north_arrow_rotated.png)
 
-Refer to [this subheader of the North Arrows guide](north_arrows#rotation/) for details on how to do so. 
+Refer to [this subheader of the North Arrows guide](north_arrows/#rotation) for details on how to do so. 
 
 ---
 
@@ -199,7 +199,7 @@ Refer to [the Scale Bars guide](scale_bars/) for details on how to customise eac
 	- Specifying either `max` or `length` will override this method!
 	- `minor_div` can still be _optionally_ provided.
 
-Refer to [this subheader of the Scale Bars guide](scale_bars#specifying-length/) for further details on how to specify the length of the scale bar, including detail on using custom units. 
+Refer to [this subheader of the Scale Bars guide](scale_bars/#specifying-length) for further details on how to specify the length of the scale bar, including detail on using custom units. 
 
 ---
 
@@ -241,7 +241,7 @@ These will create an output like the following (extent indicator on the left, de
 
 ![Customised scale bar](assets/quick/inset_map_indicators.png)
 
-Refer to [the Indicators section of the Inset Maps guide](inset_maps#inset-map-indicators/) for further details. 
+Refer to [the Indicators section of the Inset Maps guide](inset_maps/#inset-map-indicators) for further details. 
 
 ---
 
@@ -273,4 +273,4 @@ usa.filter(states=True, to_return="fips")
 usa.filter(region=["South","Midwest"], to_return="name")
 ```
 
-Refer to [the USA section of the Utilities guide](utilities#usa/) for details on how to use this class, including with `pandas.apply()`.
+Refer to [the USA section of the Utilities guide](utilities/#usa) for details on how to use this class, including with `pandas.apply()`.
