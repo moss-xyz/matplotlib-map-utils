@@ -8,6 +8,8 @@
 
 **Feedback:** I welcome any and all feedback! See the *Development Notes* below for more details.
 
+**Current Version:** `v4.0.0`, featuring a brand-new documentation site!
+
 ---
 
 ### 👋 Introduction
