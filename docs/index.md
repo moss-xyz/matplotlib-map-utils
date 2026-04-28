@@ -57,16 +57,16 @@ The requirements for this package are:
 
 ### :lucide-compass: Guides
 
-For a primer on how to import the package and use the primary functions and methods to create elements, see the [Quick Start guide](/quick).
+For a primer on how to import the package and use the primary functions and methods to create elements, see the [Quick Start guide](quick/).
 
 Each part of the package also has a dedicated page that lays out usage and customisation options in more detail:
 
 <div class="grid cards" markdown>
 
-- <a class="nav-xul" href="/north_arrows">:lucide-mouse-pointer-2:  __North Arrows__</a>
-- <a class="nav-xul" href="/scale_bars">:lucide-ruler:  __Scale Bars__</a>
-- <a class="nav-xul" href="/inset_maps">:lucide-picture-in-picture-2:  __Inset Maps__</a>
-- <a class="nav-xul" href="/utilities">:lucide-wrench:  __Utilities__</a>
+- <a class="nav-xul" href="north_arrows/">:lucide-mouse-pointer-2:  __North Arrows__</a>
+- <a class="nav-xul" href="scale_bars/">:lucide-ruler:  __Scale Bars__</a>
+- <a class="nav-xul" href="inset_maps/">:lucide-picture-in-picture-2:  __Inset Maps__</a>
+- <a class="nav-xul" href="utilities/">:lucide-wrench:  __Utilities__</a>
 
 </div>
 
