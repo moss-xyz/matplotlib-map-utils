@@ -41,7 +41,7 @@ Three more projects assisted with the creation of this package:
 
 - `v4.0.0`: Transition of documentation from Jupyter Notebooks hosted within the package itself to a new standalone static site, built with Zensical.
 
-	- `v4.1.0`: Transition to Pydantic for type hinting and validation, instead of the previous method that utilised custom logic functions. *Unlike most of the code up until this point, I leaned on AI extensively here, and expect there to be tricky bugs that will need squashing later*.
+	- `v4.1.0`: Transition to Pydantic for type hinting and validation, instead of the previous method that utilised custom logic functions. This ended up changing a fair amount of the backend construction logic, and all the functionality surrounding default values and `set_size` was re-written, which might introduce breaking changes! *Unlike most of the code up until this point, I leaned on AI extensively here, and expect there to be tricky bugs that will need squashing later*.
 
 #### Future Roadmap
 

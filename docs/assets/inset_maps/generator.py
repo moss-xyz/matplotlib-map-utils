@@ -266,8 +266,7 @@ matplotlib.pyplot.close()
 fig, ax = new_map(1,1, figsize=(10,5))
 # Visualizing three different sizes at various positions
 for s,l in zip(["xs","sm","md"], ["center left", "center", "center right"]):
-	# Calling the function to update the defaults
-	# Note the function exists on the CLASS, but impacts both the class and function
+	# Using the size parameter directly to control the default profile
 	inset_map(ax=ax, location=l, size=s, xticks=[], yticks=[])
 
 # Resetting the sizes

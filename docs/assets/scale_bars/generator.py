@@ -471,7 +471,7 @@ states.query("NAME=='Georgia'").plot(ax=ax)
 
 scale_bar(ax=ax, location="upper center", style="boxes", labels={"style":"major"}, 
             bar={"projection":3857,"max":500,"major_div":5,"minor_div":1,"minor_type":"none"}, 
-            aob={"bbox_to_anchor":(0.5,-0.01), "bbox_transform":ax.transAxes})
+            aob={"bbox_to_anchor":(0.5,-0.005), "bbox_transform":ax.transAxes})
 
 matplotlib.pyplot.savefig("./external_placement.png")
 matplotlib.pyplot.close()

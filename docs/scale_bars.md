@@ -284,9 +284,6 @@ There are three primary settings that must be supplied each time a scale bar is 
 === "Locations"
 
 	```python
-	# Do not worry about this: it is covered later, it is simply using a smaller default size
-	# (we pass size="xs" directly in the call below)
-	
 	# Grid of location options
 	# Note that the "center" options will feel slightly off: this is because the the center of the scale bar is of the entire artist, text included, not just the bar itself
 	locs = ["upper left", "upper center", "upper right", "center left", "center", "center right", "lower left", "lower center", "lower right"]
@@ -303,9 +300,6 @@ There are three primary settings that must be supplied each time a scale bar is 
 
 === "Styles"
 	```python
-	# Just reverting the change I made above; again this is explained later, don't worry about it for now
-	# (No longer needed: we pass size= directly now)
-	
 	# Modifying the styles
 	styles = ["boxes","ticks"]
 	
