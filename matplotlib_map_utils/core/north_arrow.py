@@ -226,16 +226,6 @@ class NorthArrow(matplotlib.artist.Artist):
         na_artist.set_figure(self.axes.get_figure())
         na_artist.set_zorder(self._zorder)
         na_artist.draw(renderer)
-    
-    ## SIZE FUNCTION ##
-    # This function will update the default dictionaries used based on the size of map being created
-    # See defaults.py for more information on the dictionaries used here
-    def set_size(size: Literal["xs","xsmall","x-small",
-                               "sm","small",
-                               "md","medium",
-                               "lg","large",
-                               "xl","xlarge","x-large"]):
-        pass
 
 ### DRAWING FUNCTIONS ###
 

@@ -217,16 +217,6 @@ class ScaleBar(matplotlib.artist.Artist):
         sb_artist.set_figure(self.axes.get_figure())
         sb_artist.set_zorder(self._zorder)
         sb_artist.draw(renderer)
-    
-    ## SIZE FUNCTION ##
-    # This function will update the default dictionaries used based on the size of map being created
-    # See defaults_sb.py for more information on the dictionaries used here
-    def set_size(size: Literal["xs","xsmall","x-small",
-                               "sm","small",
-                               "md","medium",
-                               "lg","large",
-                               "xl","xlarge","x-large"]):
-        pass
 
 ### DRAWING FUNCTIONS ###
 
@@ -570,7 +560,7 @@ def dual_bars(ax, draw=True, size: str=None, style: Literal["ticks","boxes"]="bo
         # Creating a bar
         # Because draw is False and return_aob is false, an OffsetImage will be returned
         b = scale_bar(ax, draw=False, size=size, style=style, location="lower left", 
-                      bar=(_bar | bar_settings), units=_units, labels=(_labels | label_settings), text=_text, aob=False, return_aob=False)
+                      bar=(_bar | bar_settings), units=units, labels=(labels | label_settings), text=text, aob=False, return_aob=False)
         bars.append(b)
 
     ##### PACKING  #####

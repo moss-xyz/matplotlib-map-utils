@@ -7,7 +7,7 @@ icon: lucide/package
 
 This project was heavily inspired by [`matplotlib-scalebar`](https://github.com/ppinard/matplotlib-scalebar/), and much of the code is either directly copied or derived from that project, since it uses the same "artist"-based approach.
 
-Three more projects assisted with the creation of this script:
+Three more projects assisted with the creation of this package:
 
 * [`EOmaps`](https://github.com/raphaelquast/EOmaps/discussions/231) provided code for calculating the rotation required to point to "true north" for an arbitrary point and CRS for the north arrow.
 
@@ -41,13 +41,13 @@ Three more projects assisted with the creation of this script:
 
 - `v4.0.0`: Transition of documentation from Jupyter Notebooks hosted within the package itself to a new standalone static site, built with Zensical.
 
+	- `v4.1.0`: Transition to Pydantic for type hinting and validation, instead of the previous method that utilised custom logic functions. *Unlike most of the code up until this point, I leaned on AI extensively here, and expect there to be tricky bugs that will need squashing later*.
+
 #### Future Roadmap
 
 With the release of `v3.x`, this project has achieved full coverage of the "main" map elements I think are necessary.
 
 If I continue development of this project, I will be looking to add or fix the following features:
-
-* For all: switch to a system based on Pydantic for easier type validation
 
 * **North Arrow:** 
 
@@ -118,7 +118,7 @@ package_name/
 │   ├── scale_bar.py
 ├── validation/
 │   ├── __init__.py
-│   ├── functions.py
+│   ├── shared.py
 │   └── inset_map.py
 │   ├── north_arrow.py
 │   └── scale_bar.py

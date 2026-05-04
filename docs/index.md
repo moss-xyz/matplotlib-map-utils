@@ -11,7 +11,7 @@ icon: lucide/book
 
 `matplotlib_map_utils` is a package that that assists with the creation of maps using [`matplotlib`](https://matplotlib.org/stable/).
 
-As of `v3.x` (the current version), this includes the ability to easily create three common map elements: 
+As of `v4.x` (the current version), this includes the ability to easily create three common map elements: 
 
 * <span class="strong-fg">North arrows</span>, which automatically point to true north,
 
@@ -52,6 +52,8 @@ The requirements for this package are:
 * `matplotlib >= 3.9` (might work with lower versions but not guaranteed)
 
 * `cartopy >= 0.23` (due to earlier bug with calling `copy()` on `CRS` objects)
+
+* `pydantic >= 2.13.3` (for type validation; might work with older versions, open an issue if you have questions)
 
 ---
 

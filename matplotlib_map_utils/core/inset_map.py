@@ -34,9 +34,9 @@ class InsetMap(matplotlib.artist.Artist):
     
     ## INITIALIZATION ##
     def __init__(self,
-                 size_profile: str=None,
+                 size: str=None,
                  location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="lower left", 
-                 size: Any=None,
+                 imsize: Any=None,
                  pad: Any=None,
                  coords: Any=None,
                  transform=None,
@@ -46,16 +46,16 @@ class InsetMap(matplotlib.artist.Artist):
         # Starting up the object with the base properties of a matplotlib Artist
         matplotlib.artist.Artist.__init__(self)
         
-        self._size_profile = size_profile if size_profile is not None else config.DEFAULT_SIZE
+        self._size = size if size is not None else config.DEFAULT_SIZE
         # Validating each of the passed parameters
-        # We pass size_profile to the validator, which automatically applies the defaults if size/pad are None
-        kwargs_model = {"location": location, "coords": coords, "to_plot": to_plot, "zorder": zorder, "size_profile": self._size_profile}
-        if size is not None: kwargs_model["size"] = size
+        # We pass size to the validator, which automatically applies the defaults if imsize/pad are None
+        kwargs_model = {"location": location, "coords": coords, "to_plot": to_plot, "zorder": zorder, "size": self._size}
+        if imsize is not None: kwargs_model["imsize"] = imsize
         if pad is not None: kwargs_model["pad"] = pad
             
         inset_model = imt.InsetMapInsetModel(**kwargs_model)
         self._location = inset_model.location
-        self._size = inset_model.size
+        self._imsize = inset_model.imsize
         self._pad = inset_model.pad
         self._coords = inset_model.coords
         self._to_plot = inset_model.model_dump(exclude_unset=True).get('to_plot', None)
@@ -68,8 +68,8 @@ class InsetMap(matplotlib.artist.Artist):
     ## INTERNAL PROPERTIES ##
     # This allows for easy-updating of properties
     # Each property will have the same pair of functions
-    # 1) calling the property itself returns its value (InsetMap.size will output (width,height))
-    # 2) passing a value will update it (InsetMap.size = (width,height) will update it)
+    # 1) calling the property itself returns its value (InsetMap.imsize will output (width,height))
+    # 2) passing a value will update it (InsetMap.imsize = (width,height) will update it)
 
     # location/loc
     @property
@@ -88,17 +88,17 @@ class InsetMap(matplotlib.artist.Artist):
     def loc(self, val: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]):
         self._location = TypeAdapter(imt.InsetMapInsetModel.model_fields['location'].annotation).validate_python(val)
 
-    # size
+    # imsize
     @property
-    def size(self):
-        return self._size
+    def imsize(self):
+        return self._imsize
 
-    @size.setter
-    def size(self, val):
+    @imsize.setter
+    def imsize(self, val):
         if val is not None:
-            self._size = TypeAdapter(imt.InsetMapInsetModel.model_fields['size'].annotation).validate_python(val)
+            self._imsize = TypeAdapter(imt.InsetMapInsetModel.model_fields['imsize'].annotation).validate_python(val)
         else:
-            self._size = imt.InsetMapInsetModel(size_profile=self._size_profile, location=self._location, zorder=self._zorder).size
+            self._imsize = imt.InsetMapInsetModel(size=self._size, location=self._location, zorder=self._zorder).imsize
     
     # pad
     @property
@@ -110,7 +110,7 @@ class InsetMap(matplotlib.artist.Artist):
         if val is not None:
             self._pad = TypeAdapter(imt.InsetMapInsetModel.model_fields['pad'].annotation).validate_python(val)
         else:
-            self._pad = imt.InsetMapInsetModel(size_profile=self._size_profile, location=self._location, zorder=self._zorder).pad
+            self._pad = imt.InsetMapInsetModel(size=self._size, location=self._location, zorder=self._zorder).pad
     
     # coords
     @property
@@ -179,7 +179,7 @@ class InsetMap(matplotlib.artist.Artist):
     # Note that this is different than the way NorthArrows and ScaleBars are rendered (via draw/add_artist())!
     def create(self, pax, **kwargs):
         # Can re-use the drawing function we already established, but return the object instead
-        iax = inset_map(ax=pax, size_profile=self._size_profile, location=self._location, size=self._size,
+        iax = inset_map(ax=pax, size=self._size, location=self._location, imsize=self._imsize,
                         pad=self._pad, coords=self._coords, transform=self._transform, zorder=self._zorder,
                         **self._kwargs, **kwargs)
         
@@ -545,9 +545,9 @@ class DetailIndicator(matplotlib.artist.Artist):
 # Function for creating an inset map, independent of the InsetMap object model
 # It is intended to be an easier-to-use API than the default inset_axes
 def inset_map(ax, 
-              size_profile: str=None,
+              size: str=None,
               location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="upper right", 
-              size: Any=None,
+              imsize: Any=None,
               pad: Any=None,
               coords: Any=None,
               transform=None,
@@ -555,13 +555,13 @@ def inset_map(ax,
               **kwargs):
     
     ## VALIDATION ##
-    kwargs_model = {"location": location, "coords": coords, "zorder": zorder, "size_profile": size_profile if size_profile is not None else config.DEFAULT_SIZE}
-    if size is not None: kwargs_model["size"] = size
+    kwargs_model = {"location": location, "coords": coords, "zorder": zorder, "size": size if size is not None else config.DEFAULT_SIZE}
+    if imsize is not None: kwargs_model["imsize"] = imsize
     if pad is not None: kwargs_model["pad"] = pad
         
     inset_model = imt.InsetMapInsetModel(**kwargs_model)
     _location = inset_model.location
-    _size = inset_model.size
+    _imsize = inset_model.imsize
     _pad = inset_model.pad
     coords = inset_model.coords
     zorder = inset_model.zorder
@@ -575,11 +575,11 @@ def inset_map(ax,
     # The default inset_axis() function does this as a fraction of the parent axis
     # But the size variable expects dimensions in inches
     
-    # Casting size to width and height
-    if isinstance(_size, (tuple, list)):
-        inset_width, inset_height = _size
+    # Casting imsize to width and height
+    if isinstance(_imsize, (tuple, list)):
+        inset_width, inset_height = _imsize
     else:
-        inset_width, inset_height = _size, _size
+        inset_width, inset_height = _imsize, _imsize
 
     # Padding is expressed in inches here, unlike traditional matplotlib
     # which expresses it as a fraction of the font size
@@ -871,37 +871,37 @@ def indicate_detail(pax: matplotlib.axes.Axes,
 # This is a top-level helping function
 # that will return an axis with inset maps drawn for Alaska, Hawaii, DC, and/or Puerto Rico
 # NOTE that as of this initial release, it assumes your map is in CRS 3857 for positioning
-def inset_usa(ax, alaska=True, hawaii=True, dc=True, puerto_rico=True, size=None, pad=None, zorder: int=99, **kwargs):
+def inset_usa(ax, alaska=True, hawaii=True, dc=True, puerto_rico=True, imsize=None, pad=None, zorder: int=99, **kwargs):
     # This will return all of the axes we create
     to_return = []
     
     # Alaska and Hawaii are positioned relative to each other
     if alaska == True and hawaii == True:
-        aax = inset_map(ax, "lower left", size, pad, zorder=zorder, **kwargs)
+        aax = inset_map(ax, location="lower left", imsize=imsize, pad=pad, zorder=zorder, **kwargs)
         to_return.append(aax)
         # Need to shift over the hawaii axis by the size of the alaska axis
         # Note that we add xmax and xmin together here, to account for the padding (xmin is the amount of padding)
         shift_right = float(aax.get_window_extent().transformed(ax.transAxes.inverted()).xmax) + float(aax.get_window_extent().transformed(ax.transAxes.inverted()).xmin)
         # also need to shift it up, by the amount of the padding (which we can crib from ymin)
         shift_up = float(aax.get_window_extent().transformed(ax.transAxes.inverted()).ymin)
-        hax = inset_map(ax, "lower left", size, pad, zorder=zorder, coords=(shift_right, shift_up), **kwargs)
+        hax = inset_map(ax, location="lower left", imsize=imsize, pad=pad, zorder=zorder, coords=(shift_right, shift_up), **kwargs)
         to_return.append(hax)
     else:
         if alaska == True:
-            aax = inset_map(ax, "lower_left", size, pad, zorder=zorder, **kwargs)
+            aax = inset_map(ax, location="lower_left", imsize=imsize, pad=pad, zorder=zorder, **kwargs)
             to_return.append(aax)
         if hawaii == True:
-            hax = inset_map(ax, "lower left", size, pad, zorder=zorder, **kwargs)
+            hax = inset_map(ax, location="lower left", imsize=imsize, pad=pad, zorder=zorder, **kwargs)
             to_return.append(hax)
 
     # Puerto Rico is positioned off the coast of Florida
     if puerto_rico == True:
-        pax = inset_map(ax, "lower right", size, pad, zorder=zorder, **kwargs)
+        pax = inset_map(ax, location="lower right", imsize=imsize, pad=pad, zorder=zorder, **kwargs)
         to_return.append(pax)
     
     # DC is off the coast of DC
     if dc == True:
-        dax = inset_map(ax, "center right", size, pad, zorder=zorder, **kwargs)
+        dax = inset_map(ax, location="center right", imsize=imsize, pad=pad, zorder=zorder, **kwargs)
         to_return.append(dax)
     
     # Finally, returning everything

@@ -85,13 +85,13 @@ matplotlib.pyplot.close()
 
 fig, ax = new_map(1,2, figsize=(10,5))
 # Changing the size
-ScaleBar.set_size("sm")
+# ScaleBar.set_size() is no longer needed
 # Plotting a state (Georgia)
 states.query("NAME=='Georgia'").to_crs(3520).plot(ax=ax[0])
 states.query("NAME=='Georgia'").to_crs(3520).plot(ax=ax[1])
 # Adding a scale bar to the upper-right corner of the axis, in the same projection as whatever geodata you plotted
-scale_bar(ax=ax[0], location="upper right", style="boxes", bar={"projection":3520})
-scale_bar(ax=ax[1], location="upper right", style="ticks", bar={"projection":3520})
+scale_bar(ax=ax[0], location="upper right", size="sm", style="boxes", bar={"projection":3520})
+scale_bar(ax=ax[1], location="upper right", size="sm", style="ticks", bar={"projection":3520})
 
 matplotlib.pyplot.savefig("./scale_bar_generic.png", bbox_inches="tight")
 matplotlib.pyplot.close()
@@ -123,7 +123,7 @@ fig, ax = new_map(1,1, figsize=(5,5))
 # Plotting a state (Georgia)
 states.query("NAME=='Georgia'").to_crs(3520).plot(ax=ax)
 # Adding an inset map to the upper-right corner of the axis
-iax = inset_map(ax=ax, location="upper right", size=0.75, pad=0.25, xticks=[], yticks=[])
+iax = inset_map(ax=ax, location="upper right", imsize=0.75, pad=0.25, xticks=[], yticks=[])
 
 matplotlib.pyplot.savefig("./inset_map_generic.png", bbox_inches="tight")
 matplotlib.pyplot.close()
@@ -137,8 +137,8 @@ fig, ax = new_map(1,2, figsize=(10,5))
 states.query("NAME=='Georgia'").to_crs(3520).plot(ax=ax[0])
 states.query("NAME=='Georgia'").to_crs(3520).plot(ax=ax[1])
 # Adding an inset map to the upper-right corner of the axis
-iax0 = inset_map(ax=ax[0], location="upper right", size=1, pad=0.25, xticks=[], yticks=[])
-iax1 = inset_map(ax=ax[1], location="upper right", size=0.75, pad=0.25, xticks=[], yticks=[])
+iax0 = inset_map(ax=ax[0], location="upper right", imsize=1, pad=0.25, xticks=[], yticks=[])
+iax1 = inset_map(ax=ax[1], location="upper right", imsize=0.75, pad=0.25, xticks=[], yticks=[])
 # Adding an extent indicator for the map on the left
 contiguous.plot(ax=iax0, facecolor="none", edgecolor="black", linewidth=0.5)
 indicate_extent(iax0, ax[0], 3857, 3520, pad=0.25)

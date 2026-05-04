@@ -71,7 +71,7 @@ fig, ax = new_map()
 contiguous.plot(ax=ax)
 
 # Adding an inset map to the plot
-iax = inset_map(ax, location="lower left", size=0.8, pad=0.1, xticks=[], yticks=[])
+iax = inset_map(ax, location="lower left", imsize=0.8, pad=0.1, xticks=[], yticks=[])
 # Plotting alaska in the inset map
 alaska.plot(ax=iax)
 ```
@@ -90,7 +90,7 @@ contiguous.plot(ax=ax)
 # Creating an InsetMap object that we want to place in the lower-right corner of the axis, 
 # Note that here, we do not specify the "parent" axis (ax)
 # Note that we also tell it what data we are going to want to plot there, but this is optional!
-im = InsetMap("lower left", size=0.8, pad=0.1, to_plot={"data":hawaii}, xticks=[], yticks=[])
+im = InsetMap("lower left", imsize=0.8, pad=0.1, to_plot={"data":hawaii}, xticks=[], yticks=[])
 # The InsetMap can then be added using create()
 # Note that this is DIFFERENT than NorthArrow and ScaleBar objects, which rely on add_artist()!
 iax = im.create(ax)
@@ -109,7 +109,7 @@ The customization options of the `InsetMap` can be accessed using dot notation (
 === "Accessing Values"
 	```python
 	# Showing the size, in inches, of the inset map
-	im.size
+	im.imsize
 	```
 
 	Returns:
@@ -120,8 +120,8 @@ The customization options of the `InsetMap` can be accessed using dot notation (
 === "Updating Values"
 	```python
 	# Updating the size
-	im.size = 0.75
-	im.size
+	im.imsize = 0.75
+	im.imsize
 	```
 
 	Returns:
@@ -150,8 +150,8 @@ There are four primary settings that must be supplied each time an inset map is 
 
 | Attribute | Description | Accepts |
 | :--- | :--- | :--- |
-| `location` | Where the inset map will be placed relative to the plot. | Any options accepted by `matplotlib` for legend placement (`"upper right"`, `"center"`, `"lower left"`, etc., see *loc* in the [`matplotlib.pyplot.legend`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html) documentation) |
-| `size` | What size you want the inset map to be, *in inches* | Either a single positive number to create a square plot, or a tuple of 2 numbers to specify `(width, height)` |
+| `size` | The default size profile, which determines the default values for `imsize` and `pad`. See the *Setting Size* section for details. | Any of `"xs"`, `"sm"`, `"md"`, `"lg"`, `"xl"` |
+| `imsize` | What size you want the inset map to be, *in inches* | Either a single positive number to create a square plot, or a tuple of 2 numbers to specify `(width, height)` |
 | `pad` | The space you want between the inset map and the edge of the parent plot, *in inches* | Either a single number to have even padding on both the x- and y-axis, or a tuple of 2 numbers to specify `(x, y)` padding |
 | `zorder` | (new as of `v3.1.0`) The zorder of the final inset map artist, which can be used to bring the artist forward / place it behind other axis artists. | Any number; the default value is 99 |
 
@@ -168,7 +168,7 @@ There are four primary settings that must be supplied each time an inset map is 
 		ax.set_aspect(1, adjustable="datalim") # this is just making things square-ish for us
 		ax.set_title(l)
 		# Creating the inset map at our specified location
-		inset_map(ax=ax, location=l, size=0.5, pad=0.05, xticks=[], yticks=[])
+		inset_map(ax=ax, location=l, imsize=0.5, pad=0.05, xticks=[], yticks=[])
 	```
 
 	![3x3 grid of possible inset map locations](assets/inset_maps/location_grid.png)
@@ -177,9 +177,9 @@ There are four primary settings that must be supplied each time an inset map is 
 	```python
 	# Changing size and padding
 	modifications = [
-		{"size":0.25,"pad":0},
-		{"size":0.5,"pad":0},
-		{"size":0.25, "pad":0.25},
+		{"imsize":0.25,"pad":0},
+		{"imsize":0.5,"pad":0},
+		{"imsize":0.25, "pad":0.25},
 	]
 	
 	fig, axs = new_map(1,3, figsize=(9,3))
@@ -204,7 +204,7 @@ There are four primary settings that must be supplied each time an inset map is 
 	for ax,z in zip(axs.flatten(), zorders):
 		states.query(f"NAME=='Georgia'").plot(ax=ax, zorder=z["plot"])
 		ax.set_aspect(1, adjustable="datalim")
-		inset_map(ax=ax, location="upper left", size=1, pad=0.05, xticks=[], yticks=[], zorder=z["inset"])
+		inset_map(ax=ax, location="upper left", imsize=1, pad=0.05, xticks=[], yticks=[], zorder=z["inset"])
 	```
 
 	![comparison of different zorder values for the inset map](assets/inset_maps/zorder.png)
@@ -228,11 +228,11 @@ for ax,l,m in zip(axs.flatten(), locs, modifications):
 	ax.set_aspect(1, adjustable="datalim") # this is just making things square-ish for us
 		
 # First, a default for comparison
-inset_map(ax=axs[0], location="upper right", size=0.8, pad=0.05, xticks=[], yticks=[])
+inset_map(ax=axs[0], location="upper right", imsize=0.8, pad=0.05, xticks=[], yticks=[])
 # Placing the upper right corner of the inset axes in the middle of the map
-inset_map(ax=axs[1], location="upper right", size=0.8, pad=0.05, coords=(0.5,0.5), xticks=[], yticks=[])
+inset_map(ax=axs[1], location="upper right", imsize=0.8, pad=0.05, coords=(0.5,0.5), xticks=[], yticks=[])
 # Placing the upper left corner of the inset axes on Atlanta, GA, using ax.transData
-inset_map(ax=axs[2], location="upper left", size=0.8, pad=0.05, coords=(-9353446,4007500), transform=axs[2].transData, xticks=[], yticks=[])
+inset_map(ax=axs[2], location="upper left", imsize=0.8, pad=0.05, coords=(-9353446,4007500), transform=axs[2].transData, xticks=[], yticks=[])
 ```
 		
 ![examples showing advanced positioning of the inset map](assets/inset_maps/advanced_positioning.png)
@@ -254,7 +254,7 @@ _Each_ dictionary in the list must follow this form:
 # One common use-case for this would be displaying a map of the US as you plot multiple individual US states
 
 # Defining the inset map
-im = InsetMap("lower left", size=0.8, pad=0.05, xticks=[], yticks=[], 
+im = InsetMap("lower left", imsize=0.8, pad=0.05, xticks=[], yticks=[], 
 							to_plot=[{"data":contiguous, "kwargs":{"facecolor":"red"}}])
 
 # Creating 1x3 subplots
@@ -288,7 +288,7 @@ fig, ax = new_map()
 contiguous.plot(ax=ax)
 
 # Adding an inset map to the plot with some kwargs for xticks, yticks, and facecolor
-iax = inset_map(ax, location="lower left", size=0.8, pad=0.1, xticks=[], yticks=[], facecolor="red")
+iax = inset_map(ax, location="lower left", imsize=0.8, pad=0.1, xticks=[], yticks=[], facecolor="red")
 # Plotting alaska in the inset map
 alaska.plot(ax=iax)
 ```
@@ -310,9 +310,9 @@ contiguous.plot(ax=ax)
 
 # Adding multiple inset maps to the plot
 # Also using facecolor so you can see which is which
-iax = inset_map(ax, location="lower left", size=0.25, pad=0.1, xticks=[], yticks=[], facecolor="red") 
-iax = inset_map(ax, location="lower right", size=0.25, pad=0.1, xticks=[], yticks=[], facecolor="blue")
-iax = inset_map(ax, location="center right", size=0.25, pad=0.1, xticks=[], yticks=[], facecolor="green")
+iax = inset_map(ax, location="lower left", imsize=0.25, pad=0.1, xticks=[], yticks=[], facecolor="red") 
+iax = inset_map(ax, location="lower right", imsize=0.25, pad=0.1, xticks=[], yticks=[], facecolor="blue")
+iax = inset_map(ax, location="center right", imsize=0.25, pad=0.1, xticks=[], yticks=[], facecolor="green")
 ```
 
 ![a plot with multiple inset maps added](assets/inset_maps/multiple_insets.png)
@@ -330,7 +330,7 @@ contiguous.plot(ax=ax)
 
 # Creating all the axes at once
 # Note that each of the 4 states can be turned off individually!
-aax, hax, pax, dax = inset_usa(ax, alaska=True, hawaii=True, dc=True, puerto_rico=True, size=0.4, pad=0.05, xticks=[], yticks=[], box_aspect=1)
+aax, hax, pax, dax = inset_usa(ax, alaska=True, hawaii=True, dc=True, puerto_rico=True, imsize=0.4, pad=0.05, xticks=[], yticks=[], box_aspect=1)
 
 alaska.plot(ax=aax)
 hawaii.plot(ax=hax)
@@ -358,7 +358,7 @@ contiguous.plot(ax=ax, column="ALAND", edgecolor="black", linewidth=0.5,
 # Don't worry too much about this code, it is quite messy and could be done better, but it should illustrate what is possible
 jenks_land = mapclassify.FisherJenks(contiguous["ALAND"], k=5)
 
-gax = inset_map(ax, location="lower left", size=(1.1,0.3), pad=0.2)
+gax = inset_map(ax, location="lower left", imsize=(1.1,0.3), pad=0.2)
 gax.tick_params(labelsize=4)
 gax.bar(x=range(5), height=jenks_land.counts, color=matplotlib.colormaps["Blues"]([0,0.25,0.50,0.75,1]), 
 	tick_label=["{:.0e}".format(b) for b in jenks_land.bins], edgecolor="black", linewidth=0.5)
@@ -367,9 +367,9 @@ gax.bar(x=range(5), height=jenks_land.counts, color=matplotlib.colormaps["Blues"
 ![a map of the US with an inset histgram showing land area](assets/inset_maps/inset_graph.png)
 
 ### Setting Size
-While the inset map can nominally have its size changed by changing the relevant attribute, this can be tedious if you have to set it for every map.
+While the inset map can nominally have its dimensions changed by changing the `imsize` attribute, this can be tedious if you have to set it for every map.
 
-Given that there are standardized paper sizes that most graphics are made towards, a specific function, `set_size()`, is provided that will batch-update the default values of the inset map to approximate what looks best at each size. The function takes in only one input, which is the size you want to update the inset to be:
+Given that there are standardized paper sizes that most graphics are made towards, a `size` parameter is available that will select pre-configured default values for `imsize` and `pad` that approximate what looks best at each size. The parameter takes in only one input, which is the size tier you want:
 
 * `xsmall` or `xs` for A8 paper, ~2 to 3 inches
 
@@ -381,7 +381,7 @@ Given that there are standardized paper sizes that most graphics are made toward
 
 * `xlarge` or `xl` for A0 paper, ~33 to 48 inches
 
-These default values can be seen in `defaults/inset_map.py`; mostly, this function updates `size` and `pad`.
+These default values can be seen in `defaults/inset_map.py`; mostly, this function updates `imsize` and `pad`.
 
 ```python
 # For reference, this is 5 inches x 10 inches
@@ -389,13 +389,8 @@ fig, ax = new_map(1,1, figsize=(10,5))
 
 # Visualizing three different sizes at various positions
 for s,l in zip(["xs","sm","md"], ["center left", "center", "center right"]):
-	# Calling the function to update the defaults
-	# Note the function exists on the CLASS, but impacts both the class and function
-	InsetMap.set_size(size=s)
-	inset_map(ax=ax, location=l, xticks=[], yticks=[])
-
-# Resetting the sizes
-InsetMap.set_size(size="sm")
+	# Using the size parameter directly to control the default profile
+	inset_map(ax=ax, location=l, size=s, xticks=[], yticks=[])
 ```
 		
 ![a plot with different sizes of inset maps](assets/inset_maps/set_size.png)
@@ -415,7 +410,7 @@ Extent indicators can be used to show the extent of one axis on another. This is
 
 ```python
 # Defining the inset map
-im = InsetMap("upper right", size=1, pad=0.05, xticks=[], yticks=[], to_plot=[{"data":contiguous}])
+im = InsetMap("upper right", imsize=1, pad=0.05, xticks=[], yticks=[], to_plot=[{"data":contiguous}])
 
 # Creating a plot of Georgia
 fig, ax = new_map(1,1, figsize=(5,5))
@@ -454,7 +449,7 @@ Extent indicators can be created either through the `indicate_extent()` function
 
 ```python
 # Setting up an inset map
-im = InsetMap(location="upper right", size=0.75, pad=0.05, xticks=[], yticks=[], to_plot=[{"data":contiguous}])
+im = InsetMap(location="upper right", imsize=0.75, pad=0.05, xticks=[], yticks=[], to_plot=[{"data":contiguous}])
 
 # What will be changed for each extent indicator
 modifications = [
@@ -485,7 +480,7 @@ In all of the examples above, the extent indicator was plotted _on the inset map
 
 ```python
 # Defining the inset map, which will be of Washington, DC (!)
-im = InsetMap("lower right", size=0.5, pad=0.05, xticks=[], yticks=[], to_plot=[{"data":washington_dc}])
+im = InsetMap("lower right", imsize=0.5, pad=0.05, xticks=[], yticks=[], to_plot=[{"data":washington_dc}])
 
 # Creating a plot of the contiguous US
 fig, ax = new_map(1,1, figsize=(5,5))
@@ -505,7 +500,7 @@ However, usually in such circumstances you want to *connect the extent indicator
 
 ```python
 # The code below is the same, except for the very last function
-im = InsetMap("lower right", size=0.5, pad=0.05, xticks=[], yticks=[], to_plot=[{"data":washington_dc}])
+im = InsetMap("lower right", imsize=0.5, pad=0.05, xticks=[], yticks=[], to_plot=[{"data":washington_dc}])
 
 fig, ax = new_map(1,1, figsize=(5,5))
 contiguous.plot(ax=ax)
@@ -545,7 +540,7 @@ The three different variables are:
 
 ```python
 # Setting up an inset map
-im = InsetMap("lower left", size=0.5, pad=0.05, xticks=[], yticks=[], to_plot=[{"data":states.query("NAME=='Georgia'")}])
+im = InsetMap("lower left", imsize=0.5, pad=0.05, xticks=[], yticks=[], to_plot=[{"data":states.query("NAME=='Georgia'")}])
 
 # What will be changed for each extent indicator
 modifications = [

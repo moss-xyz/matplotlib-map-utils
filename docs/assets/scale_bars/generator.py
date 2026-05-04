@@ -142,8 +142,8 @@ matplotlib.pyplot.close()
 # locations.png
 #------------------------------------------------
 
-# Do not worry about this: it is covered later, it is simply updating the default size of the scale bar
-ScaleBar.set_size("xs")
+# Do not worry about this: it is covered later, it is simply updating the default size of the scale bar to xs
+# ScaleBar.set_size() is no longer needed — pass size= directly instead
 # Grid of location options
 # Note that the "center" options will feel slightly off: this is because the the center of the scale bar is of the entire artist, text included, not just the bar itself
 locs = ["upper left", "upper center", "upper right", "center left", "center", "center right", "lower left", "lower center", "lower right"]
@@ -151,7 +151,7 @@ fig, axs = new_map(3,3, figsize=(9,9))
 for ax,l in zip(axs.flatten(), locs):
 	states.query(f"NAME=='Georgia'").plot(ax=ax)
 	ax.set_aspect(1, adjustable="datalim")
-	scale_bar(ax=ax, location=l, style="boxes", bar={"projection":3857,"minor_type":"none"}, labels={"style":"first_last"})
+	scale_bar(ax=ax, size="xs", location=l, style="boxes", bar={"projection":3857,"minor_type":"none"}, labels={"style":"first_last"})
 
 matplotlib.pyplot.savefig("./locations.png", bbox_inches="tight")
 matplotlib.pyplot.close()
@@ -161,7 +161,7 @@ matplotlib.pyplot.close()
 #------------------------------------------------
 
 # Just reverting the change I made above; again this is explained later, don't worry about it for now
-ScaleBar.set_size("md")
+# (No longer needed: we pass size= directly now)
 # Modifying the styles
 styles = ["boxes","ticks"]
 # Creating 1x2 subplots
@@ -401,7 +401,6 @@ matplotlib.pyplot.close()
 #------------------------------------------------
 
 # Modifying specific elements
-ScaleBar.set_size("md")
 
 modifications = [
 	{"facecolor": "lightgrey"}, # different facecolor
@@ -454,12 +453,10 @@ states.query(f"NAME=='California'").plot(ax=ax)
 # Visualizing three different sizes at various positions
 for s,l in zip(["sm","md","lg"], ["upper center", "center", "lower center"]):
 	# Calling the function to update the defaults
-	ScaleBar.set_size(size=s)
-	scale_bar(ax=ax, location=l, style="boxes", labels={"style":"major"}, 
+	scale_bar(ax=ax, size=s, location=l, style="boxes", labels={"style":"major"}, 
 					bar={"projection":3857,"max":900,"major_div":3,"minor_div":1,"minor_type":"none"})
 
-# Resetting the sizes
-ScaleBar.set_size(size="sm")
+# No need to reset sizes - the size= parameter handles it per-call
 
 matplotlib.pyplot.savefig("./set_size.png", bbox_inches="tight")
 matplotlib.pyplot.close()

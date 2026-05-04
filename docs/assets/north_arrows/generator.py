@@ -316,9 +316,8 @@ fig, ax = new_map(1,1, figsize=(10,5))
 
 # Visualizing the different sizes at various positions
 for l,s in zip([0.1, 0.2, 0.35, 0.55, 0.85], ["xs","sm","md","lg","xl"]):
-	# Calling the function to update the defaults
-	NorthArrow.set_size(size=s)
-	north_arrow(ax=ax, location="center", label={"text":s}, rotation={"degrees":0}, aob={"bbox_to_anchor":(l, 0.5), "bbox_transform":ax.transAxes})
+	# Using the size parameter to set the size directly
+	north_arrow(ax=ax, size=s, location="center", label={"text":s}, rotation={"degrees":0}, aob={"bbox_to_anchor":(l, 0.5), "bbox_transform":ax.transAxes})
 
 matplotlib.pyplot.savefig("./set_size.png", bbox_inches="tight")
 matplotlib.pyplot.close()
@@ -328,9 +327,8 @@ matplotlib.pyplot.close()
 #------------------------------------------------
 
 fig, ax = new_map()
-NorthArrow.set_size(size="sm")
 states.query("NAME=='Georgia'").plot(ax=ax)
-north_arrow(ax=ax, location="upper right", rotation={"degrees":0}, aob={"bbox_to_anchor":(1.1,1), "bbox_transform":ax.transAxes})
+north_arrow(ax=ax, size="sm", location="upper left", rotation={"degrees":0}, aob={"bbox_to_anchor":(1.05,1), "bbox_transform":ax.transAxes})
 
 matplotlib.pyplot.savefig("./external_placement.png")
 matplotlib.pyplot.close()

@@ -8,7 +8,7 @@
 
 **Feedback:** I welcome any and all feedback! See the *Development Notes* below for more details.
 
-**Current Version:** `v4.0.0`, featuring a brand-new documentation site!
+**Current Version:** `v4.1.0`, featuring a brand-new documentation site and improved type validation!
 
 ---
 
@@ -16,7 +16,7 @@
 
 `matplotlib_map_utils` is a package that that assists with the creation of maps using [`matplotlib`](https://matplotlib.org/stable/).
 
-As of `v3.x` (the current version), this includes the ability to easily create three common map elements: 
+As of `v4.x` (the current version), this includes the ability to easily create three common map elements: 
 
 * <span style="color: orange; font-weight: bold;">North arrows</span>, which automatically point to true north,
 
@@ -53,6 +53,8 @@ The requirements for this package are:
 * `matplotlib >= 3.9` (might work with lower versions but not guaranteed)
 
 * `cartopy >= 0.23` (due to earlier bug with calling `copy()` on `CRS` objects)
+
+* `pydantic >= 2.13.3` (for type validation; might work with older versions, open an issue if you have questions)
 
 ---
 

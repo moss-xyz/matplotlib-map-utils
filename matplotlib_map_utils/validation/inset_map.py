@@ -31,7 +31,7 @@ class InsetMapPlotModel(BaseModel):
 class InsetMapInsetModel(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]
-    size: Optional[Union[Annotated[Union[float, int], Field(ge=0)], Tuple[Annotated[Union[float, int], Field(ge=0)], Annotated[Union[float, int], Field(ge=0)]]]] = None
+    imsize: Optional[Union[Annotated[Union[float, int], Field(ge=0)], Tuple[Annotated[Union[float, int], Field(ge=0)], Annotated[Union[float, int], Field(ge=0)]]]] = None
     pad: Optional[Union[Annotated[Union[float, int], Field(ge=0)], Tuple[Annotated[Union[float, int], Field(ge=0)], Annotated[Union[float, int], Field(ge=0)]]]] = None
     coords: Optional[Tuple[Union[float, int], Union[float, int]]] = None
     to_plot: Optional[Union[List[InsetMapPlotModel], Tuple[InsetMapPlotModel, ...]]] = None
@@ -42,7 +42,7 @@ class InsetMapInsetModel(BaseModel):
     def apply_size_defaults(cls, data: Any) -> Any:
         if data is None or data is True: data = {}
         if not isinstance(data, dict): return data
-        size = data.pop('size_profile', config.DEFAULT_SIZE)
+        size = data.pop('size', config.DEFAULT_SIZE)
         defaults = imd._DEFAULTS_IM[_get_size_key(size)][0]
         merged = defaults | data
         # Auto-wrap a single dict for to_plot into a list
