@@ -44,7 +44,11 @@ class InsetMapInsetModel(BaseModel):
         if not isinstance(data, dict): return data
         size = data.pop('size_profile', config.DEFAULT_SIZE)
         defaults = imd._DEFAULTS_IM[_get_size_key(size)][0]
-        return defaults | data
+        merged = defaults | data
+        # Auto-wrap a single dict for to_plot into a list
+        if isinstance(merged.get('to_plot'), dict):
+            merged['to_plot'] = [merged['to_plot']]
+        return merged
 
 class InsetMapExtentModel(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)

@@ -150,6 +150,9 @@ class InsetMap(matplotlib.artist.Artist):
     @to_plot.setter
     def to_plot(self, val):
         if val is not None:
+            # Auto-wrap a single dict into a list
+            if isinstance(val, dict):
+                val = [val]
             validated = TypeAdapter(imt.InsetMapInsetModel.model_fields['to_plot'].annotation).validate_python(val)
             self._to_plot = [d.model_dump(exclude_unset=True) if d is not None else None for d in validated]
         else:
