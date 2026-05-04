@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "matplotlib-map-utils"
-version = "4.0.0"
+version = "4.1.0"
 authors = [
   { name="David Moss", email="davidmoss1221@gmail.com" },
 ]
