@@ -8,21 +8,9 @@
 # Pydantic type validation
 from typing import Annotated, Union, Tuple, List, Optional, Literal, Any
 from pydantic import ConfigDict, BaseModel, Field, BeforeValidator, model_validator
-from .shared import MatplotlibColor, MatplotlibFontsize, CRSInput, _validate_crs_input
+from .shared import MatplotlibColor, MatplotlibFontsize, CRSInput, _validate_crs_input, _get_size_key
 from .. import config
 from ..defaults import scale_bar as sbd
-
-def _get_size_key(size: Any) -> str:
-    if not isinstance(size, str):
-        return "md"
-    size_map = {
-        "xs": "xs", "xsmall": "xs", "x-small": "xs",
-        "sm": "sm", "small": "sm",
-        "md": "md", "medium": "md",
-        "lg": "lg", "large": "lg",
-        "xl": "xl", "xlarge": "xl", "x-large": "xl"
-    }
-    return size_map.get(size.lower(), "md")
 
 ### ALL ###
 # This code tells other packages what to import if not explicitly stated
@@ -157,8 +145,20 @@ class ScaleBarLabelsModel(BaseModel):
         if data is None or data is True: data = {}
         if not isinstance(data, dict): return data
         size = data.pop('size', config.DEFAULT_SIZE)
+        text_defaults = data.pop('text', None)
         defaults = sbd._DEFAULTS_SB[_get_size_key(size)][1]
-        return defaults | data
+        merged = defaults | data
+        # Apply text cascade: text properties act as fallbacks for labels
+        if text_defaults is not None:
+            text_fields = ['fontsize', 'fontfamily', 'fontstyle', 'fontweight',
+                           'stroke_width', 'stroke_color', 'rotation', 'rotation_mode']
+            for field in text_fields:
+                if field in text_defaults and merged.get(field) is None:
+                    merged[field] = text_defaults[field]
+            # textcolor -> textcolors rename for labels
+            if merged.get('textcolors') is None and 'textcolor' in text_defaults:
+                merged['textcolors'] = text_defaults['textcolor']
+        return merged
 
 class ScaleBarUnitsModel(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -182,8 +182,17 @@ class ScaleBarUnitsModel(BaseModel):
         if data is None or data is True: data = {}
         if not isinstance(data, dict): return data
         size = data.pop('size', config.DEFAULT_SIZE)
+        text_defaults = data.pop('text', None)
         defaults = sbd._DEFAULTS_SB[_get_size_key(size)][2]
-        return defaults | data
+        merged = defaults | data
+        # Apply text cascade: text properties act as fallbacks for units
+        if text_defaults is not None:
+            text_fields = ['fontsize', 'textcolor', 'fontfamily', 'fontstyle', 'fontweight',
+                           'stroke_width', 'stroke_color', 'rotation', 'rotation_mode']
+            for field in text_fields:
+                if field in text_defaults and merged.get(field) is None:
+                    merged[field] = text_defaults[field]
+        return merged
 
 class ScaleBarTextModel(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)

@@ -47,3 +47,20 @@ def _validate_crs_input(v):
         raise ValueError(f"Invalid CRS supplied ({v}), please provide a valid CRS input that PyProj can use instead")
 
 CRSInput = Annotated[Any, BeforeValidator(_validate_crs_input)]
+
+def _get_size_key(size: Any) -> str:
+    """Convert a size string (e.g. 'medium', 'x-small') to its canonical short key."""
+    if not isinstance(size, str):
+        return "md"
+    size_map = {
+        "xs": "xs", "xsmall": "xs", "x-small": "xs",
+        "sm": "sm", "small": "sm",
+        "md": "md", "medium": "md",
+        "lg": "lg", "large": "lg",
+        "xl": "xl", "xlarge": "xl", "x-large": "xl"
+    }
+    return size_map.get(size.lower(), "md")
+
+def _del_keys(d: dict, to_remove: list) -> dict:
+    """Return a copy of dict *d* with the specified keys removed."""
+    return {key: val for key, val in d.items() if key not in to_remove}

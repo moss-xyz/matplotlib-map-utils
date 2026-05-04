@@ -24,6 +24,7 @@ from typing import Literal
 # The information contained in our helper scripts (validation and defaults)
 from .. import config
 from ..validation import north_arrow as nat
+from ..validation.shared import _del_keys
 
 ### CLASSES ###
 
@@ -439,7 +440,4 @@ def _iterative_rotate(artist, deg):
         for child in artist.get_children():
             _iterative_rotate(child, deg)
 
-# This function will remove any keys we specify from a dictionary
-# This is useful if we need to unpack on certain values from a dictionary, and is used in north_arrow()
-def _del_keys(dict, to_remove):
-    return {key: val for key, val in dict.items() if key not in to_remove}
+# _del_keys is imported from validation.shared

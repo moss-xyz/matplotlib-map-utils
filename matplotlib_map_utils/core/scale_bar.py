@@ -29,6 +29,7 @@ from typing import Literal
 # The information contained in our helper scripts (validation and defaults)
 from .. import config
 from ..validation import scale_bar as sbt
+from ..validation.shared import _del_keys
 ### CLASSES ###
 
 class ScaleBar(matplotlib.artist.Artist):
@@ -60,16 +61,20 @@ class ScaleBar(matplotlib.artist.Artist):
         # Shared elements for both ticked and boxed bars
         # This validation is dependent on the type of bar we are constructing
         # So we modify the validation dictionary to remove the keys that are not relevant (throwing a warning if they exist in the input)
-        def _build(model, input_val):
+        def _build(model, input_val, extra=None):
             if input_val is False: return False
             data = input_val.copy() if isinstance(input_val, dict) else {}
             data['size'] = self._size
-            return model(**data).model_dump(exclude_unset=True)
+            if extra is not None:
+                data.update(extra)
+            return model(**data).model_dump()
             
         self._bar = _build(sbt.ScaleBarBarModel, bar)
-        self._units = _build(sbt.ScaleBarUnitsModel, units)
-        self._labels = _build(sbt.ScaleBarLabelsModel, labels)
         self._text = _build(sbt.ScaleBarTextModel, text)
+        # Pass text dict into labels/units so text cascade is resolved at validation time
+        _text_dict = self._text if isinstance(self._text, dict) else None
+        self._units = _build(sbt.ScaleBarUnitsModel, units, extra={'text': _text_dict} if _text_dict else None)
+        self._labels = _build(sbt.ScaleBarLabelsModel, labels, extra={'text': _text_dict} if _text_dict else None)
         self._aob = _build(sbt.ScaleBarAobModel, aob)
 
     ## INTERNAL PROPERTIES ##
@@ -115,7 +120,7 @@ class ScaleBar(matplotlib.artist.Artist):
         else:
             data = val.copy() if isinstance(val, dict) else {}
             data['size'] = self._size
-            self._bar = sbt.ScaleBarBarModel(**data).model_dump(exclude_unset=True)
+            self._bar = sbt.ScaleBarBarModel(**data).model_dump()
     
     # units
     @property
@@ -128,7 +133,9 @@ class ScaleBar(matplotlib.artist.Artist):
         else:
             data = val.copy() if isinstance(val, dict) else {}
             data['size'] = self._size
-            self._units = sbt.ScaleBarUnitsModel(**data).model_dump(exclude_unset=True)
+            if isinstance(self._text, dict):
+                data['text'] = self._text
+            self._units = sbt.ScaleBarUnitsModel(**data).model_dump()
     
     # labels
     @property
@@ -141,7 +148,9 @@ class ScaleBar(matplotlib.artist.Artist):
         else:
             data = val.copy() if isinstance(val, dict) else {}
             data['size'] = self._size
-            self._labels = sbt.ScaleBarLabelsModel(**data).model_dump(exclude_unset=True)
+            if isinstance(self._text, dict):
+                data['text'] = self._text
+            self._labels = sbt.ScaleBarLabelsModel(**data).model_dump()
     
     # text
     @property
@@ -154,7 +163,7 @@ class ScaleBar(matplotlib.artist.Artist):
         else:
             data = val.copy() if isinstance(val, dict) else {}
             data['size'] = self._size
-            self._text = sbt.ScaleBarTextModel(**data).model_dump(exclude_unset=True)
+            self._text = sbt.ScaleBarTextModel(**data).model_dump()
     
     # aob
     @property
@@ -167,7 +176,7 @@ class ScaleBar(matplotlib.artist.Artist):
         else:
             data = val.copy() if isinstance(val, dict) else {}
             data['size'] = self._size
-            self._aob = sbt.ScaleBarAobModel(**data).model_dump(exclude_unset=True)
+            self._aob = sbt.ScaleBarAobModel(**data).model_dump()
     
     # zorder
     @property
@@ -258,16 +267,20 @@ def scale_bar(ax, draw=True, size: str=None, style: Literal["ticks","boxes"]="bo
     # If a dictionary is passed to any of the elements, first validate that it is "correct"
     # Note that we also merge the provided dict with the default style dict, so no keys are missing
     # If a specific component is not desired, it should be set to False in the function call
-    def _build(model, input_val):
+    def _build(model, input_val, extra=None):
         if input_val is False: return False
         data = input_val.copy() if isinstance(input_val, dict) else {}
         data['size'] = _size
-        return model(**data).model_dump(exclude_unset=True)
+        if extra is not None:
+            data.update(extra)
+        return model(**data).model_dump()
         
     _bar = _build(sbt.ScaleBarBarModel, bar)
-    _units = _build(sbt.ScaleBarUnitsModel, units)
-    _labels = _build(sbt.ScaleBarLabelsModel, labels)
     _text = _build(sbt.ScaleBarTextModel, text)
+    # Pass text dict into labels/units so text cascade is resolved at validation time
+    _text_dict = _text if isinstance(_text, dict) else None
+    _units = _build(sbt.ScaleBarUnitsModel, units, extra={'text': _text_dict} if _text_dict else None)
+    _labels = _build(sbt.ScaleBarLabelsModel, labels, extra={'text': _text_dict} if _text_dict else None)
     _aob = _build(sbt.ScaleBarAobModel, aob)
 
     # Raster controls for the temporary rendered image.
@@ -277,17 +290,12 @@ def scale_bar(ax, draw=True, size: str=None, style: Literal["ticks","boxes"]="bo
     _raster_dpi = _raster_dpi * _raster_dpi_scale
 
     ##### CONFIGURING TEXT #####
-    # First need to convert each string font size (if any) to a point size
+    # Font size conversion: convert any string font sizes to numeric point sizes
     for d in [_text, _labels, _units]:
         if d is not None and "fontsize" in d.keys():
             d["fontsize"] = _convert_font_size(d["fontsize"])
-
-    # The text dictionary acts as a shortcut for setting text properties elsewhere (units, major, and minor)
-    # So the first order of business is to use it as an override for the other dictionaries as needed
-    _units = _text | _units
-    # Then change the textcolor key to textcolors so it fits in the major category
-    _text["textcolors"] = _text["textcolor"] # if we hadn't made a deepcopy above, this would cause errors later (text shouldn't have textcolors as a key)
-    _labels = _del_keys(_text, ["textcolor"]) | _labels
+    # Note: text cascade (text -> labels/units) is now handled at validation time
+    # in ScaleBarLabelsModel and ScaleBarUnitsModel model validators
     
     ##### CONFIG #####
 
@@ -542,7 +550,7 @@ def dual_bars(ax, draw=True, size: str=None, style: Literal["ticks","boxes"]="bo
         if input_val is False: return False
         data = input_val.copy() if isinstance(input_val, dict) else {}
         data['size'] = _size
-        return model(**data).model_dump(exclude_unset=True)
+        return model(**data).model_dump()
         
     _bar = _build(sbt.ScaleBarBarModel, bar)
     _aob = _build(sbt.ScaleBarAobModel, aob)
@@ -618,10 +626,7 @@ def dual_bars(ax, draw=True, size: str=None, style: Literal["ticks","boxes"]="bo
 
 #
 
-# This function will remove any keys we specify from a dictionary
-# This is useful if we need to unpack on certain values from a dictionary, and is used in scale_bar()
-def _del_keys(dict, to_remove):
-    return {key: val for key, val in dict.items() if key not in to_remove}
+# _del_keys is imported from validation.shared
 
 # This function handles the configuration steps 
 # (i.e. calculating the length of the bar, its divisions, etc.)

@@ -10,21 +10,9 @@ import matplotlib.axes
 # Pydantic type validation
 from typing import Annotated, Union, Tuple, List, Optional, Literal, Any, Dict
 from pydantic import ConfigDict, BaseModel, Field, model_validator
-from .shared import MatplotlibColor, CRSInput
+from .shared import MatplotlibColor, CRSInput, _get_size_key
 from .. import config
 from ..defaults import inset_map as imd
-
-def _get_size_key(size: Any) -> str:
-    if not isinstance(size, str):
-        return "md"
-    size_map = {
-        "xs": "xs", "xsmall": "xs", "x-small": "xs",
-        "sm": "sm", "small": "sm",
-        "md": "md", "medium": "md",
-        "lg": "lg", "large": "lg",
-        "xl": "xl", "xlarge": "xl", "x-large": "xl"
-    }
-    return size_map.get(size.lower(), "md")
 
 ### ALL ###
 # This code tells other packages what to import if not explicitly stated
