@@ -561,7 +561,8 @@ def dual_bars(ax, draw=True, size: str=None, style: Literal["ticks","boxes"]="bo
         label_settings = {"loc":label_loc}
         # Creating a bar
         # Because draw is False and return_aob is false, an OffsetImage will be returned
-        b = scale_bar(ax, draw=False, size=size, style=style, location="lower left", bar=bar, units=units, labels=labels, text=text, aob=False, return_aob=False), 
+        b = scale_bar(ax, draw=False, size=size, style=style, location="lower left", 
+                      bar=(_bar | bar_settings), units=_units, labels=(_labels | label_settings), text=_text, aob=False, return_aob=False)
         bars.append(b)
 
     ##### PACKING  #####
