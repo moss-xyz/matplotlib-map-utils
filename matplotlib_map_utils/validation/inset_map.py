@@ -9,8 +9,22 @@
 import matplotlib.axes
 # Pydantic type validation
 from typing import Annotated, Union, Tuple, List, Optional, Literal, Any, Dict
-from pydantic import ConfigDict, BaseModel, Field
+from pydantic import ConfigDict, BaseModel, Field, model_validator
 from .shared import MatplotlibColor, CRSInput
+from .. import config
+from ..defaults import inset_map as imd
+
+def _get_size_key(size: Any) -> str:
+    if not isinstance(size, str):
+        return "md"
+    size_map = {
+        "xs": "xs", "xsmall": "xs", "x-small": "xs",
+        "sm": "sm", "small": "sm",
+        "md": "md", "medium": "md",
+        "lg": "lg", "large": "lg",
+        "xl": "xl", "xlarge": "xl", "x-large": "xl"
+    }
+    return size_map.get(size.lower(), "md")
 
 ### ALL ###
 # This code tells other packages what to import if not explicitly stated
@@ -34,6 +48,15 @@ class InsetMapInsetModel(BaseModel):
     coords: Optional[Tuple[Union[float, int], Union[float, int]]] = None
     to_plot: Optional[Union[List[InsetMapPlotModel], Tuple[InsetMapPlotModel, ...]]] = None
     zorder: int
+
+    @model_validator(mode='before')
+    @classmethod
+    def apply_size_defaults(cls, data: Any) -> Any:
+        if data is None or data is True: data = {}
+        if not isinstance(data, dict): return data
+        size = data.pop('size_profile', config.DEFAULT_SIZE)
+        defaults = imd._DEFAULTS_IM[_get_size_key(size)][0]
+        return defaults | data
 
 class InsetMapExtentModel(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)

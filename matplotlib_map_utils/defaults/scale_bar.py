@@ -68,7 +68,7 @@ _TEXT_XS = {
     "textcolor":"black",
     "fontfamily":"sans-serif",
     "fontstyle":"normal",
-    "fontweight":"regular",
+    "fontweight":"normal",
     "stroke_width":0.5, # changed
     "stroke_color":"white",
     "rotation":None,
@@ -145,7 +145,7 @@ _TEXT_SM = {
     "textcolor":"black",
     "fontfamily":"sans-serif",
     "fontstyle":"normal",
-    "fontweight":"regular",
+    "fontweight":"normal",
     "stroke_width":0.5, # changed
     "stroke_color":"white",
     "rotation":None,
@@ -222,7 +222,7 @@ _TEXT_MD = {
     "textcolor":"black",
     "fontfamily":"sans-serif",
     "fontstyle":"normal",
-    "fontweight":"regular",
+    "fontweight":"normal",
     "stroke_width":1, # changed
     "stroke_color":"white",
     "rotation":None,
@@ -299,7 +299,7 @@ _TEXT_LG = {
     "textcolor":"black",
     "fontfamily":"sans-serif",
     "fontstyle":"normal",
-    "fontweight":"regular",
+    "fontweight":"normal",
     "stroke_width":2, # changed
     "stroke_color":"white",
     "rotation":None,
@@ -376,7 +376,7 @@ _TEXT_XL = {
     "textcolor":"black",
     "fontfamily":"sans-serif",
     "fontstyle":"normal",
-    "fontweight":"regular",
+    "fontweight":"normal",
     "stroke_width":4, # changed
     "stroke_color":"white",
     "rotation":None,

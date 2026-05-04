@@ -22,7 +22,7 @@ import numpy
 # Defaults for rotating the arrow to point towards True North (see _rotate_arrow for how it is used)
 # This default is the only one that is static: the rest can and should change depending on the size of your figure
 _ROTATION_ALL = {
-    "degrees":None,
+    "degrees":0,
     "crs":None,
     "reference":None,
     "coords":None 
@@ -88,7 +88,7 @@ _LABEL_XS = {
     "fontfamily":"sans-serif",
     "fontstyle":"normal",
     "color":"black",
-    "fontweight":"regular",
+    "fontweight":"normal",
     "stroke_width":0.5,
     "stroke_color":"white",
     "rotation":0,
@@ -158,7 +158,7 @@ _LABEL_SM = {
     "fontfamily":"sans-serif",
     "fontstyle":"normal",
     "color":"black",
-    "fontweight":"regular",
+    "fontweight":"normal",
     "stroke_width":0.5,
     "stroke_color":"white",
     "rotation":0,
@@ -228,7 +228,7 @@ _LABEL_MD = {
     "fontfamily":"sans-serif",
     "fontstyle":"normal",
     "color":"black",
-    "fontweight":"regular",
+    "fontweight":"normal",
     "stroke_width":1,
     "stroke_color":"white",
     "rotation":0,
@@ -298,7 +298,7 @@ _LABEL_LG = {
     "fontfamily":"sans-serif",
     "fontstyle":"normal",
     "color":"black",
-    "fontweight":"regular",
+    "fontweight":"normal",
     "stroke_width":2,
     "stroke_color":"white",
     "rotation":0,
@@ -368,7 +368,7 @@ _LABEL_XL = {
     "fontfamily":"sans-serif",
     "fontstyle":"normal",
     "color":"black",
-    "fontweight":"regular",
+    "fontweight":"normal",
     "stroke_width":4,
     "stroke_color":"white",
     "rotation":0,

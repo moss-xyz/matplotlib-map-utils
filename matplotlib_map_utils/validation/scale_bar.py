@@ -5,14 +5,24 @@
 
 ### IMPORTING PACKAGES ###
 
-# Geo packages
-import pyproj
-# matplotlib's useful validation functions
-import matplotlib.rcsetup
 # Pydantic type validation
 from typing import Annotated, Union, Tuple, List, Optional, Literal, Any
-from pydantic import ConfigDict, BaseModel, Field, BeforeValidator
+from pydantic import ConfigDict, BaseModel, Field, BeforeValidator, model_validator
 from .shared import MatplotlibColor, MatplotlibFontsize, CRSInput, _validate_crs_input
+from .. import config
+from ..defaults import scale_bar as sbd
+
+def _get_size_key(size: Any) -> str:
+    if not isinstance(size, str):
+        return "md"
+    size_map = {
+        "xs": "xs", "xsmall": "xs", "x-small": "xs",
+        "sm": "sm", "small": "sm",
+        "md": "md", "medium": "md",
+        "lg": "lg", "large": "lg",
+        "xl": "xl", "xlarge": "xl", "x-large": "xl"
+    }
+    return size_map.get(size.lower(), "md")
 
 ### ALL ###
 # This code tells other packages what to import if not explicitly stated
@@ -113,6 +123,15 @@ class ScaleBarBarModel(BaseModel):
     raster_dpi: Annotated[Optional[Union[float, int]], Field(ge=1)] = None
     raster_dpi_scale: Annotated[Optional[Union[float, int]], Field(ge=0.0001)] = None
 
+    @model_validator(mode='before')
+    @classmethod
+    def apply_size_defaults(cls, data: Any) -> Any:
+        if data is None or data is True: data = {}
+        if not isinstance(data, dict): return data
+        size = data.pop('size', config.DEFAULT_SIZE)
+        defaults = sbd._DEFAULTS_SB[_get_size_key(size)][0]
+        return defaults | data
+
 class ScaleBarLabelsModel(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     labels: Optional[Union[List[Any], Tuple[Any, ...]]] = None
@@ -120,33 +139,51 @@ class ScaleBarLabelsModel(BaseModel):
     format_int: bool
     style: Literal["major","first_last","last_only","minor_all","minor_first"]
     loc: Optional[Literal["above","below"]] = None
-    fontsize: MatplotlibFontsize
-    textcolors: Union[MatplotlibColor, List[MatplotlibColor], Tuple[MatplotlibColor, ...]]
-    fontfamily: Literal["serif", "sans-serif", "cursive", "fantasy", "monospace"]
-    fontstyle: Literal["normal", "italic", "oblique"]
-    fontweight: Literal["normal", "bold", "heavy", "light", "ultrabold", "ultralight"]
-    stroke_width: Annotated[Union[float, int], Field(ge=0)]
-    stroke_color: MatplotlibColor
+    fontsize: Optional[MatplotlibFontsize] = None
+    textcolors: Optional[Union[MatplotlibColor, List[MatplotlibColor], Tuple[MatplotlibColor, ...]]] = None
+    fontfamily: Optional[Literal["serif", "sans-serif", "cursive", "fantasy", "monospace"]] = None
+    fontstyle: Optional[Literal["normal", "italic", "oblique"]] = None
+    fontweight: Optional[Literal["normal", "bold", "heavy", "light", "ultrabold", "ultralight"]] = None
+    stroke_width: Annotated[Optional[Union[float, int]], Field(ge=0)] = None
+    stroke_color: Optional[MatplotlibColor] = None
     rotation: Annotated[Optional[Union[float, int]], Field(ge=-360, le=360)] = None
     rotation_mode: Optional[Literal["anchor","default"]] = None
     sep: Annotated[Union[float, int], Field(ge=0)]
     pad: Annotated[Union[float, int], Field(ge=0)]
 
+    @model_validator(mode='before')
+    @classmethod
+    def apply_size_defaults(cls, data: Any) -> Any:
+        if data is None or data is True: data = {}
+        if not isinstance(data, dict): return data
+        size = data.pop('size', config.DEFAULT_SIZE)
+        defaults = sbd._DEFAULTS_SB[_get_size_key(size)][1]
+        return defaults | data
+
 class ScaleBarUnitsModel(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     label: Optional[str] = None
     loc: Optional[Literal["bar","text","opposite"]] = None
-    fontsize: MatplotlibFontsize
-    textcolor: MatplotlibColor
-    fontfamily: Literal["serif", "sans-serif", "cursive", "fantasy", "monospace"]
-    fontstyle: Literal["normal", "italic", "oblique"]
-    fontweight: Literal["normal", "bold", "heavy", "light", "ultrabold", "ultralight"]
-    stroke_width: Annotated[Union[float, int], Field(ge=0)]
-    stroke_color: MatplotlibColor
+    fontsize: Optional[MatplotlibFontsize] = None
+    textcolor: Optional[MatplotlibColor] = None
+    fontfamily: Optional[Literal["serif", "sans-serif", "cursive", "fantasy", "monospace"]] = None
+    fontstyle: Optional[Literal["normal", "italic", "oblique"]] = None
+    fontweight: Optional[Literal["normal", "bold", "heavy", "light", "ultrabold", "ultralight"]] = None
+    stroke_width: Annotated[Optional[Union[float, int]], Field(ge=0)] = None
+    stroke_color: Optional[MatplotlibColor] = None
     rotation: Annotated[Optional[Union[float, int]], Field(ge=-360, le=360)] = None
     rotation_mode: Optional[Literal["anchor","default"]] = None
     sep: Annotated[Union[float, int], Field(ge=0)]
     pad: Annotated[Union[float, int], Field(ge=0)]
+
+    @model_validator(mode='before')
+    @classmethod
+    def apply_size_defaults(cls, data: Any) -> Any:
+        if data is None or data is True: data = {}
+        if not isinstance(data, dict): return data
+        size = data.pop('size', config.DEFAULT_SIZE)
+        defaults = sbd._DEFAULTS_SB[_get_size_key(size)][2]
+        return defaults | data
 
 class ScaleBarTextModel(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -160,6 +197,15 @@ class ScaleBarTextModel(BaseModel):
     rotation: Annotated[Optional[Union[float, int]], Field(ge=-360, le=360)] = None
     rotation_mode: Optional[Literal["anchor","default"]] = None
 
+    @model_validator(mode='before')
+    @classmethod
+    def apply_size_defaults(cls, data: Any) -> Any:
+        if data is None or data is True: data = {}
+        if not isinstance(data, dict): return data
+        size = data.pop('size', config.DEFAULT_SIZE)
+        defaults = sbd._DEFAULTS_SB[_get_size_key(size)][3]
+        return defaults | data
+
 class ScaleBarAobModel(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     facecolor: Optional[MatplotlibColor] = None
@@ -171,3 +217,12 @@ class ScaleBarAobModel(BaseModel):
     frameon: bool
     bbox_to_anchor: Optional[Any] = None
     bbox_transform: Optional[Any] = None
+
+    @model_validator(mode='before')
+    @classmethod
+    def apply_size_defaults(cls, data: Any) -> Any:
+        if data is None or data is True: data = {}
+        if not isinstance(data, dict): return data
+        size = data.pop('size', config.DEFAULT_SIZE)
+        defaults = sbd._DEFAULTS_SB[_get_size_key(size)][4]
+        return defaults | data

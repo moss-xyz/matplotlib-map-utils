@@ -22,16 +22,8 @@ import matplotlib.offsetbox
 # The types we use in this script
 from typing import Literal
 # The information contained in our helper scripts (validation and defaults)
-from ..defaults import north_arrow as nad
+from .. import config
 from ..validation import north_arrow as nat
-from ..validation import functions as naf
-
-### INITIALIZATION ###
-
-# Setting the defaults to the "medium" size, which is roughly optimized for A4/Letter paper
-# Making these as globals is important for the set_size() function to work later
-_DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = nad._DEFAULTS_NA["md"]
-_DEFAULT_ROTATION = nad._ROTATION_ALL
 
 ### CLASSES ###
 
@@ -41,11 +33,11 @@ _DEFAULT_ROTATION = nad._ROTATION_ALL
 class NorthArrow(matplotlib.artist.Artist):
     
     ## INITIALIZATION ##
-    def __init__(self, location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="upper right",
+    def __init__(self, size: str=None, location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="upper right",
                        scale: None | float | int=None,
-                       base: None | bool | nat._TYPE_BASE = None, fancy: None | bool | nat._TYPE_FANCY = None, 
-                       label: None | bool | nat._TYPE_LABEL = None, shadow: None | bool | nat._TYPE_SHADOW = None, 
-                       pack: None | nat._TYPE_PACK = None, aob: None | nat._TYPE_AOB = None, rotation: None | nat._TYPE_ROTATION = None,
+                       base: None | bool | dict = None, fancy: None | bool | dict = None, 
+                       label: None | bool | dict = None, shadow: None | bool | dict = None, 
+                       pack: None | dict = None, aob: None | dict = None, rotation: None | dict = None,
                        zorder: int=99,):
         # Starting up the object with the base properties of a matplotlib Artist
         matplotlib.artist.Artist.__init__(self)
@@ -55,39 +47,28 @@ class NorthArrow(matplotlib.artist.Artist):
         # If a specific component is not desired, it should be set to False during initialization
 
         # Location is stored as just a string
-        location =  naf._validate(nat._VALIDATE_PRIMARY, "location", location)
-        self._location = location
-
-        zorder = naf._validate(nat._VALIDATE_PRIMARY, "zorder", zorder)
-        self._zorder = zorder
-
-        # Scale will set to the default size if no value is passed
-        scale = naf._validate(nat._VALIDATE_PRIMARY, "scale", scale)
-        if scale is None:
-            self._scale = _DEFAULT_SCALE
-        else:
-            self._scale = scale
+        self._size = size if size is not None else config.DEFAULT_SIZE
+        primary = nat.NorthArrowPrimaryModel(location=location, zorder=zorder, scale=scale, size=self._size)
+        self._location = primary.location
+        self._zorder = primary.zorder
+        self._scale = primary.scale
         
+        def _build(model, input_val):
+            if input_val is False: return False
+            data = input_val.copy() if isinstance(input_val, dict) else {}
+            data['size'] = self._size
+            return model(**data).model_dump()
+
         # Main elements
-        base = naf._validate_dict(base, _DEFAULT_BASE, nat._VALIDATE_BASE, return_clean=True, parse_false=False)
-        self._base = base
-
-        fancy = naf._validate_dict(fancy, _DEFAULT_FANCY, nat._VALIDATE_FANCY, return_clean=True, parse_false=False)
-        self._fancy = fancy
-
-        label = naf._validate_dict(label, _DEFAULT_LABEL, nat._VALIDATE_LABEL, return_clean=True, parse_false=False)
-        self._label = label
-        
-        shadow = naf._validate_dict(shadow, _DEFAULT_SHADOW, nat._VALIDATE_SHADOW, return_clean=True, parse_false=False)
-        self._shadow = shadow
+        self._base = _build(nat.NorthArrowBaseModel, base)
+        self._fancy = _build(nat.NorthArrowFancyModel, fancy)
+        self._label = _build(nat.NorthArrowLabelModel, label)
+        self._shadow = _build(nat.NorthArrowShadowModel, shadow)
 
         # Other properties
-        pack = naf._validate_dict(pack, _DEFAULT_PACK, nat._VALIDATE_PACK, return_clean=True, parse_false=False)
-        self._pack = pack
-        aob = naf._validate_dict(aob, _DEFAULT_AOB, nat._VALIDATE_AOB, return_clean=True, parse_false=False)
-        self._aob = aob
-        rotation = naf._validate_dict(rotation, _DEFAULT_ROTATION | rotation, nat._VALIDATE_ROTATION, return_clean=True, parse_false=False)
-        self._rotation = rotation
+        self._pack = _build(nat.NorthArrowPackModel, pack)
+        self._aob = _build(nat.NorthArrowAobModel, aob)
+        self._rotation = _build(nat.NorthArrowRotationModel, rotation)
 
     ## INTERNAL PROPERTIES ##
     # This allows for easy-updating of properties
@@ -102,8 +83,7 @@ class NorthArrow(matplotlib.artist.Artist):
 
     @location.setter
     def location(self, val: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]):
-        val = naf._validate(nat._VALIDATE_PRIMARY, "location", val)
-        self._location = val
+        self._location = nat.NorthArrowPrimaryModel(location=val, scale=self._scale if self._scale is not None else 0, zorder=self._zorder).location
     
     @property
     def loc(self):
@@ -111,8 +91,7 @@ class NorthArrow(matplotlib.artist.Artist):
 
     @loc.setter
     def loc(self, val: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]):
-        val = naf._validate(nat._VALIDATE_PRIMARY, "location", val)
-        self._location = val
+        self._location = nat.NorthArrowPrimaryModel(location=val, scale=self._scale if self._scale is not None else 0, zorder=self._zorder).location
 
     # scale
     @property
@@ -120,12 +99,8 @@ class NorthArrow(matplotlib.artist.Artist):
         return self._scale
 
     @scale.setter
-    def scale(self, val: None | float | int):
-        val = naf._validate(nat._VALIDATE_PRIMARY, "scale", val)
-        if val is None:
-            self._scale = _DEFAULT_SCALE
-        else:
-            self._scale = val
+    def scale(self, val: float | int):
+        self._scale = nat.NorthArrowPrimaryModel(location=self._location, scale=val, zorder=self._zorder, size=self._size).scale
 
     # base
     @property
@@ -134,9 +109,11 @@ class NorthArrow(matplotlib.artist.Artist):
 
     @base.setter
     def base(self, val: dict):
-        val = naf._validate_type("base", val, dict)
-        val = naf._validate_dict(val, self._base, nat._VALIDATE_BASE, return_clean=True, parse_false=False)
-        self._base = val
+        if val is False: self._base = False
+        else:
+            data = val.copy() if isinstance(val, dict) else {}
+            data['size'] = self._size
+            self._base = nat.NorthArrowBaseModel.model_validate(data).model_dump()
     
     # fancy
     @property
@@ -145,9 +122,11 @@ class NorthArrow(matplotlib.artist.Artist):
 
     @fancy.setter
     def fancy(self, val: dict):
-        val = naf._validate_type("fancy", val, dict)
-        val = naf._validate_dict(val, self._fancy, nat._VALIDATE_FANCY, return_clean=True, parse_false=False)
-        self._fancy = val
+        if val is False: self._fancy = False
+        else:
+            data = val.copy() if isinstance(val, dict) else {}
+            data['size'] = self._size
+            self._fancy = nat.NorthArrowFancyModel.model_validate(data).model_dump()
     
     # label
     @property
@@ -156,9 +135,11 @@ class NorthArrow(matplotlib.artist.Artist):
 
     @label.setter
     def label(self, val: dict):
-        val = naf._validate_type("label", val, dict)
-        val = naf._validate_dict(val, self._label, nat._VALIDATE_LABEL, return_clean=True, parse_false=False)
-        self._label = val
+        if val is False: self._label = False
+        else:
+            data = val.copy() if isinstance(val, dict) else {}
+            data['size'] = self._size
+            self._label = nat.NorthArrowLabelModel.model_validate(data).model_dump()
     
     # shadow
     @property
@@ -167,9 +148,11 @@ class NorthArrow(matplotlib.artist.Artist):
 
     @shadow.setter
     def shadow(self, val: dict):
-        val = naf._validate_type("shadow", val, dict)
-        val = naf._validate_dict(val, self._shadow, nat._VALIDATE_SHADOW, return_clean=True, parse_false=False)
-        self._shadow = val
+        if val is False: self._shadow = False
+        else:
+            data = val.copy() if isinstance(val, dict) else {}
+            data['size'] = self._size
+            self._shadow = nat.NorthArrowShadowModel.model_validate(data).model_dump()
     
     # pack
     @property
@@ -178,9 +161,11 @@ class NorthArrow(matplotlib.artist.Artist):
 
     @pack.setter
     def pack(self, val: dict):
-        val = naf._validate_type("pack", val, dict)
-        val = naf._validate_dict(val, self._pack, nat._VALIDATE_PACK, return_clean=True, parse_false=False)
-        self._pack = val
+        if val is False: self._pack = False
+        else:
+            data = val.copy() if isinstance(val, dict) else {}
+            data['size'] = self._size
+            self._pack = nat.NorthArrowPackModel.model_validate(data).model_dump()
     
     # aob
     @property
@@ -189,9 +174,11 @@ class NorthArrow(matplotlib.artist.Artist):
 
     @aob.setter
     def aob(self, val: dict):
-        val = naf._validate_type("aob", val, dict)
-        val = naf._validate_dict(val, self._aob, nat._VALIDATE_AOB, return_clean=True, parse_false=False)
-        self._aob = val
+        if val is False: self._aob = False
+        else:
+            data = val.copy() if isinstance(val, dict) else {}
+            data['size'] = self._size
+            self._aob = nat.NorthArrowAobModel.model_validate(data).model_dump()
     
     # rotation
     @property
@@ -200,9 +187,11 @@ class NorthArrow(matplotlib.artist.Artist):
 
     @rotation.setter
     def rotation(self, val: dict):
-        val = naf._validate_type("rotation", val, dict)
-        val = naf._validate_dict(val, self._rotation, nat._VALIDATE_ROTATION, return_clean=True, parse_false=False)
-        self._rotation = val
+        if val is False: self._rotation = False
+        else:
+            data = val.copy() if isinstance(val, dict) else {}
+            data['size'] = self._size
+            self._rotation = nat.NorthArrowRotationModel.model_validate(data).model_dump()
 
     # zorder
     @property
@@ -211,8 +200,7 @@ class NorthArrow(matplotlib.artist.Artist):
 
     @zorder.setter
     def zorder(self, val: int):
-        val = naf._validate(nat._VALIDATE_PRIMARY, "zorder", val)
-        self._zorder = val
+        self._zorder = nat.NorthArrowPrimaryModel(location=self._location, scale=self._scale if self._scale is not None else 0, zorder=val, size=self._size).zorder
     
     ## COPY FUNCTION ##
     # This is solely to get around matplotlib's restrictions around re-using an artist across multiple axes
@@ -246,58 +234,51 @@ class NorthArrow(matplotlib.artist.Artist):
                                "md","medium",
                                "lg","large",
                                "xl","xlarge","x-large"]):
-        # Bringing in our global default values to update them
-        global _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB
-        # Changing the global default values as required
-        if size.lower() in ["xs","xsmall","x-small"]:
-            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = nad._DEFAULTS_NA["xs"]
-        elif size.lower() in ["sm","small"]:
-            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = nad._DEFAULTS_NA["sm"]
-        elif size.lower() in ["md","medium"]:
-            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = nad._DEFAULTS_NA["md"]
-        elif size.lower() in ["lg","large"]:
-            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = nad._DEFAULTS_NA["lg"]
-        elif size.lower() in ["xl","xlarge","x-large"]:
-            _DEFAULT_SCALE, _DEFAULT_BASE, _DEFAULT_FANCY, _DEFAULT_LABEL, _DEFAULT_SHADOW, _DEFAULT_PACK, _DEFAULT_AOB = nad._DEFAULTS_NA["xl"]
-        else:
-            raise ValueError("Invalid value supplied, try one of ['xsmall', 'small', 'medium', 'large', 'xlarge'] instead")
+        pass
 
 ### DRAWING FUNCTIONS ###
 
 # This function presents a way to draw the north arrow independent of the NorthArrow object model
 # and is actually used by the object model when draw() is called anyways
-def north_arrow(ax, draw=True,
-                location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="upper right",
+def north_arrow(ax, draw=True, size: str=None, location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="upper right",
                 scale: None | float | int=None,
-                base: None | bool | nat._TYPE_BASE=None, 
-                fancy: None | bool | nat._TYPE_FANCY=None,
-                label: None | bool | nat._TYPE_LABEL=None, 
-                shadow: None | bool | nat._TYPE_SHADOW=None,
-                pack: None | nat._TYPE_PACK=None, 
-                aob: None | nat._TYPE_AOB=None, 
-                rotation: None | nat._TYPE_ROTATION=None,
+                base: None | bool | dict=None, 
+                fancy: None | bool | dict=None,
+                label: None | bool | dict=None, 
+                shadow: None | bool | dict=None,
+                pack: None | dict=None, 
+                aob: None | dict=None, 
+                rotation: None | dict=None,
                 zorder: int=99,):
     
+    if draw==True:
+        na_obj = NorthArrow(size=size, location=location, scale=scale, base=base, fancy=fancy, label=label, shadow=shadow, pack=pack, aob=aob, rotation=rotation, zorder=zorder)
+        return ax.add_artist(na_obj)
+    
     # First, validating the three primary inputs
-    _location = naf._validate(nat._VALIDATE_PRIMARY, "location", location)
-    _zorder = naf._validate(nat._VALIDATE_PRIMARY, "zorder", zorder)
-
-    if scale is None:
-        _scale = _DEFAULT_SCALE
-    else:
-        _scale = naf._validate(nat._VALIDATE_PRIMARY, "scale", scale)
+    primary = nat.NorthArrowPrimaryModel(location=location, zorder=zorder, scale=scale if scale is not None else 0, size=size if size is not None else config.DEFAULT_SIZE)
+    _location = primary.location
+    _zorder = primary.zorder
+    _scale = primary.scale
+    _size = primary.size
 
     # This works the same as it does with the NorthArrow object
     # If a dictionary is passed to any of the elements, first validate that it is "correct"
     # Note that we also merge the provided dict with the default style dict, so no keys are missing
     # If a specific component is not desired, it should be set to False in the function call
-    _base = naf._validate_dict(base, _DEFAULT_BASE, nat._VALIDATE_BASE, return_clean=True)
-    _fancy = naf._validate_dict(fancy, _DEFAULT_FANCY, nat._VALIDATE_FANCY, return_clean=True)
-    _label = naf._validate_dict(label, _DEFAULT_LABEL, nat._VALIDATE_LABEL, return_clean=True)
-    _shadow = naf._validate_dict(shadow, _DEFAULT_SHADOW, nat._VALIDATE_SHADOW, return_clean=True)
-    _pack = naf._validate_dict(pack, _DEFAULT_PACK, nat._VALIDATE_PACK, return_clean=True)
-    _aob = naf._validate_dict(aob, _DEFAULT_AOB, nat._VALIDATE_AOB, return_clean=True)
-    _rotation = naf._validate_dict(rotation, _DEFAULT_ROTATION, nat._VALIDATE_ROTATION, return_clean=True)
+    def _build(model, input_val):
+        if input_val is False: return False
+        data = input_val.copy() if isinstance(input_val, dict) else {}
+        data['size'] = _size
+        return model(**data).model_dump()
+
+    _base = _build(nat.NorthArrowBaseModel, base)
+    _fancy = _build(nat.NorthArrowFancyModel, fancy)
+    _label = _build(nat.NorthArrowLabelModel, label)
+    _shadow = _build(nat.NorthArrowShadowModel, shadow)
+    _pack = _build(nat.NorthArrowPackModel, pack)
+    _aob = _build(nat.NorthArrowAobModel, aob)
+    _rotation = _build(nat.NorthArrowRotationModel, rotation)
     
     # First, getting the figure for our axes
     fig = ax.get_figure()
@@ -309,8 +290,9 @@ def north_arrow(ax, draw=True,
     ## BASE ARROW ##
     # Because everything is dependent on this component, it ALWAYS exists
     # However, if we don't want it (base=False), then we'll hide it
-    if base == False:
-        base_artist = matplotlib.patches.Polygon(_DEFAULT_BASE["coords"] * _scale, closed=True, visible=False, **_del_keys(_DEFAULT_BASE, ["coords","scale"]))
+    if _base == False:
+        _fallback = _build(nat.NorthArrowBaseModel, {})
+        base_artist = matplotlib.patches.Polygon(_fallback["coords"] * _scale, closed=True, visible=False, **_del_keys(_fallback, ["coords","scale"]))
     else:
         base_artist = matplotlib.patches.Polygon(_base["coords"] * _scale, closed=True, visible=True, **_del_keys(_base, ["coords","scale"]))
 
@@ -388,14 +370,7 @@ def north_arrow(ax, draw=True,
     _iterative_rotate(aob_box, rotate_deg)
 
     aob_box.set_zorder(_zorder)
-    
-    ## DRAWING ##
-    # If this option is set to true, we'll draw the final artists as desired
-    if draw==True:
-        _ = ax.add_artist(aob_box)
-    # If not, we'll return the aob_box as an artist object (the NorthArrow draw() function uses this)
-    else:
-        return aob_box
+    return aob_box
 
 ### HELPING FUNTIONS ###
 # These are quick functions we use to help in other parts of this process

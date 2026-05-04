@@ -27,27 +27,20 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 # The types we use in this script
 from typing import Literal
 # The information contained in our helper scripts (validation and defaults)
-from ..defaults import scale_bar as sbd
+from .. import config
 from ..validation import scale_bar as sbt
-from ..validation import functions as sbf
-
-### INIT ###
-
-_DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = sbd._DEFAULTS_SB["md"]
-
-
 ### CLASSES ###
 
 class ScaleBar(matplotlib.artist.Artist):
     
     ## INITIALIZATION ##
-    def __init__(self, style: Literal["ticks","boxes"]="boxes",
+    def __init__(self, size: str=None, style: Literal["ticks","boxes"]="boxes",
                        location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="upper right",
-                       bar: None | bool | sbt._TYPE_BAR=None,
-                       units: None | bool | sbt._TYPE_UNITS=None,
-                       labels: None | bool | sbt._TYPE_LABELS=None,
-                       text: None | bool | sbt._TYPE_TEXT=None,
-                       aob: None | bool | sbt._TYPE_AOB=None,
+                       bar: None | bool | dict=None,
+                       units: None | bool | dict=None,
+                       labels: None | bool | dict=None,
+                       text: None | bool | dict=None,
+                       aob: None | bool | dict=None,
                        zorder: int=99,
                        ):
         # Starting up the object with the base properties of a matplotlib Artist
@@ -58,38 +51,26 @@ class ScaleBar(matplotlib.artist.Artist):
         # If a specific component is not desired, it should be set to False during initialization
 
         ##### VALIDATING #####
-        style = sbf._validate(sbt._VALIDATE_PRIMARY, "style", style)
-        self._style = style
-
-        # Location is stored as just a string
-        location = sbf._validate(sbt._VALIDATE_PRIMARY, "location", location)
-        self._location = location
-
-        zorder = sbf._validate(sbt._VALIDATE_PRIMARY, "zorder", zorder)
-        self._zorder = zorder
+        self._size = size if size is not None else config.DEFAULT_SIZE
+        primary = sbt.ScaleBarPrimaryModel(style=style, location=location, zorder=zorder)
+        self._style = primary.style
+        self._location = primary.location
+        self._zorder = primary.zorder
         
         # Shared elements for both ticked and boxed bars
         # This validation is dependent on the type of bar we are constructing
         # So we modify the validation dictionary to remove the keys that are not relevant (throwing a warning if they exist in the input)
-        if self._style == "boxes":
-            bar = sbf._validate_dict(bar, _del_keys(_DEFAULT_BAR, ["minor_frac","tick_loc","basecolors","tickcolors","tickwidth"]), 
-                                                      _del_keys(sbt._VALIDATE_BAR, ["minor_frac","tick_loc","basecolors","tickcolors","tickwidth"]), return_clean=True, to_validate="input")
-        else:
-            bar = sbf._validate_dict(bar, _del_keys(_DEFAULT_BAR, ["facecolors","edgecolors","edgewidth"]), 
-                                                      _del_keys(sbt._VALIDATE_BAR, ["facecolors","edgecolors","edgewidth"]), return_clean=True, to_validate="input")
-        self._bar = bar
-
-        units = sbf._validate_dict(units, _DEFAULT_UNITS, sbt._VALIDATE_UNITS, return_clean=True, to_validate="input")
-        self._units = units
-
-        labels = sbf._validate_dict(labels, _DEFAULT_LABELS, sbt._VALIDATE_LABELS, return_clean=True, to_validate="input")
-        self._labels = labels
-
-        text = sbf._validate_dict(text, _DEFAULT_TEXT, sbt._VALIDATE_TEXT, return_clean=True, to_validate="input")
-        self._text = text
-
-        aob = sbf._validate_dict(aob, _DEFAULT_AOB, sbt._VALIDATE_AOB, return_clean=True, to_validate="input")
-        self._aob = aob
+        def _build(model, input_val):
+            if input_val is False: return False
+            data = input_val.copy() if isinstance(input_val, dict) else {}
+            data['size'] = self._size
+            return model(**data).model_dump(exclude_unset=True)
+            
+        self._bar = _build(sbt.ScaleBarBarModel, bar)
+        self._units = _build(sbt.ScaleBarUnitsModel, units)
+        self._labels = _build(sbt.ScaleBarLabelsModel, labels)
+        self._text = _build(sbt.ScaleBarTextModel, text)
+        self._aob = _build(sbt.ScaleBarAobModel, aob)
 
     ## INTERNAL PROPERTIES ##
     # This allows for easy-updating of properties
@@ -104,8 +85,7 @@ class ScaleBar(matplotlib.artist.Artist):
 
     @style.setter
     def style(self, val: Literal["boxes","ticks"]):
-        val = sbf._validate(sbt._VALIDATE_PRIMARY, "style", val)
-        self._style = val
+        self._style = sbt.ScaleBarPrimaryModel(style=val, location=self._location, zorder=self._zorder).style
 
     # location/loc
     @property
@@ -114,8 +94,7 @@ class ScaleBar(matplotlib.artist.Artist):
 
     @location.setter
     def location(self, val: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]):
-        val = sbf._validate(sbt._VALIDATE_PRIMARY, "location", val)
-        self._location = val
+        self._location = sbt.ScaleBarPrimaryModel(style=self._style, location=val, zorder=self._zorder).location
     
     @property
     def loc(self):
@@ -123,8 +102,7 @@ class ScaleBar(matplotlib.artist.Artist):
 
     @loc.setter
     def loc(self, val: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]):
-        val = sbf._validate(sbt._VALIDATE_PRIMARY, "location", val)
-        self._location = val
+        self._location = sbt.ScaleBarPrimaryModel(style=self._style, location=val, zorder=self._zorder).location
 
     # bar
     @property
@@ -133,12 +111,11 @@ class ScaleBar(matplotlib.artist.Artist):
 
     @bar.setter
     def bar(self, val: dict):
-        val = sbf._validate_type("bar", val, dict)
-        if self._style == "boxes":
-            val = sbf._validate_dict(val, self._bar, _del_keys(sbt._VALIDATE_BAR, ["minor_frac","tick_loc","basecolors","tickcolors","tickwidth"]), return_clean=True, parse_false=False)
+        if val is False: self._bar = False
         else:
-            val = sbf._validate_dict(val, self._bar, _del_keys(sbt._VALIDATE_BAR, ["facecolors","edgecolors","edgewidth"]), return_clean=True, parse_false=False)
-        self._bar = val
+            data = val.copy() if isinstance(val, dict) else {}
+            data['size'] = self._size
+            self._bar = sbt.ScaleBarBarModel(**data).model_dump(exclude_unset=True)
     
     # units
     @property
@@ -147,9 +124,11 @@ class ScaleBar(matplotlib.artist.Artist):
 
     @units.setter
     def units(self, val: dict):
-        val = sbf._validate_type("units", val, dict)
-        val = sbf._validate_dict(val, self._units, sbt._VALIDATE_UNITS, return_clean=True, parse_false=False)
-        self._units = val
+        if val is False: self._units = False
+        else:
+            data = val.copy() if isinstance(val, dict) else {}
+            data['size'] = self._size
+            self._units = sbt.ScaleBarUnitsModel(**data).model_dump(exclude_unset=True)
     
     # labels
     @property
@@ -158,9 +137,11 @@ class ScaleBar(matplotlib.artist.Artist):
 
     @labels.setter
     def labels(self, val: dict):
-        val = sbf._validate_type("labels", val, dict)
-        val = sbf._validate_dict(val, self._labels, sbt._VALIDATE_LABELS, return_clean=True, parse_false=False)
-        self._labels = val
+        if val is False: self._labels = False
+        else:
+            data = val.copy() if isinstance(val, dict) else {}
+            data['size'] = self._size
+            self._labels = sbt.ScaleBarLabelsModel(**data).model_dump(exclude_unset=True)
     
     # text
     @property
@@ -169,9 +150,11 @@ class ScaleBar(matplotlib.artist.Artist):
 
     @text.setter
     def text(self, val: dict):
-        val = sbf._validate_type("text", val, dict)
-        val = sbf._validate_dict(val, self._text, sbt._VALIDATE_TEXT, return_clean=True, parse_false=False)
-        self._text = val
+        if val is False: self._text = False
+        else:
+            data = val.copy() if isinstance(val, dict) else {}
+            data['size'] = self._size
+            self._text = sbt.ScaleBarTextModel(**data).model_dump(exclude_unset=True)
     
     # aob
     @property
@@ -180,9 +163,11 @@ class ScaleBar(matplotlib.artist.Artist):
 
     @aob.setter
     def aob(self, val: dict):
-        val = sbf._validate_type("aob", val, dict)
-        val = sbf._validate_dict(val, self._aob, sbt._VALIDATE_AOB, return_clean=True, parse_false=False)
-        self._aob = val
+        if val is False: self._aob = False
+        else:
+            data = val.copy() if isinstance(val, dict) else {}
+            data['size'] = self._size
+            self._aob = sbt.ScaleBarAobModel(**data).model_dump(exclude_unset=True)
     
     # zorder
     @property
@@ -191,8 +176,7 @@ class ScaleBar(matplotlib.artist.Artist):
 
     @zorder.setter
     def zorder(self, val: int):
-        val = sbf._validate(sbt._VALIDATE_PRIMARY, "zorder", val)
-        self._zorder = val
+        self._zorder = sbt.ScaleBarPrimaryModel(style=self._style, location=self._location, zorder=val).zorder
     
     ## COPY FUNCTION ##
     # This is solely to get around matplotlib's restrictions around re-using an artist across multiple axes
@@ -233,31 +217,17 @@ class ScaleBar(matplotlib.artist.Artist):
                                "md","medium",
                                "lg","large",
                                "xl","xlarge","x-large"]):
-        # Bringing in our global default values to update them
-        global _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB
-        # Changing the global default values as required
-        if size.lower() in ["xs","xsmall","x-small"]:
-            _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = sbd._DEFAULTS_SB["xs"]
-        elif size.lower() in ["sm","small"]:
-            _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = sbd._DEFAULTS_SB["sm"]
-        elif size.lower() in ["md","medium"]:
-            _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = sbd._DEFAULTS_SB["md"]
-        elif size.lower() in ["lg","large"]:
-            _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = sbd._DEFAULTS_SB["lg"]
-        elif size.lower() in ["xl","xlarge","x-large"]:
-            _DEFAULT_BAR, _DEFAULT_LABELS, _DEFAULT_UNITS, _DEFAULT_TEXT, _DEFAULT_AOB = sbd._DEFAULTS_SB["xl"]
-        else:
-            raise ValueError("Invalid value supplied, try one of ['xsmall', 'small', 'medium', 'large', 'xlarge'] instead")
+        pass
 
 ### DRAWING FUNCTIONS ###
 
-def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
+def scale_bar(ax, draw=True, size: str=None, style: Literal["ticks","boxes"]="boxes",
                   location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="upper right",
-                  bar: None | bool | sbt._TYPE_BAR=None,
-                  units: None | bool | sbt._TYPE_UNITS=None,
-                  labels: None | bool | sbt._TYPE_LABELS=None,
-                  text: None | bool | sbt._TYPE_TEXT=None,
-                  aob: None | bool | sbt._TYPE_AOB=None,
+                  bar: None | bool | dict=None,
+                  units: None | bool | dict=None,
+                  labels: None | bool | dict=None,
+                  text: None | bool | dict=None,
+                  aob: None | bool | dict=None,
                   zorder: int=99,
                   return_aob: bool=True,):
     # For the default function mode, dispatch to the Artist class so final
@@ -278,24 +248,27 @@ def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
         return
 
     ##### VALIDATION #####
-    _style = sbf._validate(sbt._VALIDATE_PRIMARY, "style", style)
-    _location = sbf._validate(sbt._VALIDATE_PRIMARY, "location", location)
-    _zorder = sbf._validate(sbt._VALIDATE_PRIMARY, "zorder", zorder)
+    _size = size if size is not None else config.DEFAULT_SIZE
+    primary = sbt.ScaleBarPrimaryModel(style=style, location=location, zorder=zorder)
+    _style = primary.style
+    _location = primary.location
+    _zorder = primary.zorder
 
     # This works the same as it does with the ScaleBar object(s)
     # If a dictionary is passed to any of the elements, first validate that it is "correct"
     # Note that we also merge the provided dict with the default style dict, so no keys are missing
     # If a specific component is not desired, it should be set to False in the function call
-    if _style == "boxes":
-        _bar = sbf._validate_dict(bar, _del_keys(_DEFAULT_BAR, ["minor_frac","tick_loc","basecolors","tickcolors","tickwidth"]), 
-                                                       _del_keys(sbt._VALIDATE_BAR, ["minor_frac","tick_loc","basecolors","tickcolors","tickwidth"]), return_clean=True)
-    else:
-        _bar = sbf._validate_dict(bar, _del_keys(_DEFAULT_BAR, ["facecolors","edgecolors","edgewidth"]), 
-                                                       _del_keys(sbt._VALIDATE_BAR, ["facecolors","edgecolors","edgewidth"]), return_clean=True)
-    _units = sbf._validate_dict(units, _DEFAULT_UNITS, sbt._VALIDATE_UNITS, return_clean=True)
-    _labels = sbf._validate_dict(labels, _DEFAULT_LABELS, sbt._VALIDATE_LABELS, return_clean=True)
-    _text = sbf._validate_dict(text, copy.deepcopy(_DEFAULT_TEXT), sbt._VALIDATE_TEXT, return_clean=True) # this one has to be a deepcopy due to dictionary immutability
-    _aob = sbf._validate_dict(aob, _DEFAULT_AOB, sbt._VALIDATE_AOB, return_clean=True)
+    def _build(model, input_val):
+        if input_val is False: return False
+        data = input_val.copy() if isinstance(input_val, dict) else {}
+        data['size'] = _size
+        return model(**data).model_dump()
+        
+    _bar = _build(sbt.ScaleBarBarModel, bar)
+    _units = _build(sbt.ScaleBarUnitsModel, units)
+    _labels = _build(sbt.ScaleBarLabelsModel, labels)
+    _text = _build(sbt.ScaleBarTextModel, text)
+    _aob = _build(sbt.ScaleBarAobModel, aob)
 
     # Raster controls for the temporary rendered image.
     # These are kept explicit so output quality is not coupled to external rc state.
@@ -545,72 +518,35 @@ def scale_bar(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
 # This is a convenience function for creating two scale bars, with different units, aligned with each other
 # The bars should be identical except for the units and the divisions
 # NOTE: still under development, will tidy up if there is usage of it
-def dual_bars(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
+def dual_bars(ax, draw=True, size: str=None, style: Literal["ticks","boxes"]="boxes",
                   location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="upper right",
                   units_dual=["mi","km"], bar_maxes=[None,None], bar_lengths=[None,None], major_divs=[None, None], minor_divs=[None, None],
-                  bar: None | bool | sbt._TYPE_BAR=None,
-                  units: None | bool | sbt._TYPE_UNITS=None,
-                  labels: None | bool | sbt._TYPE_LABELS=None,
-                  text: None | bool | sbt._TYPE_TEXT=None,
-                  aob: None | bool | sbt._TYPE_AOB=None,
+                  bar: None | bool | dict=None,
+                  units: None | bool | dict=None,
+                  labels: None | bool | dict=None,
+                  text: None | bool | dict=None,
+                  aob: None | bool | dict=None,
                   zorder: int=99,
                   pad=0, sep=0,
                   return_aob: bool=True
                   ):
     
-    _style = sbf._validate(sbt._VALIDATE_PRIMARY, "style", style)
-    _location = sbf._validate(sbt._VALIDATE_PRIMARY, "location", location)
-    _zorder = sbf._validate(sbt._VALIDATE_PRIMARY, "zorder", zorder)
-
-    ##### CONCATENATION #####
-    # NOTE: Probably a better way to do this, will investigate
-    # Validation is done within each call of the scale_bar function, so don't need to do as much here
-    if _style == "boxes":
-        _bar = (_del_keys(_DEFAULT_BAR, ["rotation", "unit", "max", "length", "major_div", "minor_div",
-                                         "minor_frac","tick_loc","basecolors","tickcolors","tickwidth"]) | bar)
-    else:
-        _bar = (_del_keys(_DEFAULT_BAR, ["rotation", "unit", "max", "length", "major_div", "minor_div",
-                                         "facecolors","edgecolors","edgewidth"]) | bar)
-    _units = _DEFAULT_UNITS | units if units is not None else _DEFAULT_UNITS
-    _labels = _DEFAULT_LABELS | labels if labels is not None else _DEFAULT_LABELS
-    _text = _DEFAULT_TEXT | text if text is not None else _DEFAULT_TEXT
-    _aob = _DEFAULT_AOB | aob if aob is not None else _DEFAULT_AOB
+    primary = sbt.ScaleBarPrimaryModel(style=style, location=location, zorder=zorder)
+    _style = primary.style
+    _location = primary.location
+    _zorder = primary.zorder
     
-    ##### VALIDATION #####
-    if not isinstance(units_dual, (list, tuple)) or len(units_dual) != 2:
-        raise ValueError("units_dual must be a list or tuple of length 2")
-    if not isinstance(bar_maxes, (list, tuple)) or len(bar_maxes) != 2:
-        raise ValueError("bar_maxes must be a list or tuple of length 2")
-    if not isinstance(bar_lengths, (list, tuple)) or len(bar_lengths) != 2:
-        raise ValueError("bar_lengths must be a list or tuple of length 2")
-    if not isinstance(major_divs, (list, tuple)) or len(major_divs) != 2:
-        raise ValueError("major_divs must be a list or tuple of length 2")
-    if not isinstance(minor_divs, (list, tuple)) or len(minor_divs) != 2:
-        raise ValueError("minor_divs must be a list or tuple of length 2")
-
-    if _units.get("loc", None) == "opposite":
-        raise ValueError("units['loc'] for units cannot be opposite for dual_bars, as it will not align correctly with the second scale bar")
-
-    if _bar.get("rotation", None) is not None and bar.get("rotation", 0) != 0:
-        warnings.warn("bar['rotation'] is not fully supported. It is recommended instead that you set rotation to zero and return the image by setting draw=False and return_aob=False, to return the OffsetImage of the dual scale bars instead.")
-    if _bar.get("unit", None) is not None:
-        warnings.warn("bar['unit'] is ignored for dual_bars, as it is set by units_dual")
-        _ = _bar.pop("unit")
-    if _bar.get("max", None) is not None:
-        warnings.warn("bar['max'] is ignored for dual_bars, as it is (optionally) set by bar_maxes")
-        _ = _bar.pop("max")
-    if _bar.get("length", None) is not None:
-        warnings.warn("bar['length'] is ignored for dual_bars, as it is (optionally) set by bar_lengths")
-        _ = _bar.pop("length")
-    if _bar.get("major_div", None) is not None:
-        warnings.warn("bar['major_div'] is ignored for dual_bars, as it is (optionally) set by major_divs")
-        _ = _bar.pop("major_div")
-    if _bar.get("minor_div", None) is not None:
-        warnings.warn("bar['minor_div'] is ignored for dual_bars, as it is (optionally) set by minor_divs")
-        _ = _bar.pop("minor_div")
+    _size = size if size is not None else config.DEFAULT_SIZE
     
-    _aob = sbf._validate_dict(_aob, _DEFAULT_AOB, sbt._VALIDATE_AOB, return_clean=True)
-    
+    def _build(model, input_val):
+        if input_val is False: return False
+        data = input_val.copy() if isinstance(input_val, dict) else {}
+        data['size'] = _size
+        return model(**data).model_dump()
+        
+    _bar = _build(sbt.ScaleBarBarModel, bar)
+    _aob = _build(sbt.ScaleBarAobModel, aob)
+
     ##### CREATION #####
     # Setting up the order of some other settings (label location, tick location)
     labels_loc = ["above","below"]
@@ -625,19 +561,14 @@ def dual_bars(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
         label_settings = {"loc":label_loc}
         # Creating a bar
         # Because draw is False and return_aob is false, an OffsetImage will be returned
-        bars.append(scale_bar(ax, draw=False, style=_style, location=location, 
-                              bar=(_bar | bar_settings), 
-                              units=_units, 
-                              labels=(_labels | label_settings),
-                              text=_text,
-                              aob=None,
-                              return_aob=False))
+        b = scale_bar(ax, draw=False, size=size, style=style, location="lower left", bar=bar, units=units, labels=labels, text=text, aob=False, return_aob=False), 
+        bars.append(b)
 
     ##### PACKING  #####
     # First need to know if we pack vertically or horizontally
     bar_vertical = _config_bar_vert(_bar["rotation"])
     packer = matplotlib.offsetbox.VPacker if bar_vertical == False else matplotlib.offsetbox.HPacker
-    if bar["reverse"] == True:
+    if _bar["reverse"] == True:
         align = "right" if bar_vertical == False else "top"
     else:
         align = "left" if bar_vertical == False else "bottom"
@@ -683,6 +614,8 @@ def dual_bars(ax, draw=True, style: Literal["ticks","boxes"]="boxes",
         return aob_pack
 
 ### OTHER FUNCTIONS ###
+
+#
 
 # This function will remove any keys we specify from a dictionary
 # This is useful if we need to unpack on certain values from a dictionary, and is used in scale_bar()
