@@ -256,11 +256,11 @@ def north_arrow(ax, draw=True, size: str=None, location: Literal["upper right", 
         return ax.add_artist(na_obj)
     
     # First, validating the three primary inputs
-    primary = nat.NorthArrowPrimaryModel(location=location, zorder=zorder, scale=scale if scale is not None else 0, size=size if size is not None else config.DEFAULT_SIZE)
+    _size = size if size is not None else config.DEFAULT_SIZE
+    primary = nat.NorthArrowPrimaryModel(location=location, zorder=zorder, scale=scale if scale is not None else 0, size=_size)
     _location = primary.location
     _zorder = primary.zorder
     _scale = primary.scale
-    _size = primary.size
 
     # This works the same as it does with the NorthArrow object
     # If a dictionary is passed to any of the elements, first validate that it is "correct"

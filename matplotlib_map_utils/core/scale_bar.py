@@ -262,7 +262,7 @@ def scale_bar(ax, draw=True, size: str=None, style: Literal["ticks","boxes"]="bo
         if input_val is False: return False
         data = input_val.copy() if isinstance(input_val, dict) else {}
         data['size'] = _size
-        return model(**data).model_dump()
+        return model(**data).model_dump(exclude_unset=True)
         
     _bar = _build(sbt.ScaleBarBarModel, bar)
     _units = _build(sbt.ScaleBarUnitsModel, units)
@@ -542,7 +542,7 @@ def dual_bars(ax, draw=True, size: str=None, style: Literal["ticks","boxes"]="bo
         if input_val is False: return False
         data = input_val.copy() if isinstance(input_val, dict) else {}
         data['size'] = _size
-        return model(**data).model_dump()
+        return model(**data).model_dump(exclude_unset=True)
         
     _bar = _build(sbt.ScaleBarBarModel, bar)
     _aob = _build(sbt.ScaleBarAobModel, aob)
