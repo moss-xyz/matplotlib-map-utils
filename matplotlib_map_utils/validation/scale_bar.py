@@ -5,20 +5,18 @@
 
 ### IMPORTING PACKAGES ###
 
-# Geo packages
-import pyproj
-# matplotlib's useful validation functions
-import matplotlib.rcsetup
-# The types we use in this script
-from typing import TypedDict, Literal, get_args
-# Finally, the validation functions
-from . import functions as vf
+# Pydantic type validation
+from typing import Annotated, Union, Tuple, List, Optional, Literal, Any
+from pydantic import ConfigDict, BaseModel, Field, BeforeValidator, model_validator
+from .shared import MatplotlibColor, MatplotlibFontsize, CRSInput, _validate_crs_input, _get_size_key
+from .. import config
+from ..defaults import scale_bar as sbd
 
 ### ALL ###
 # This code tells other packages what to import if not explicitly stated
 __all__ = [
     "preferred_divs", "convert_dict", "units_standard",
-    "_TYPE_BAR", "_TYPE_LABELS", "_TYPE_UNITS", "_TYPE_TEXT", "_TYPE_AOB"
+    "ScaleBarPrimaryModel", "ScaleBarBarModel", "ScaleBarLabelsModel", "ScaleBarUnitsModel", "ScaleBarTextModel", "ScaleBarAobModel"
 ]
 
 ### CONSTANTS ###
@@ -72,214 +70,168 @@ units_standard = {
     "km":"km", "kilometer":"km", "kilometers":"km", "kilometre":"km", "kilometres":"km",
 }
 
-### TYPE HINTS ###
-# This section of the code is for defining structured dictionaries and lists
-# for the inputs necessary for object creation we've created (such as the style dictionaries)
-# so that intellisense can help with autocompletion
+### COMPONENT MODELS ###
 
-class _TYPE_BAR(TypedDict, total=False):
-    projection: str | int | pyproj.CRS # should be a valid cartopy or pyproj crs, or a string or int that can be converted to that
-    unit: Literal["m","km","ft","yd","mi","nmi"] # the units you want to convert the bar to, if different than the projection units
-    rotation: float | int # between -360 and 360
-    max: float | int # the max bar value, in desired units (as specified by units dict)
-    length: float | int # the length of the bar in inches (if > 1) or as a % of the axis (if between 0 and 1)
-    height: float | int # the height of the bar in inches
-    reverse: bool # flag if the order of the elements should be reversed
-    major_div: int # the number of major divisions on the bar
-    minor_div: int # the number of minor divisions on the bar
-    minor_frac: float # the fraction of the major division that the minor division should be (e.g. 0.5 = half the size of the major division)
-    minor_type: Literal["all","first","none"] # whether the minor divisions should be drawn on all major divisions or just the first one
-    major_mult: float | int # used in conjunction with major_div to define the length of the bar, if desired
-    # Boxes only
-    facecolors: list | tuple | str # a color or list of colors to use for the faces of the boxes
-    edgecolors: list | tuple | str # a color or list of colors to use for the edges of the boxes
-    edgewidth: float | int # the line thickness of the edges of the boxes
-    # Ticks only
-    tick_loc: Literal["above","below","middle"] # the location of the ticks relative to the bar
-    basecolors: list | tuple | str # a color or list of colors to use for the bottom bar
-    tickcolors: list | tuple | str # a color or list of colors to use for the ticks
-    tickwidth: float | int # the line thickness of the bottom bar and ticks
-    interpolation: str | None # interpolation method used by OffsetImage; e.g. "none", "nearest", "bilinear"
-    dpi_cor: bool # whether OffsetImage should be corrected for renderer dpi (matplotlib default behavior)
-    resample: bool # whether OffsetImage should use image resampling during scaling
-    raster_dpi: float | int | None # explicit dpi for temporary rasterization step, None uses figure/renderer dpi
-    raster_dpi_scale: float | int # multiplier applied to raster_dpi for supersampling
+class ScaleBarPrimaryModel(BaseModel):
+    style: Literal["ticks","boxes"]
+    location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]
+    zorder: int
 
+def _validate_scalebar_projection(v):
+    if isinstance(v, str) and v.lower() in ["px","pixel","pixels","pt","point","points","dx","custom","axis"]:
+        return v.lower()
+    return _validate_crs_input(v)
+    
+ScaleBarProjection = Annotated[Any, BeforeValidator(_validate_scalebar_projection)]
 
-class _TYPE_LABELS(TypedDict, total=False):
-    labels: list | tuple # a list of text labels to replace the default labels of the major elements
-    format: str # a format string to apply to the default labels of the major elements
-    format_int: bool # if True, float divisions that end in zero wil be converted to ints (e.g. 1.0 -> 1)
-    style: Literal["major","first_last","last_only","minor_all","minor_first"] # each selection in the list creates a different set of labels
-    loc: Literal["above","below"] # whether the major text elements should appear above or below the bar
-    fontsize: str | float | int # any fontsize value for matplotlib
-    textcolors: list | str # a color or list of colors to use for the major text elements
-    fontfamily: Literal["serif", "sans-serif", "cursive", "fantasy", "monospace"] # from matplotlib documentation
-    fontstyle: Literal["normal", "italic", "oblique"] # from matplotlib documentation
-    fontweight: Literal["normal", "bold", "heavy", "light", "ultrabold", "ultralight"] # from matplotlib documentation
-    stroke_width: float | int # between 0 and infinity
-    stroke_color: str # optional: any color value for matplotlib
-    rotation: float | int # a value between -360 and 360 to rotate the text elements by
-    rotation_mode: Literal["anchor","default"] # from matplotlib documentation
-    sep: float | int # between 0 and inf, used to add separation between the labels and the bar
-    pad: float | int # between 0 and inf, used to add separation between the labels and the bar
+class ScaleBarBarModel(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    projection: ScaleBarProjection
+    unit: Optional[Literal["m","km","ft","yd","mi","nmi"]] = None
+    rotation: Annotated[Optional[Union[float, int]], Field(ge=-360, le=360)] = None
+    max: Annotated[Optional[Union[float, int]], Field(ge=0)] = None
+    length: Annotated[Optional[Union[float, int]], Field(ge=0)] = None
+    height: Annotated[Optional[Union[float, int]], Field(ge=0)] = None
+    reverse: bool
+    major_div: Annotated[Optional[int], Field(ge=1)] = None
+    minor_div: Annotated[Optional[int], Field(ge=0)] = None
+    minor_frac: Annotated[Optional[Union[float, int]], Field(ge=0, le=1)] = None
+    minor_type: Optional[Literal["all","first","none"]] = None
+    major_mult: Annotated[Optional[Union[float, int]], Field(ge=0)] = None
+    facecolors: Optional[Union[MatplotlibColor, List[MatplotlibColor], Tuple[MatplotlibColor, ...]]] = None
+    edgecolors: Optional[Union[MatplotlibColor, List[MatplotlibColor], Tuple[MatplotlibColor, ...]]] = None
+    edgewidth: Annotated[Optional[Union[float, int]], Field(ge=0)] = None
+    tick_loc: Optional[Literal["above","below","middle"]] = None
+    basecolors: Optional[Union[MatplotlibColor, List[MatplotlibColor], Tuple[MatplotlibColor, ...]]] = None
+    tickcolors: Optional[Union[MatplotlibColor, List[MatplotlibColor], Tuple[MatplotlibColor, ...]]] = None
+    tickwidth: Annotated[Optional[Union[float, int]], Field(ge=0)] = None
+    interpolation: Optional[str] = None
+    dpi_cor: bool
+    resample: bool
+    raster_dpi: Annotated[Optional[Union[float, int]], Field(ge=1)] = None
+    raster_dpi_scale: Annotated[Optional[Union[float, int]], Field(ge=0.0001)] = None
 
+    @model_validator(mode='before')
+    @classmethod
+    def apply_size_defaults(cls, data: Any) -> Any:
+        if data is None or data is True: data = {}
+        if not isinstance(data, dict): return data
+        size = data.pop('size', config.DEFAULT_SIZE)
+        defaults = sbd._DEFAULTS_SB[_get_size_key(size)][0]
+        return defaults | data
 
-class _TYPE_UNITS(TypedDict, total=False):
-    label: str # an override for the units label
-    loc: Literal["bar","text","opposite"] # where the units text should appear (in line with the bar, or the major div text, or opposite the major div text)
-    fontsize: str | float | int # any fontsize value for matplotlib
-    textcolor: str # any color value for matplotlib
-    fontfamily: Literal["serif", "sans-serif", "cursive", "fantasy", "monospace"] # from matplotlib documentation
-    fontstyle: Literal["normal", "italic", "oblique"] # from matplotlib documentation
-    fontweight: Literal["normal", "bold", "heavy", "light", "ultrabold", "ultralight"] # from matplotlib documentation
-    stroke_width: float | int # between 0 and infinity
-    stroke_color: str # any color value for matplotlib
-    rotation: float | int # between -360 and 360
-    rotation_mode: Literal["anchor","default"] # from matplotlib documentation
-    sep: float | int # between 0 and inf, used to add separation between the units text and the bar ("opposite" only)
-    pad: float | int # between 0 and inf, used to add separation between the units text and the bar ("opposite" only)
+class ScaleBarLabelsModel(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    labels: Optional[Union[List[Any], Tuple[Any, ...]]] = None
+    format: str
+    format_int: bool
+    style: Literal["major","first_last","last_only","minor_all","minor_first"]
+    loc: Optional[Literal["above","below"]] = None
+    fontsize: Optional[MatplotlibFontsize] = None
+    textcolors: Optional[Union[MatplotlibColor, List[MatplotlibColor], Tuple[MatplotlibColor, ...]]] = None
+    fontfamily: Optional[Literal["serif", "sans-serif", "cursive", "fantasy", "monospace"]] = None
+    fontstyle: Optional[Literal["normal", "italic", "oblique"]] = None
+    fontweight: Optional[Literal["normal", "bold", "heavy", "light", "ultrabold", "ultralight"]] = None
+    stroke_width: Annotated[Optional[Union[float, int]], Field(ge=0)] = None
+    stroke_color: Optional[MatplotlibColor] = None
+    rotation: Annotated[Optional[Union[float, int]], Field(ge=-360, le=360)] = None
+    rotation_mode: Optional[Literal["anchor","default"]] = None
+    sep: Annotated[Union[float, int], Field(ge=0)]
+    pad: Annotated[Union[float, int], Field(ge=0)]
 
+    @model_validator(mode='before')
+    @classmethod
+    def apply_size_defaults(cls, data: Any) -> Any:
+        if data is None or data is True: data = {}
+        if not isinstance(data, dict): return data
+        size = data.pop('size', config.DEFAULT_SIZE)
+        text_defaults = data.pop('text', None)
+        defaults = sbd._DEFAULTS_SB[_get_size_key(size)][1]
+        merged = defaults | data
+        # Apply text cascade: text properties act as fallbacks for labels
+        if text_defaults is not None:
+            text_fields = ['fontsize', 'fontfamily', 'fontstyle', 'fontweight',
+                           'stroke_width', 'stroke_color', 'rotation', 'rotation_mode']
+            for field in text_fields:
+                if field in text_defaults and merged.get(field) is None:
+                    merged[field] = text_defaults[field]
+            # textcolor -> textcolors rename for labels
+            if merged.get('textcolors') is None and 'textcolor' in text_defaults:
+                merged['textcolors'] = text_defaults['textcolor']
+        return merged
 
-class _TYPE_TEXT(TypedDict, total=False):
-    fontsize: str | float | int # any fontsize value for matplotlib
-    textcolor: list | str # a color or list of colors to use for all the text elements
-    fontfamily: Literal["serif", "sans-serif", "cursive", "fantasy", "monospace"] # from matplotlib documentation
-    fontstyle: Literal["normal", "italic", "oblique"] # from matplotlib documentation
-    fontweight: Literal["normal", "bold", "heavy", "light", "ultrabold", "ultralight"] # from matplotlib documentation
-    stroke_width: float | int # between 0 and infinity
-    stroke_color: str # optional: any color value for matplotlib
-    rotation: float | int # a value between -360 and 360 to rotate the text elements by
-    rotation_mode: Literal["anchor","default"] # from matplotlib documentation
+class ScaleBarUnitsModel(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    label: Optional[str] = None
+    loc: Optional[Literal["bar","text","opposite"]] = None
+    fontsize: Optional[MatplotlibFontsize] = None
+    textcolor: Optional[MatplotlibColor] = None
+    fontfamily: Optional[Literal["serif", "sans-serif", "cursive", "fantasy", "monospace"]] = None
+    fontstyle: Optional[Literal["normal", "italic", "oblique"]] = None
+    fontweight: Optional[Literal["normal", "bold", "heavy", "light", "ultrabold", "ultralight"]] = None
+    stroke_width: Annotated[Optional[Union[float, int]], Field(ge=0)] = None
+    stroke_color: Optional[MatplotlibColor] = None
+    rotation: Annotated[Optional[Union[float, int]], Field(ge=-360, le=360)] = None
+    rotation_mode: Optional[Literal["anchor","default"]] = None
+    sep: Annotated[Union[float, int], Field(ge=0)]
+    pad: Annotated[Union[float, int], Field(ge=0)]
 
+    @model_validator(mode='before')
+    @classmethod
+    def apply_size_defaults(cls, data: Any) -> Any:
+        if data is None or data is True: data = {}
+        if not isinstance(data, dict): return data
+        size = data.pop('size', config.DEFAULT_SIZE)
+        text_defaults = data.pop('text', None)
+        defaults = sbd._DEFAULTS_SB[_get_size_key(size)][2]
+        merged = defaults | data
+        # Apply text cascade: text properties act as fallbacks for units
+        if text_defaults is not None:
+            text_fields = ['fontsize', 'textcolor', 'fontfamily', 'fontstyle', 'fontweight',
+                           'stroke_width', 'stroke_color', 'rotation', 'rotation_mode']
+            for field in text_fields:
+                if field in text_defaults and merged.get(field) is None:
+                    merged[field] = text_defaults[field]
+        return merged
 
-class _TYPE_AOB(TypedDict, total=False):
-    facecolor: str # NON-STANDARD: used to set the facecolor of the offset box (i.e. to white), any color vlaue for matplotlib
-    edgecolor: str # NON-STANDARD: used to set the edge of the offset box (i.e. to black), any color vlaue for matplotlib
-    alpha: float | int # NON-STANDARD: used to set the transparency of the face color of the offset box^, between 0 and 1
-    pad: float | int # between 0 and inf
-    borderpad: float | int # between 0 and inf
-    prop: str | float | int # any fontsize value for matplotlib
-    frameon: bool # any bool
-    # bbox_to_anchor: None # NOTE: currently unvalidated, use at your own risk!
-    # bbox_transform: None # NOTE: currently unvalidated, use at your own risk!
+class ScaleBarTextModel(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    fontsize: MatplotlibFontsize
+    textcolor: Union[MatplotlibColor, List[MatplotlibColor], Tuple[MatplotlibColor, ...]]
+    fontfamily: Literal["serif", "sans-serif", "cursive", "fantasy", "monospace"]
+    fontstyle: Literal["normal", "italic", "oblique"]
+    fontweight: Literal["normal", "bold", "heavy", "light", "ultrabold", "ultralight"]
+    stroke_width: Annotated[Union[float, int], Field(ge=0)]
+    stroke_color: MatplotlibColor
+    rotation: Annotated[Optional[Union[float, int]], Field(ge=-360, le=360)] = None
+    rotation_mode: Optional[Literal["anchor","default"]] = None
 
-### VALIDITY DICTS ###
-# These compile the functions in validation/functions, as well as matplotlib's built-in validity functions
-# into dictionaries that can be used to validate all the inputs to a dictionary at once
+    @model_validator(mode='before')
+    @classmethod
+    def apply_size_defaults(cls, data: Any) -> Any:
+        if data is None or data is True: data = {}
+        if not isinstance(data, dict): return data
+        size = data.pop('size', config.DEFAULT_SIZE)
+        defaults = sbd._DEFAULTS_SB[_get_size_key(size)][3]
+        return defaults | data
 
-_VALIDATE_PRIMARY = {
-    "style":{"func":vf._validate_list, "kwargs":{"list":["ticks","boxes"]}},
-    "location":{"func":vf._validate_list, "kwargs":{"list":["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]}},
-    "zorder":{"func":vf._validate_type, "kwargs":{"match":int}}, # only check that it is an int
-}
+class ScaleBarAobModel(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    facecolor: Optional[MatplotlibColor] = None
+    edgecolor: Optional[MatplotlibColor] = None
+    alpha: Annotated[Optional[Union[float, int]], Field(ge=0, le=1)] = None
+    pad: Annotated[Union[float, int], Field(ge=0)]
+    borderpad: Annotated[Union[float, int], Field(ge=0)]
+    prop: MatplotlibFontsize
+    frameon: bool
+    bbox_to_anchor: Optional[Any] = None
+    bbox_transform: Optional[Any] = None
 
-_VALID_BAR_TICK_LOC = get_args(_TYPE_BAR.__annotations__["tick_loc"])
-_VALID_BAR_MINOR_TYPE = get_args(_TYPE_BAR.__annotations__["minor_type"]) 
-
-_VALIDATE_BAR = {
-    "projection":{"func":vf._validate_or, "kwargs":{"funcs":[vf._validate_projection, vf._validate_list], "kwargs":[{"none_ok":False}, {"list":["px","pixel","pixels","pt","point","points","dx","custom","axis"], "none_ok":False}]}}, # between 0 and inf, or a two-tuple of (x,y) size, each between 0 and inf
-    "unit":{"func":vf._validate_list, "kwargs":{"list":list(units_standard.keys()), "none_ok":True}}, # any of the listed unit values are accepted
-    "rotation":{"func":vf._validate_range, "kwargs":{"min":-360, "max":360, "none_ok":True}}, # between -360 and 360 degrees
-    "max":{"func":vf._validate_range, "kwargs":{"min":0, "max":None, "none_ok":True}}, # between 0 and inf
-    "length":{"func":vf._validate_range, "kwargs":{"min":0, "max":None, "none_ok":True}}, # between 0 and inf
-    "height":{"func":vf._validate_range, "kwargs":{"min":0, "max":None, "none_ok":True}}, # between 0 and inf
-    "reverse":{"func":vf._validate_type, "kwargs":{"match":bool}}, # any bool
-
-    "major_div":{"func":vf._validate_range, "kwargs":{"min":1, "max":None, "none_ok":True}}, # between 1 and inf
-    "minor_div":{"func":vf._validate_range, "kwargs":{"min":0, "max":None, "none_ok":True}}, # between 0 and inf
-    "minor_frac":{"func":vf._validate_range, "kwargs":{"min":0, "max":1, "none_ok":True}}, # ticks only: between 0 and 1
-    "minor_type":{"func":vf._validate_list, "kwargs":{"list":_VALID_BAR_MINOR_TYPE, "none_ok":True}}, # any item in the list, or None (for no minor)
-    "major_mult":{"func":vf._validate_range, "kwargs":{"min":0, "max":None, "none_ok":True}}, # between 0 and inf
-
-    "facecolors":{"func":vf._validate_iterable, "kwargs":{"func":matplotlib.rcsetup.validate_color}}, # boxes only: any color value for matplotlib
-    "edgecolors":{"func":vf._validate_iterable, "kwargs":{"func":matplotlib.rcsetup.validate_color}}, # boxes only: any color value for matplotlib
-    "edgewidth":{"func":vf._validate_range, "kwargs":{"min":0, "max":None, "none_ok":True}}, # boxes only: between 0 and inf
-
-    "tick_loc":{"func":vf._validate_list, "kwargs":{"list":_VALID_BAR_TICK_LOC}}, # ticks only: any item in the list
-    "basecolors":{"func":vf._validate_iterable, "kwargs":{"func":matplotlib.rcsetup.validate_color}}, # ticks only: any color value for matplotlib
-    "tickcolors":{"func":vf._validate_iterable, "kwargs":{"func":matplotlib.rcsetup.validate_color}}, # ticks only: any color value for matplotlib
-    "tickwidth":{"func":vf._validate_range, "kwargs":{"min":0, "max":None, "none_ok":True}}, # ticks only: between 0 and inf
-    "interpolation":{"func":vf._validate_type, "kwargs":{"match":str, "none_ok":True}},
-    "dpi_cor":{"func":vf._validate_type, "kwargs":{"match":bool}},
-    "resample":{"func":vf._validate_type, "kwargs":{"match":bool}},
-    "raster_dpi":{"func":vf._validate_range, "kwargs":{"min":1, "max":None, "none_ok":True}},
-    "raster_dpi_scale":{"func":vf._validate_range, "kwargs":{"min":0.0001, "max":None, "none_ok":True}},
-}
-
-_VALID_LABELS_STYLE = get_args(_TYPE_LABELS.__annotations__["style"])
-_VALID_LABELS_LOC = get_args(_TYPE_LABELS.__annotations__["loc"])
-_VALID_LABELS_FONTFAMILY = get_args(_TYPE_LABELS.__annotations__["fontfamily"])
-_VALID_LABELS_FONTSTYLE = get_args(_TYPE_LABELS.__annotations__["fontstyle"])
-_VALID_LABELS_FONTWEIGHT = get_args(_TYPE_LABELS.__annotations__["fontweight"])
-_VALID_LABELS_ROTATION_MODE = get_args(_TYPE_LABELS.__annotations__["rotation_mode"])
-
-_VALIDATE_LABELS = {
-    "labels":{"func":vf._validate_iterable, "kwargs":{"func":vf._validate_types,"kwargs":{"matches":[str,bool,int,float], "none_ok":True}}}, # any list of strings
-    "format":{"func":vf._validate_type, "kwargs":{"match":str}}, # only check that it is a string, not that it is a valid format string
-    "format_int":{"func":vf._validate_type, "kwargs":{"match":bool}}, # any bool
-    "style":{"func":vf._validate_list, "kwargs":{"list":_VALID_LABELS_STYLE}}, # any item in the list
-    "loc":{"func":vf._validate_list, "kwargs":{"list":_VALID_LABELS_LOC, "none_ok":True}}, # any string in the list we allow
-    "fontsize":{"func":matplotlib.rcsetup.validate_fontsize}, # any fontsize for matplotlib
-    "textcolors":{"func":vf._validate_iterable, "kwargs":{"func":matplotlib.rcsetup.validate_color}}, # any color value for matplotlib
-    "fontfamily":{"func":vf._validate_list, "kwargs":{"list":_VALID_LABELS_FONTFAMILY}},
-    "fontstyle":{"func":vf._validate_list, "kwargs":{"list":_VALID_LABELS_FONTSTYLE}},
-    "fontweight":{"func":matplotlib.rcsetup.validate_fontweight}, # any fontweight value for matplotlib
-    "stroke_width":{"func":vf._validate_range, "kwargs":{"min":0, "max":None}}, # between 0 and inf
-    "stroke_color":{"func":matplotlib.rcsetup.validate_color}, # any color value for matplotlib
-    "rotation":{"func":vf._validate_range, "kwargs":{"min":-360, "max":360, "none_ok":True}}, # between -360 and 360 degrees
-    "rotation_mode":{"func":vf._validate_list, "kwargs":{"list":_VALID_LABELS_ROTATION_MODE, "none_ok":True}}, # any string in the list we allow
-    "sep":{"func":vf._validate_range, "kwargs":{"min":0, "max":None}}, # between 0 and inf
-    "pad":{"func":vf._validate_range, "kwargs":{"min":0, "max":None}}, # between 0 and inf
-}
-
-_VALID_UNITS_LOC = get_args(_TYPE_UNITS.__annotations__["loc"])
-_VALID_UNITS_FONTFAMILY = get_args(_TYPE_UNITS.__annotations__["fontfamily"])
-_VALID_UNITS_FONTSTYLE = get_args(_TYPE_UNITS.__annotations__["fontstyle"])
-_VALID_UNITS_FONTWEIGHT = get_args(_TYPE_UNITS.__annotations__["fontweight"])
-_VALID_UNITS_ROTATION_MODE = get_args(_TYPE_UNITS.__annotations__["rotation_mode"])
-
-_VALIDATE_UNITS = {
-    "label":{"func":vf._validate_type, "kwargs":{"match":str, "none_ok":True}}, # any string
-    "loc":{"func":vf._validate_list, "kwargs":{"list":_VALID_UNITS_LOC, "none_ok":True}}, # any string in the list we allow
-    "fontsize":{"func":matplotlib.rcsetup.validate_fontsize}, # any fontsize for matplotlib
-    "textcolor":{"func":matplotlib.rcsetup.validate_color}, # any color value for matplotlib
-    "fontfamily":{"func":vf._validate_list, "kwargs":{"list":_VALID_UNITS_FONTFAMILY}},
-    "fontstyle":{"func":vf._validate_list, "kwargs":{"list":_VALID_UNITS_FONTSTYLE}},
-    "fontweight":{"func":matplotlib.rcsetup.validate_fontweight}, # any fontweight value for matplotlib
-    "stroke_width":{"func":vf._validate_range, "kwargs":{"min":0, "max":None}}, # between 0 and inf
-    "stroke_color":{"func":matplotlib.rcsetup.validate_color}, # any color value for matplotlib
-    "rotation":{"func":vf._validate_range, "kwargs":{"min":-360, "max":360, "none_ok":True}}, # between -360 and 360 degrees
-    "rotation_mode":{"func":vf._validate_list, "kwargs":{"list":_VALID_UNITS_ROTATION_MODE, "none_ok":True}}, # any string in the list we allow
-    "sep":{"func":vf._validate_range, "kwargs":{"min":0, "max":None}}, # between 0 and inf
-    "pad":{"func":vf._validate_range, "kwargs":{"min":0, "max":None}}, # between 0 and inf
-}
-
-_VALID_TEXT_FONTFAMILY = get_args(_TYPE_TEXT.__annotations__["fontfamily"])
-_VALID_TEXT_FONTSTYLE = get_args(_TYPE_TEXT.__annotations__["fontstyle"])
-_VALID_TEXT_FONTWEIGHT = get_args(_TYPE_TEXT.__annotations__["fontweight"])
-_VALID_TEXT_ROTATION_MODE = get_args(_TYPE_TEXT.__annotations__["rotation_mode"])
-
-_VALIDATE_TEXT = {
-    "fontsize":{"func":matplotlib.rcsetup.validate_fontsize}, # any fontsize for matplotlib
-    "textcolor":{"func":matplotlib.rcsetup.validate_color}, # any color value for matplotlib
-    "fontfamily":{"func":vf._validate_list, "kwargs":{"list":_VALID_TEXT_FONTFAMILY}},
-    "fontstyle":{"func":vf._validate_list, "kwargs":{"list":_VALID_TEXT_FONTSTYLE}},
-    "fontweight":{"func":matplotlib.rcsetup.validate_fontweight}, # any fontweight value for matplotlib
-    "stroke_width":{"func":vf._validate_range, "kwargs":{"min":0, "max":None}}, # between 0 and inf
-    "stroke_color":{"func":matplotlib.rcsetup.validate_color}, # any color value for matplotlib
-    "rotation":{"func":vf._validate_range, "kwargs":{"min":-360, "max":360, "none_ok":True}}, # between -360 and 360 degrees
-    "rotation_mode":{"func":vf._validate_list, "kwargs":{"list":_VALID_TEXT_ROTATION_MODE, "none_ok":True}}, # any string in the list we allow
-}
-
-_VALIDATE_AOB = {
-    "facecolor":{"func":vf._validate_color_or_none, "kwargs":{"none_ok":True}}, # any color value for matplotlib OR NONE
-    "edgecolor":{"func":vf._validate_color_or_none, "kwargs":{"none_ok":True}}, # any color value for matplotlib OR NONE
-    "alpha":{"func":vf._validate_range, "kwargs":{"min":0, "max":1, "none_ok":True}}, # any value between 0 and 1
-    "pad":{"func":vf._validate_range, "kwargs":{"min":0, "max":None}}, # between 0 and inf
-    "borderpad":{"func":vf._validate_range, "kwargs":{"min":0, "max":None}}, # between 0 and inf
-    "prop":{"func":matplotlib.rcsetup.validate_fontsize}, # any fontsize value for matplotlib
-    "frameon":{"func":vf._validate_type, "kwargs":{"match":bool}}, # any bool
-    "bbox_to_anchor":{"func":vf._skip_validation}, # NOTE: currently unvalidated, use at your own risk!
-    "bbox_transform":{"func":vf._skip_validation}, # NOTE: currently unvalidated, use at your own risk!
-}
+    @model_validator(mode='before')
+    @classmethod
+    def apply_size_defaults(cls, data: Any) -> Any:
+        if data is None or data is True: data = {}
+        if not isinstance(data, dict): return data
+        size = data.pop('size', config.DEFAULT_SIZE)
+        defaults = sbd._DEFAULTS_SB[_get_size_key(size)][4]
+        return defaults | data

@@ -16,7 +16,7 @@
 
 # Map
 _INSET_MAP_XS = {
-    "size":0.5,
+    "imsize":0.5,
     "pad":0.05,
 }
 
@@ -25,7 +25,7 @@ _INSET_MAP_XS = {
 
 # Map
 _INSET_MAP_SM = {
-    "size":1,
+    "imsize":1,
     "pad":0.1,
 }
 
@@ -34,7 +34,7 @@ _INSET_MAP_SM = {
 
 # Map
 _INSET_MAP_MD = {
-    "size":2,
+    "imsize":2,
     "pad":0.25,
 }
 
@@ -43,7 +43,7 @@ _INSET_MAP_MD = {
 
 # Map
 _INSET_MAP_LG = {
-    "size":4,
+    "imsize":4,
     "pad":0.5,
 }
 
@@ -52,7 +52,7 @@ _INSET_MAP_LG = {
 
 # Map
 _INSET_MAP_XL = {
-    "size":8,
+    "imsize":8,
     "pad":1,
 }
 

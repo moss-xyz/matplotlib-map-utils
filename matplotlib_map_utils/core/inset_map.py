@@ -19,17 +19,11 @@ import matplotlib.artist
 import matplotlib.patches
 import matplotlib.colors
 # The types we use in this script
-from typing import Literal
+from typing import Literal, Any
 # The information contained in our helper scripts (validation and defaults)
-from ..defaults import inset_map as imd
+from pydantic import TypeAdapter
+from .. import config
 from ..validation import inset_map as imt
-from ..validation import functions as imf
-
-### INITIALIZATION ###
-
-# Setting the defaults to the "medium" size, which is roughly optimized for A4/Letter paper
-# Making these as globals is important for the set_size() function to work later
-_DEFAULT_INSET_MAP = imd._DEFAULTS_IM["md"][0]
 
 ### CLASSES ###
 # Note these are really just to be convenient when storing the 
@@ -40,10 +34,11 @@ class InsetMap(matplotlib.artist.Artist):
     
     ## INITIALIZATION ##
     def __init__(self,
+                 size: str=None,
                  location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="lower left", 
-                 size: imt._TYPE_INSET["size"]=None,
-                 pad: imt._TYPE_INSET["pad"]=None,
-                 coords: imt._TYPE_INSET["coords"]=None,
+                 imsize: Any=None,
+                 pad: Any=None,
+                 coords: Any=None,
                  transform=None,
                  to_plot=None,
                  zorder: int=99,
@@ -51,28 +46,30 @@ class InsetMap(matplotlib.artist.Artist):
         # Starting up the object with the base properties of a matplotlib Artist
         matplotlib.artist.Artist.__init__(self)
         
+        self._size = size if size is not None else config.DEFAULT_SIZE
         # Validating each of the passed parameters
-        self._location = imf._validate(imt._VALIDATE_INSET, "location", location)
-        self._size = imf._validate(imt._VALIDATE_INSET, "size", size)
-        self._pad = imf._validate(imt._VALIDATE_INSET, "pad", pad)
-        self._coords = imf._validate(imt._VALIDATE_INSET, "coords", coords)
-        self._to_plot = imf._validate(imt._VALIDATE_INSET, "to_plot", to_plot)
-        self._zorder = imf._validate(imt._VALIDATE_INSET, "zorder", zorder)
+        # We pass size to the validator, which automatically applies the defaults if imsize/pad are None
+        kwargs_model = {"location": location, "coords": coords, "to_plot": to_plot, "zorder": zorder, "size": self._size}
+        if imsize is not None: kwargs_model["imsize"] = imsize
+        if pad is not None: kwargs_model["pad"] = pad
+            
+        inset_model = imt.InsetMapInsetModel(**kwargs_model)
+        self._location = inset_model.location
+        self._imsize = inset_model.imsize
+        self._pad = inset_model.pad
+        self._coords = inset_model.coords
+        self._to_plot = inset_model.model_dump(exclude_unset=True).get('to_plot', None)
+        self._zorder = inset_model.zorder
 
-        # Checking if we need to override values for size and pad
-        if self._size is None:
-            self._size = _DEFAULT_INSET_MAP["size"]
-        if self._pad is None:
-            self._pad = _DEFAULT_INSET_MAP["pad"]
-        
+
         self._transform = transform # not validated!
         self._kwargs = kwargs # not validated!
 
     ## INTERNAL PROPERTIES ##
     # This allows for easy-updating of properties
     # Each property will have the same pair of functions
-    # 1) calling the property itself returns its value (InsetMap.size will output (width,height))
-    # 2) passing a value will update it (InsetMap.size = (width,height) will update it)
+    # 1) calling the property itself returns its value (InsetMap.imsize will output (width,height))
+    # 2) passing a value will update it (InsetMap.imsize = (width,height) will update it)
 
     # location/loc
     @property
@@ -81,8 +78,7 @@ class InsetMap(matplotlib.artist.Artist):
 
     @location.setter
     def location(self, val: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]):
-        val = imf._validate(imt._VALIDATE_INSET, "location", val)
-        self._location = val
+        self._location = TypeAdapter(imt.InsetMapInsetModel.model_fields['location'].annotation).validate_python(val)
     
     @property
     def loc(self):
@@ -90,21 +86,19 @@ class InsetMap(matplotlib.artist.Artist):
 
     @loc.setter
     def loc(self, val: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]):
-        val = imf._validate(imt._VALIDATE_INSET, "location", val)
-        self._location = val
+        self._location = TypeAdapter(imt.InsetMapInsetModel.model_fields['location'].annotation).validate_python(val)
 
-    # size
+    # imsize
     @property
-    def size(self):
-        return self._size
+    def imsize(self):
+        return self._imsize
 
-    @size.setter
-    def size(self, val):
-        val = imf._validate(imt._VALIDATE_INSET, "size", val)
+    @imsize.setter
+    def imsize(self, val):
         if val is not None:
-            self._size = val
+            self._imsize = TypeAdapter(imt.InsetMapInsetModel.model_fields['imsize'].annotation).validate_python(val)
         else:
-            self._size = _DEFAULT_INSET_MAP["size"]
+            self._imsize = imt.InsetMapInsetModel(size=self._size, location=self._location, zorder=self._zorder).imsize
     
     # pad
     @property
@@ -113,11 +107,10 @@ class InsetMap(matplotlib.artist.Artist):
 
     @pad.setter
     def pad(self, val):
-        val = imf._validate(imt._VALIDATE_INSET, "pad", val)
         if val is not None:
-            self._pad = val
+            self._pad = TypeAdapter(imt.InsetMapInsetModel.model_fields['pad'].annotation).validate_python(val)
         else:
-            self._pad = _DEFAULT_INSET_MAP["pad"]
+            self._pad = imt.InsetMapInsetModel(size=self._size, location=self._location, zorder=self._zorder).pad
     
     # coords
     @property
@@ -126,8 +119,7 @@ class InsetMap(matplotlib.artist.Artist):
 
     @coords.setter
     def coords(self, val):
-        val = imf._validate(imt._VALIDATE_INSET, "coords", val)
-        self._coords = val
+        self._coords = TypeAdapter(imt.InsetMapInsetModel.model_fields['coords'].annotation).validate_python(val)
     
     # transform
     @property
@@ -157,8 +149,14 @@ class InsetMap(matplotlib.artist.Artist):
 
     @to_plot.setter
     def to_plot(self, val):
-        val = imf._validate(imt._VALIDATE_INSET, "to_plot", val)
-        self._to_plot = val
+        if val is not None:
+            # Auto-wrap a single dict into a list
+            if isinstance(val, dict):
+                val = [val]
+            validated = TypeAdapter(imt.InsetMapInsetModel.model_fields['to_plot'].annotation).validate_python(val)
+            self._to_plot = [d.model_dump(exclude_unset=True) if d is not None else None for d in validated]
+        else:
+            self._to_plot = None
     
     # zorder
     @property
@@ -167,8 +165,7 @@ class InsetMap(matplotlib.artist.Artist):
 
     @zorder.setter
     def zorder(self, val):
-        val = imf._validate(imt._VALIDATE_INSET, "zorder", val)
-        self._zorder = val
+        self._zorder = TypeAdapter(imt.InsetMapInsetModel.model_fields['zorder'].annotation).validate_python(val)
 
     ## COPY FUNCTION ##
     # This is solely to get around matplotlib's restrictions around re-using an artist across multiple axes
@@ -182,7 +179,7 @@ class InsetMap(matplotlib.artist.Artist):
     # Note that this is different than the way NorthArrows and ScaleBars are rendered (via draw/add_artist())!
     def create(self, pax, **kwargs):
         # Can re-use the drawing function we already established, but return the object instead
-        iax = inset_map(ax=pax, location=self._location, size=self._size,
+        iax = inset_map(ax=pax, size=self._size, location=self._location, imsize=self._imsize,
                         pad=self._pad, coords=self._coords, transform=self._transform, zorder=self._zorder,
                         **self._kwargs, **kwargs)
         
@@ -196,58 +193,35 @@ class InsetMap(matplotlib.artist.Artist):
         # Instead of "drawing", we have to return the axis, for further manipulation
         return iax
     
-    ## SIZE FUNCTION ##
-    # This function will update the default dictionaries used based on the size of map being created
-    # See defaults.py for more information on the dictionaries used here
-    def set_size(size: Literal["xs","xsmall","x-small",
-                               "sm","small",
-                               "md","medium",
-                               "lg","large",
-                               "xl","xlarge","x-large"]):
-        # Bringing in our global default values to update them
-        global _DEFAULT_INSET_MAP
-        # Changing the global default values as required
-        if size.lower() in ["xs","xsmall","x-small"]:
-            _DEFAULT_INSET_MAP = imd._DEFAULTS_IM["xs"][0]
-        elif size.lower() in ["sm","small"]:
-            _DEFAULT_INSET_MAP = imd._DEFAULTS_IM["sm"][0]
-        elif size.lower() in ["md","medium"]:
-            _DEFAULT_INSET_MAP = imd._DEFAULTS_IM["md"][0]
-        elif size.lower() in ["lg","large"]:
-            _DEFAULT_INSET_MAP = imd._DEFAULTS_IM["lg"][0]
-        elif size.lower() in ["xl","xlarge","x-large"]:
-            _DEFAULT_INSET_MAP = imd._DEFAULTS_IM["xl"][0]
-        else:
-            raise ValueError("Invalid value supplied, try one of ['xsmall', 'small', 'medium', 'large', 'xlarge'] instead")
 
 # The main object model of the extent indicator
 class ExtentIndicator(matplotlib.artist.Artist):
     
     ## INITIALIZATION ##
     def __init__(self,
-                 to_return: imt._TYPE_EXTENT["to_return"]=None,
-                 straighten: imt._TYPE_EXTENT["straighten"]=True,
-                 pad: imt._TYPE_EXTENT["pad"]=0.05,
-                 plot: imt._TYPE_EXTENT["plot"]=True,
-                 facecolor: imt._TYPE_EXTENT["facecolor"]="red",
-                 linecolor: imt._TYPE_EXTENT["linecolor"]="red",
-                 alpha: imt._TYPE_EXTENT["alpha"]=0.5,
-                 linewidth: imt._TYPE_EXTENT["linewidth"]=1,
+                 to_return: Any=None,
+                 straighten: bool=True,
+                 pad: Any=0.05,
+                 plot: bool=True,
+                 facecolor: Any="red",
+                 linecolor: Any="red",
+                 alpha: Any=0.5,
+                 linewidth: Any=1,
                  zorder: int=99,
                  **kwargs):
         # Starting up the object with the base properties of a matplotlib Artist
         matplotlib.artist.Artist.__init__(self)
         
         # Validating each of the passed parameters
-        self._to_return = imf._validate(imt._VALIDATE_EXTENT, "to_return", to_return)
-        self._straighten = imf._validate(imt._VALIDATE_EXTENT, "straighten", straighten)
-        self._pad = imf._validate(imt._VALIDATE_EXTENT, "pad", pad)
-        self._plot = imf._validate(imt._VALIDATE_EXTENT, "plot", plot)
-        self._facecolor = imf._validate(imt._VALIDATE_EXTENT, "facecolor", facecolor)
-        self._linecolor = imf._validate(imt._VALIDATE_EXTENT, "linecolor", linecolor)
-        self._alpha = imf._validate(imt._VALIDATE_EXTENT, "alpha", alpha)
-        self._linewidth = imf._validate(imt._VALIDATE_EXTENT, "linewidth", linewidth)
-        self._zorder = imf._validate(imt._VALIDATE_EXTENT, "zorder", zorder)
+        self._to_return = TypeAdapter(imt.InsetMapExtentModel.model_fields['to_return'].annotation).validate_python(to_return)
+        self._straighten = TypeAdapter(imt.InsetMapExtentModel.model_fields['straighten'].annotation).validate_python(straighten)
+        self._pad = TypeAdapter(imt.InsetMapExtentModel.model_fields['pad'].annotation).validate_python(pad)
+        self._plot = TypeAdapter(imt.InsetMapExtentModel.model_fields['plot'].annotation).validate_python(plot)
+        self._facecolor = TypeAdapter(imt.InsetMapExtentModel.model_fields['facecolor'].annotation).validate_python(facecolor)
+        self._linecolor = TypeAdapter(imt.InsetMapExtentModel.model_fields['linecolor'].annotation).validate_python(linecolor)
+        self._alpha = TypeAdapter(imt.InsetMapExtentModel.model_fields['alpha'].annotation).validate_python(alpha)
+        self._linewidth = TypeAdapter(imt.InsetMapExtentModel.model_fields['linewidth'].annotation).validate_python(linewidth)
+        self._zorder = TypeAdapter(imt.InsetMapExtentModel.model_fields['zorder'].annotation).validate_python(zorder)
 
         self._kwargs = kwargs # not validated!
 
@@ -264,8 +238,7 @@ class ExtentIndicator(matplotlib.artist.Artist):
 
     @to_return.setter
     def to_return(self, val):
-        val = imf._validate(imt._VALIDATE_EXTENT, "to_return", val)
-        self._to_return = val
+        self._to_return = TypeAdapter(imt.InsetMapExtentModel.model_fields['to_return'].annotation).validate_python(val)
 
     # straighten
     @property
@@ -274,8 +247,7 @@ class ExtentIndicator(matplotlib.artist.Artist):
 
     @straighten.setter
     def straighten(self, val):
-        val = imf._validate(imt._VALIDATE_EXTENT, "straighten", val)
-        self._straighten = val
+        self._straighten = TypeAdapter(imt.InsetMapExtentModel.model_fields['straighten'].annotation).validate_python(val)
 
     # pad
     @property
@@ -284,8 +256,7 @@ class ExtentIndicator(matplotlib.artist.Artist):
 
     @pad.setter
     def pad(self, val):
-        val = imf._validate(imt._VALIDATE_EXTENT, "pad", val)
-        self._pad = val
+        self._pad = TypeAdapter(imt.InsetMapExtentModel.model_fields['pad'].annotation).validate_python(val)
 
     # plot
     @property
@@ -294,8 +265,7 @@ class ExtentIndicator(matplotlib.artist.Artist):
 
     @plot.setter
     def plot(self, val):
-        val = imf._validate(imt._VALIDATE_EXTENT, "plot", val)
-        self._plot = val
+        self._plot = TypeAdapter(imt.InsetMapExtentModel.model_fields['plot'].annotation).validate_python(val)
 
     # facecolor
     @property
@@ -304,8 +274,7 @@ class ExtentIndicator(matplotlib.artist.Artist):
 
     @facecolor.setter
     def facecolor(self, val):
-        val = imf._validate(imt._VALIDATE_EXTENT, "facecolor", val)
-        self._facecolor = val
+        self._facecolor = TypeAdapter(imt.InsetMapExtentModel.model_fields['facecolor'].annotation).validate_python(val)
 
     # linecolor
     @property
@@ -314,8 +283,7 @@ class ExtentIndicator(matplotlib.artist.Artist):
 
     @linecolor.setter
     def linecolor(self, val):
-        val = imf._validate(imt._VALIDATE_EXTENT, "linecolor", val)
-        self._linecolor = val
+        self._linecolor = TypeAdapter(imt.InsetMapExtentModel.model_fields['linecolor'].annotation).validate_python(val)
 
     # alpha
     @property
@@ -324,8 +292,7 @@ class ExtentIndicator(matplotlib.artist.Artist):
 
     @alpha.setter
     def alpha(self, val):
-        val = imf._validate(imt._VALIDATE_EXTENT, "alpha", val)
-        self._alpha = val
+        self._alpha = TypeAdapter(imt.InsetMapExtentModel.model_fields['alpha'].annotation).validate_python(val)
 
     # linewidth
     @property
@@ -334,8 +301,7 @@ class ExtentIndicator(matplotlib.artist.Artist):
 
     @linewidth.setter
     def linewidth(self, val):
-        val = imf._validate(imt._VALIDATE_EXTENT, "linewidth", val)
-        self._linewidth = val
+        self._linewidth = TypeAdapter(imt.InsetMapExtentModel.model_fields['linewidth'].annotation).validate_python(val)
     
     # zorder
     @property
@@ -344,8 +310,7 @@ class ExtentIndicator(matplotlib.artist.Artist):
 
     @zorder.setter
     def zorder(self, val):
-        val = imf._validate(imt._VALIDATE_EXTENT, "zorder", val)
-        self._zorder = val
+        self._zorder = TypeAdapter(imt.InsetMapExtentModel.model_fields['zorder'].annotation).validate_python(val)
 
     # kwargs
     @property
@@ -370,10 +335,10 @@ class ExtentIndicator(matplotlib.artist.Artist):
     # Calling ExtentIndicator.create(ax) will create an inset map with the specified parameters on the given axis
     # Note that this is different than the way NorthArrows and ScaleBars are rendered (via draw/add_artist())!
     def create(self,
-               pax: imt._TYPE_EXTENT["pax"],
-               bax: imt._TYPE_EXTENT["bax"],
-               pcrs: imt._TYPE_EXTENT["pcrs"],
-               bcrs: imt._TYPE_EXTENT["bcrs"], **kwargs):
+               pax: matplotlib.axes.Axes,
+               bax: matplotlib.axes.Axes,
+               pcrs: Any,
+               bcrs: Any, **kwargs):
         
         # Can re-use the drawing function we already established, but return the object instead
         exi = indicate_extent(pax=pax, bax=bax, pcrs=pcrs, bcrs=bcrs, 
@@ -393,33 +358,33 @@ class DetailIndicator(matplotlib.artist.Artist):
     
     ## INITIALIZATION ##
     def __init__(self,
-                 to_return: imt._TYPE_DETAIL["to_return"]=None,
-                 straighten: imt._TYPE_EXTENT["straighten"]=True,
-                 pad: imt._TYPE_EXTENT["pad"]=0.05,
-                 plot: imt._TYPE_EXTENT["plot"]=True,
-                 facecolor: imt._TYPE_EXTENT["facecolor"]="none",
-                 linecolor: imt._TYPE_EXTENT["linecolor"]="black",
-                 alpha: imt._TYPE_EXTENT["alpha"]=1,
-                 linewidth: imt._TYPE_EXTENT["linewidth"]=1,
-                 connector_color: imt._TYPE_DETAIL["connector_color"]="black",
-                 connector_width: imt._TYPE_DETAIL["connector_width"]=1,
+                 to_return: Any=None,
+                 straighten: bool=True,
+                 pad: Any=0.05,
+                 plot: bool=True,
+                 facecolor: Any="none",
+                 linecolor: Any="black",
+                 alpha: Any=1,
+                 linewidth: Any=1,
+                 connector_color: Any="black",
+                 connector_width: Any=1,
                  zorder: int=99,
                  **kwargs):
         # Starting up the object with the base properties of a matplotlib Artist
         matplotlib.artist.Artist.__init__(self)
         
         # Validating each of the passed parameters
-        self._straighten = imf._validate(imt._VALIDATE_EXTENT, "straighten", straighten)
-        self._pad = imf._validate(imt._VALIDATE_EXTENT, "pad", pad)
-        self._plot = imf._validate(imt._VALIDATE_EXTENT, "plot", plot)
-        self._facecolor = imf._validate(imt._VALIDATE_EXTENT, "facecolor", facecolor)
-        self._linecolor = imf._validate(imt._VALIDATE_EXTENT, "linecolor", linecolor)
-        self._alpha = imf._validate(imt._VALIDATE_EXTENT, "alpha", alpha)
-        self._linewidth = imf._validate(imt._VALIDATE_EXTENT, "linewidth", linewidth)
-        self._to_return = imf._validate(imt._VALIDATE_DETAIL, "to_return", to_return)
-        self._connector_color = imf._validate(imt._VALIDATE_DETAIL, "connector_color", connector_color)
-        self._connector_width = imf._validate(imt._VALIDATE_DETAIL, "connector_width", connector_width)
-        self._zorder = imf._validate(imt._VALIDATE_DETAIL, "zorder", zorder)
+        self._to_return = TypeAdapter(imt.InsetMapDetailModel.model_fields['to_return'].annotation).validate_python(to_return)
+        self._straighten = TypeAdapter(imt.InsetMapExtentModel.model_fields['straighten'].annotation).validate_python(straighten)
+        self._pad = TypeAdapter(imt.InsetMapExtentModel.model_fields['pad'].annotation).validate_python(pad)
+        self._plot = TypeAdapter(imt.InsetMapExtentModel.model_fields['plot'].annotation).validate_python(plot)
+        self._facecolor = TypeAdapter(imt.InsetMapDetailModel.model_fields['facecolor'].annotation).validate_python(facecolor)
+        self._linecolor = TypeAdapter(imt.InsetMapDetailModel.model_fields['linecolor'].annotation).validate_python(linecolor)
+        self._alpha = TypeAdapter(imt.InsetMapDetailModel.model_fields['alpha'].annotation).validate_python(alpha)
+        self._linewidth = TypeAdapter(imt.InsetMapDetailModel.model_fields['linewidth'].annotation).validate_python(linewidth)
+        self._connector_color = TypeAdapter(imt.InsetMapDetailModel.model_fields['connector_color'].annotation).validate_python(connector_color)
+        self._connector_width = TypeAdapter(imt.InsetMapDetailModel.model_fields['connector_width'].annotation).validate_python(connector_width)
+        self._zorder = TypeAdapter(imt.InsetMapDetailModel.model_fields['zorder'].annotation).validate_python(zorder)
 
         self._kwargs = kwargs # not validated!
 
@@ -436,8 +401,7 @@ class DetailIndicator(matplotlib.artist.Artist):
 
     @to_return.setter
     def to_return(self, val):
-        val = imf._validate(imt._VALIDATE_DETAIL, "to_return", val)
-        self._to_return = val
+        self._to_return = TypeAdapter(imt.InsetMapDetailModel.model_fields['to_return'].annotation).validate_python(val)
 
     # straighten
     @property
@@ -446,8 +410,7 @@ class DetailIndicator(matplotlib.artist.Artist):
 
     @straighten.setter
     def straighten(self, val):
-        val = imf._validate(imt._VALIDATE_EXTENT, "straighten", val)
-        self._straighten = val
+        self._straighten = TypeAdapter(imt.InsetMapExtentModel.model_fields['straighten'].annotation).validate_python(val)
 
     # pad
     @property
@@ -456,8 +419,7 @@ class DetailIndicator(matplotlib.artist.Artist):
 
     @pad.setter
     def pad(self, val):
-        val = imf._validate(imt._VALIDATE_EXTENT, "pad", val)
-        self._pad = val
+        self._pad = TypeAdapter(imt.InsetMapExtentModel.model_fields['pad'].annotation).validate_python(val)
 
     # plot
     @property
@@ -466,8 +428,7 @@ class DetailIndicator(matplotlib.artist.Artist):
 
     @plot.setter
     def plot(self, val):
-        val = imf._validate(imt._VALIDATE_EXTENT, "plot", val)
-        self._plot = val
+        self._plot = TypeAdapter(imt.InsetMapExtentModel.model_fields['plot'].annotation).validate_python(val)
 
     # facecolor
     @property
@@ -476,8 +437,7 @@ class DetailIndicator(matplotlib.artist.Artist):
 
     @facecolor.setter
     def facecolor(self, val):
-        val = imf._validate(imt._VALIDATE_EXTENT, "facecolor", val)
-        self._facecolor = val
+        self._facecolor = TypeAdapter(imt.InsetMapDetailModel.model_fields['facecolor'].annotation).validate_python(val)
 
     # linecolor
     @property
@@ -486,8 +446,7 @@ class DetailIndicator(matplotlib.artist.Artist):
 
     @linecolor.setter
     def linecolor(self, val):
-        val = imf._validate(imt._VALIDATE_EXTENT, "linecolor", val)
-        self._linecolor = val
+        self._linecolor = TypeAdapter(imt.InsetMapDetailModel.model_fields['linecolor'].annotation).validate_python(val)
 
     # alpha
     @property
@@ -496,8 +455,7 @@ class DetailIndicator(matplotlib.artist.Artist):
 
     @alpha.setter
     def alpha(self, val):
-        val = imf._validate(imt._VALIDATE_EXTENT, "alpha", val)
-        self._alpha = val
+        self._alpha = TypeAdapter(imt.InsetMapDetailModel.model_fields['alpha'].annotation).validate_python(val)
 
     # linewidth
     @property
@@ -506,8 +464,7 @@ class DetailIndicator(matplotlib.artist.Artist):
 
     @linewidth.setter
     def linewidth(self, val):
-        val = imf._validate(imt._VALIDATE_EXTENT, "linewidth", val)
-        self._linewidth = val
+        self._linewidth = TypeAdapter(imt.InsetMapExtentModel.model_fields['linewidth'].annotation).validate_python(val)
 
     # connector_color
     @property
@@ -516,8 +473,7 @@ class DetailIndicator(matplotlib.artist.Artist):
 
     @connector_color.setter
     def connector_color(self, val):
-        val = imf._validate(imt._VALIDATE_DETAIL, "connector_color", val)
-        self._connector_color = val
+        self._connector_color = TypeAdapter(imt.InsetMapDetailModel.model_fields['connector_color'].annotation).validate_python(val)
 
     # connector_width
     @property
@@ -526,8 +482,7 @@ class DetailIndicator(matplotlib.artist.Artist):
 
     @connector_width.setter
     def connector_width(self, val):
-        val = imf._validate(imt._VALIDATE_DETAIL, "connector_width", val)
-        self._connector_width = val
+        self._connector_width = TypeAdapter(imt.InsetMapDetailModel.model_fields['connector_width'].annotation).validate_python(val)
     
     # zorder
     @property
@@ -536,8 +491,7 @@ class DetailIndicator(matplotlib.artist.Artist):
 
     @zorder.setter
     def zorder(self, val):
-        val = imf._validate(imt._VALIDATE_DETAIL, "zorder", val)
-        self._zorder = val
+        self._zorder = TypeAdapter(imt.InsetMapDetailModel.model_fields['zorder'].annotation).validate_python(val)
 
     # kwargs
     @property
@@ -562,10 +516,10 @@ class DetailIndicator(matplotlib.artist.Artist):
     # Calling DetailIndicator.create(ax) will create an inset map with the specified parameters on the given axis
     # Note that this is different than the way NorthArrows and ScaleBars are rendered (via draw/add_artist())!
     def create(self,
-               pax: imt._TYPE_EXTENT["pax"],
-               iax: imt._TYPE_EXTENT["bax"],
-               pcrs: imt._TYPE_EXTENT["pcrs"],
-               icrs: imt._TYPE_EXTENT["bcrs"], 
+               pax: matplotlib.axes.Axes,
+               iax: matplotlib.axes.Axes,
+               pcrs: Any,
+               icrs: Any, 
                **kwargs):
         
         # Can re-use the drawing function we already established, but return the object instead
@@ -591,25 +545,26 @@ class DetailIndicator(matplotlib.artist.Artist):
 # Function for creating an inset map, independent of the InsetMap object model
 # It is intended to be an easier-to-use API than the default inset_axes
 def inset_map(ax, 
+              size: str=None,
               location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="upper right", 
-              size: imt._TYPE_INSET["size"]=None,
-              pad: imt._TYPE_INSET["pad"]=None,
-              coords: imt._TYPE_INSET["coords"]=None,
+              imsize: Any=None,
+              pad: Any=None,
+              coords: Any=None,
               transform=None,
               zorder: int=99,
               **kwargs):
     
     ## VALIDATION ##
-    location = imf._validate(imt._VALIDATE_INSET, "location", location)
-    size = imf._validate(imt._VALIDATE_INSET, "size", size)
-    pad = imf._validate(imt._VALIDATE_INSET, "pad", pad)
-    coords = imf._validate(imt._VALIDATE_INSET, "coords", coords)
-    zorder = imf._validate(imt._VALIDATE_INSET, "zorder", zorder)
-
-    if size is None:
-        size = _DEFAULT_INSET_MAP["size"]
-    if pad is None:
-        pad = _DEFAULT_INSET_MAP["pad"]
+    kwargs_model = {"location": location, "coords": coords, "zorder": zorder, "size": size if size is not None else config.DEFAULT_SIZE}
+    if imsize is not None: kwargs_model["imsize"] = imsize
+    if pad is not None: kwargs_model["pad"] = pad
+        
+    inset_model = imt.InsetMapInsetModel(**kwargs_model)
+    _location = inset_model.location
+    _imsize = inset_model.imsize
+    _pad = inset_model.pad
+    coords = inset_model.coords
+    zorder = inset_model.zorder
 
     ## SET-UP ##
     # Getting the figure
@@ -620,21 +575,18 @@ def inset_map(ax,
     # The default inset_axis() function does this as a fraction of the parent axis
     # But the size variable expects dimensions in inches
     
-    # Casting size to width and height
-    if isinstance(size, (tuple, list)):
-        inset_width, inset_height = size
+    # Casting imsize to width and height
+    if isinstance(_imsize, (tuple, list)):
+        inset_width, inset_height = _imsize
     else:
-        inset_width = size 
-        inset_height = size
+        inset_width, inset_height = _imsize, _imsize
 
-    ## PADDING ##
     # Padding is expressed in inches here, unlike traditional matplotlib
     # which expresses it as a fraction of the font size
-    if isinstance(pad, (tuple, list)):
-        pad_x, pad_y = pad
+    if isinstance(_pad, (tuple, list)):
+        pad_x, pad_y = _pad
     else:
-        pad_x = pad 
-        pad_y = pad
+        pad_x, pad_y = _pad, _pad
     
     ## RESIZING ##
     # Getting the current dimensions of the parent axis in inches (ignoring ticks and labels - just the axis itself)
@@ -714,35 +666,36 @@ def inset_map(ax,
 # or, it is called by detail_indicator to show where the bounds of an inset axis lay on the parent
 # here, PAX means "plotting axis" (where the indicator is plotted) 
 # and BAX means "bounds axis" (where the extent is derived from)
-def indicate_extent(pax: imt._TYPE_EXTENT["pax"],
-                    bax: imt._TYPE_EXTENT["bax"],
-                    pcrs: imt._TYPE_EXTENT["pcrs"],
-                    bcrs: imt._TYPE_EXTENT["bcrs"],
-                    to_return: imt._TYPE_EXTENT["to_return"]=None,
-                    straighten: imt._TYPE_EXTENT["straighten"]=True,
-                    pad: imt._TYPE_EXTENT["pad"]=0.05,
-                    plot: imt._TYPE_EXTENT["plot"]=True,
-                    facecolor: imt._TYPE_EXTENT["facecolor"]="red",
-                    linecolor: imt._TYPE_EXTENT["linecolor"]="red",
-                    alpha: imt._TYPE_EXTENT["alpha"]=0.5,
-                    linewidth: imt._TYPE_EXTENT["linewidth"]=1,
+def indicate_extent(pax: matplotlib.axes.Axes,
+                    bax: matplotlib.axes.Axes,
+                    pcrs: Any,
+                    bcrs: Any,
+                    to_return: Any=None,
+                    straighten: bool=True,
+                    pad: Any=0.05,
+                    plot: bool=True,
+                    facecolor: Any="red",
+                    linecolor: Any="red",
+                    alpha: Any=0.5,
+                    linewidth: Any=1,
                     zorder: int=99,
                     **kwargs):
     
     ## VALIDATION ##
-    pax = imf._validate(imt._VALIDATE_EXTENT, "pax", pax)
-    bax = imf._validate(imt._VALIDATE_EXTENT, "bax", bax)
-    pcrs = imf._validate(imt._VALIDATE_EXTENT, "pcrs", pcrs)
-    bcrs = imf._validate(imt._VALIDATE_EXTENT, "bcrs", bcrs)
-    to_return = imf._validate(imt._VALIDATE_EXTENT, "to_return", to_return)
-    straighten = imf._validate(imt._VALIDATE_EXTENT, "straighten", straighten)
-    pad = imf._validate(imt._VALIDATE_EXTENT, "pad", pad)
-    plot = imf._validate(imt._VALIDATE_EXTENT, "plot", plot)
-    facecolor = imf._validate(imt._VALIDATE_EXTENT, "facecolor", facecolor)
-    linecolor = imf._validate(imt._VALIDATE_EXTENT, "linecolor", linecolor)
-    alpha = imf._validate(imt._VALIDATE_EXTENT, "alpha", alpha)
-    linewidth = imf._validate(imt._VALIDATE_EXTENT, "linewidth", linewidth)
-    zorder = imf._validate(imt._VALIDATE_EXTENT, "zorder", zorder)
+    extent_model = imt.InsetMapExtentModel(pax=pax, bax=bax, pcrs=pcrs, bcrs=bcrs, to_return=to_return, straighten=straighten, pad=pad, plot=plot, facecolor=facecolor, linecolor=linecolor, alpha=alpha, linewidth=linewidth, zorder=zorder)
+    pax = extent_model.pax
+    bax = extent_model.bax
+    pcrs = extent_model.pcrs
+    bcrs = extent_model.bcrs
+    to_return = extent_model.to_return
+    straighten = extent_model.straighten
+    pad = extent_model.pad
+    plot = extent_model.plot
+    facecolor = extent_model.facecolor
+    linecolor = extent_model.linecolor
+    alpha = extent_model.alpha
+    linewidth = extent_model.linewidth
+    zorder = extent_model.zorder
     
     # Make sure the figure layout is calculated
     fig = pax.get_figure()
@@ -802,18 +755,18 @@ def indicate_extent(pax: imt._TYPE_EXTENT["pax"],
 # This will also, call extent_indicator too, as the two are linked
 # here, PAX means "parent axis" (where the indicator is plotted) 
 # and IAX means "inset axis" (which contains the detail/zoomed-in section)
-def indicate_detail(pax: imt._TYPE_EXTENT["pax"], 
-                    iax: imt._TYPE_EXTENT["bax"], 
-                    pcrs: imt._TYPE_EXTENT["pcrs"], 
-                    icrs: imt._TYPE_EXTENT["bcrs"],
-                    to_return: imt._TYPE_DETAIL["to_return"]=None,
-                    straighten: imt._TYPE_EXTENT["straighten"]=True,
-                    pad: imt._TYPE_EXTENT["pad"]=0.05,
-                    plot: imt._TYPE_EXTENT["plot"]=True,
-                    facecolor: imt._TYPE_EXTENT["facecolor"]="none",
-                    alpha: imt._TYPE_EXTENT["alpha"]=1,
-                    linecolor: imt._TYPE_EXTENT["linecolor"]="black",
-                    linewidth: imt._TYPE_EXTENT["linewidth"]=1,
+def indicate_detail(pax: matplotlib.axes.Axes, 
+                    iax: matplotlib.axes.Axes, 
+                    pcrs: Any, 
+                    icrs: Any,
+                    to_return: Any=None,
+                    straighten: bool=True,
+                    pad: Any=0.05,
+                    plot: bool=True,
+                    facecolor: Any="none",
+                    alpha: Any=1,
+                    linecolor: Any="black",
+                    linewidth: Any=1,
                     zorder: int=99,
                     **kwargs):
     
@@ -821,19 +774,20 @@ def indicate_detail(pax: imt._TYPE_EXTENT["pax"],
     fig.draw_without_rendering()
 
     ## VALIDATION ##
-    pax = imf._validate(imt._VALIDATE_EXTENT, "pax", pax)
-    iax = imf._validate(imt._VALIDATE_EXTENT, "bax", iax)
-    pcrs = imf._validate(imt._VALIDATE_EXTENT, "pcrs", pcrs)
-    icrs = imf._validate(imt._VALIDATE_EXTENT, "bcrs", icrs)
-    to_return = imf._validate(imt._VALIDATE_DETAIL, "to_return", to_return)
-    straighten = imf._validate(imt._VALIDATE_EXTENT, "straighten", straighten)
-    pad = imf._validate(imt._VALIDATE_EXTENT, "pad", pad)
-    plot = imf._validate(imt._VALIDATE_EXTENT, "plot", plot)
-    facecolor = imf._validate(imt._VALIDATE_EXTENT, "facecolor", facecolor)
-    alpha = imf._validate(imt._VALIDATE_EXTENT, "alpha", alpha)
-    linecolor = imf._validate(imt._VALIDATE_EXTENT, "linecolor", linecolor)
-    linewidth = imf._validate(imt._VALIDATE_EXTENT, "linewidth", linewidth)
-    zorder = imf._validate(imt._VALIDATE_EXTENT, "zorder", zorder)
+    extent_model = imt.InsetMapExtentModel(pax=pax, bax=iax, pcrs=pcrs, bcrs=icrs, straighten=straighten, pad=pad, plot=plot, facecolor=facecolor, linecolor=linecolor, alpha=alpha, linewidth=linewidth, zorder=zorder)
+    pax = extent_model.pax
+    iax = extent_model.bax
+    pcrs = extent_model.pcrs
+    icrs = extent_model.bcrs
+    straighten = extent_model.straighten
+    pad = extent_model.pad
+    plot = extent_model.plot
+    facecolor = extent_model.facecolor
+    alpha = extent_model.alpha
+    linecolor = extent_model.linecolor
+    linewidth = extent_model.linewidth
+    zorder = extent_model.zorder
+    to_return = TypeAdapter(imt.InsetMapDetailModel.model_fields['to_return'].annotation).validate_python(to_return)
 
     # Drawing the extent indicator on the main map
     # Setting to_return="ax" gets us the corners of the patch in pax.transAxes coordinates
@@ -917,37 +871,37 @@ def indicate_detail(pax: imt._TYPE_EXTENT["pax"],
 # This is a top-level helping function
 # that will return an axis with inset maps drawn for Alaska, Hawaii, DC, and/or Puerto Rico
 # NOTE that as of this initial release, it assumes your map is in CRS 3857 for positioning
-def inset_usa(ax, alaska=True, hawaii=True, dc=True, puerto_rico=True, size=None, pad=None, zorder: int=99, **kwargs):
+def inset_usa(ax, alaska=True, hawaii=True, dc=True, puerto_rico=True, imsize=None, pad=None, zorder: int=99, **kwargs):
     # This will return all of the axes we create
     to_return = []
     
     # Alaska and Hawaii are positioned relative to each other
     if alaska == True and hawaii == True:
-        aax = inset_map(ax, "lower left", size, pad, zorder=zorder, **kwargs)
+        aax = inset_map(ax, location="lower left", imsize=imsize, pad=pad, zorder=zorder, **kwargs)
         to_return.append(aax)
         # Need to shift over the hawaii axis by the size of the alaska axis
         # Note that we add xmax and xmin together here, to account for the padding (xmin is the amount of padding)
         shift_right = float(aax.get_window_extent().transformed(ax.transAxes.inverted()).xmax) + float(aax.get_window_extent().transformed(ax.transAxes.inverted()).xmin)
         # also need to shift it up, by the amount of the padding (which we can crib from ymin)
         shift_up = float(aax.get_window_extent().transformed(ax.transAxes.inverted()).ymin)
-        hax = inset_map(ax, "lower left", size, pad, zorder=zorder, coords=(shift_right, shift_up), **kwargs)
+        hax = inset_map(ax, location="lower left", imsize=imsize, pad=pad, zorder=zorder, coords=(shift_right, shift_up), **kwargs)
         to_return.append(hax)
     else:
         if alaska == True:
-            aax = inset_map(ax, "lower_left", size, pad, zorder=zorder, **kwargs)
+            aax = inset_map(ax, location="lower_left", imsize=imsize, pad=pad, zorder=zorder, **kwargs)
             to_return.append(aax)
         if hawaii == True:
-            hax = inset_map(ax, "lower left", size, pad, zorder=zorder, **kwargs)
+            hax = inset_map(ax, location="lower left", imsize=imsize, pad=pad, zorder=zorder, **kwargs)
             to_return.append(hax)
 
     # Puerto Rico is positioned off the coast of Florida
     if puerto_rico == True:
-        pax = inset_map(ax, "lower right", size, pad, zorder=zorder, **kwargs)
+        pax = inset_map(ax, location="lower right", imsize=imsize, pad=pad, zorder=zorder, **kwargs)
         to_return.append(pax)
     
     # DC is off the coast of DC
     if dc == True:
-        dax = inset_map(ax, "center right", size, pad, zorder=zorder, **kwargs)
+        dax = inset_map(ax, location="center right", imsize=imsize, pad=pad, zorder=zorder, **kwargs)
         to_return.append(dax)
     
     # Finally, returning everything

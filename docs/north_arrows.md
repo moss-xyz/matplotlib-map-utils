@@ -231,7 +231,7 @@ There are three primary settings that must be supplied each time a north arrow i
 | Attribute | Description | Accepts |
 | :--- | :--- | :--- |
 | `location` | Where the arrow will be placed relative to the plot. | Any options accepted by `matplotlib` for legend placement (`"upper right"`, `"center"`, `"lower left"`, etc., see *loc* in the [`matplotlib.pyplot.legend`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html) documentation) |
-| `scale` | The desired size of the north arrow's *height*, in inches; the default is whatever size is set by the `set_size()` function (see *Tips and Tricks* section). | Any positive number |
+| `scale` | The desired size of the north arrow's *height*, in inches; the default is whatever size is set by the `size` parameter (see *Tips and Tricks* section). | Any positive number |
 | `zorder` | (new as of `v3.1.0`) The zorder of the final north arrow artist, which can be used to bring the artist forward / place it behind other axis artists. | Any number; default value is 99 |
 
 === "Locations"
@@ -552,7 +552,7 @@ for ax,m in zip(axs.flatten(), modifications):
 ### Setting Size
 While the north arrow can nominally have its size changed by changing the `scale` attribute, doing so doesn't change the other, related components, such as the sizes of the text, the shadow's offset, the stroke widths, and so on.
 
-However, given that there are standardized paper sizes that most graphics are made towards, a specific function, `set_size()`, is provided that will batch-update the default values of the north arrow to approximate what looks best at each size. The function takes in only one input, which is the size you want to update the arrow to be:
+However, given that there are standardized paper sizes that most graphics are made towards, a `size` parameter is available that will select pre-configured default values that approximate what looks best at each size. The parameter takes in only one input, which is the size tier you want:
 
 * `xsmall` or `xs` for A8 paper, ~2 to 3 inches
 
@@ -572,12 +572,11 @@ fig, ax = new_map(1,1, figsize=(10,5))
 
 # Visualizing the different sizes at various positions
 for l,s in zip([0.1, 0.2, 0.35, 0.55, 0.85], ["xs","sm","md","lg","xl"]):
-	# Calling the function to update the defaults
-	NorthArrow.set_size(size=s)
-	north_arrow(ax=ax, location="center", label={"text":s}, rotation={"degrees":0}, aob={"bbox_to_anchor":(l, 0.5), "bbox_transform":ax.transAxes})
+	# Using the size parameter to set the size directly
+	north_arrow(ax=ax, size=s, location="center", label={"text":s}, rotation={"degrees":0}, aob={"bbox_to_anchor":(l, 0.5), "bbox_transform":ax.transAxes})
 ```
 		
-![using set_size() to control the size of the north arrow](assets/north_arrows/set_size.png)
+![setting the size of the north arrow](assets/north_arrows/set_size.png)
 
 ### Placing Arrows Outside of Axis
 Sometimes it is more desireable to place the arrow outside of the plot entirely, which can be accomplished using `bbox_to_anchor` and `bbox_transform` from the `aob`component settings. This works the same way it does for [`matplotlib.pyplot.legend`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html#matplotlib.pyplot.legend).
@@ -586,11 +585,9 @@ Sometimes it is more desireable to place the arrow outside of the plot entirely,
 ```python
 fig, ax = new_map()
 
-NorthArrow.set_size(size="sm")
-
 states.query("NAME=='Georgia'").plot(ax=ax)
 
-north_arrow(ax=ax, location="upper right", rotation={"degrees":0}, aob={"bbox_to_anchor":(1.1,1), "bbox_transform":ax.transAxes})
+north_arrow(ax=ax, size="sm", location="upper left", rotation={"degrees":0}, aob={"bbox_to_anchor":(1.05,1), "bbox_transform":ax.transAxes})
 ```
 
 ![example placing a north arrow outside of the axis limits](assets/north_arrows/external_placement.png)

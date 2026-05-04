@@ -284,9 +284,6 @@ There are three primary settings that must be supplied each time a scale bar is 
 === "Locations"
 
 	```python
-	# Do not worry about this: it is covered later, it is simply updating the default size of the scale bar
-	ScaleBar.set_size("xs")
-	
 	# Grid of location options
 	# Note that the "center" options will feel slightly off: this is because the the center of the scale bar is of the entire artist, text included, not just the bar itself
 	locs = ["upper left", "upper center", "upper right", "center left", "center", "center right", "lower left", "lower center", "lower right"]
@@ -296,16 +293,13 @@ There are three primary settings that must be supplied each time a scale bar is 
 	for ax,l in zip(axs.flatten(), locs):
 		states.query(f"NAME=='Georgia'").plot(ax=ax)
 		ax.set_aspect(1, adjustable="datalim")
-		scale_bar(ax=ax, location=l, style="boxes", bar={"projection":3857,"minor_type":"none"}, labels={"style":"first_last"})
+		scale_bar(ax=ax, size="xs", location=l, style="boxes", bar={"projection":3857,"minor_type":"none"}, labels={"style":"first_last"})
 	```
 	
 	![grid of plots showing possible location options](assets/scale_bars/locations.png)
 
 === "Styles"
 	```python
-	# Just reverting the change I made above; again this is explained later, don't worry about it for now
-	ScaleBar.set_size("md")
-	
 	# Modifying the styles
 	styles = ["boxes","ticks"]
 	
@@ -660,7 +654,6 @@ for ax,m in zip(axs.flatten(), modifications):
 
 ```python
 # Modifying specific elements
-ScaleBar.set_size("md")
 
 modifications = [
 	{"facecolor": "lightgrey"}, # different facecolor
@@ -707,7 +700,7 @@ scale_bar(ax=ax, location="upper right", style="boxes",
 ### Setting Size
 While the scale bar can nominally have its size changed by changing the `length` attribute, doing so doesn't change the other, related components, such as the sizes of the text, the the box dimensions, the stroke widths, and so on.
 
-However, given that there are standardized paper sizes that most graphics are made towards, a specific function, `set_size()`, is provided that will batch-update the default values of the scale bar to approximate what looks best at each size. The function takes in only one input, which is the size you want to update the bar to be:
+However, given that there are standardized paper sizes that most graphics are made towards, a `size` parameter is available that will select pre-configured default values that approximate what looks best at each size. The parameter takes in only one input, which is the size tier you want:
 
 * `xsmall` or `xs` for A8 paper, ~2 to 3 inches
 
@@ -730,13 +723,10 @@ states.query(f"NAME=='California'").plot(ax=ax)
 
 # Visualizing three different sizes at various positions
 for s,l in zip(["sm","md","lg"], ["upper center", "center", "lower center"]):
-	# Calling the function to update the defaults
-	ScaleBar.set_size(size=s)
-	scale_bar(ax=ax, location=l, style="boxes", labels={"style":"major"}, 
+	scale_bar(ax=ax, size=s, location=l, style="boxes", labels={"style":"major"}, 
 			bar={"projection":3857,"max":900,"major_div":3,"minor_div":1,"minor_type":"none"})
 
-# Resetting the sizes
-ScaleBar.set_size(size="sm")
+# No need to reset sizes - the size= parameter handles it per-call
 ```
 
 ![comparison of default scale bar sizes](assets/scale_bars/set_size.png)

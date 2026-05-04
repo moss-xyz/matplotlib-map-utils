@@ -35,14 +35,14 @@ georgia.buffer(75000).plot(ax=ax, facecolor="none", edgecolor="none") # this hel
 georgia.plot(ax=ax, edgecolor="black", facecolor="none")
 
 # Creating an inset map and extent indicator for the USA
-cax = inset_map(ax, "lower right", size=1.75, pad=0.1, xticks=[], yticks=[])
+cax = inset_map(ax, location="lower right", imsize=1.75, pad=0.1, xticks=[], yticks=[])
 contiguous.plot(ax=cax, facecolor="none", edgecolor="black", linewidth=0.5)
 indicate_extent(cax, ax, 3857, 3857)
 
 # Creating an inset map and detail indicator for Atlanta, GA
 atl_centroid = shapely.Point(pyproj.Transformer.from_crs(4326, 3857, always_xy=True).transform(-84.40123859860549, 33.75203795433787))
 atl_buffer = atl_centroid.buffer(20000)
-aax = inset_map(ax, "upper right", size=1.75, pad=0.25, xticks=[], yticks=[])
+aax = inset_map(ax, location="upper right", imsize=1.75, pad=0.25, xticks=[], yticks=[])
 geopandas.GeoSeries(atl_buffer).plot(ax=aax, facecolor="none", edgecolor="none")
 indicate_detail(ax, aax, 3857, 3857, linecolor="cornflowerblue")
 
