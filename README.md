@@ -8,7 +8,7 @@
 
 **Feedback:** I welcome any and all feedback! See the *Development Notes* below for more details.
 
-**Current Version:** `v4.1.0`, featuring a brand-new documentation site and improved type validation! This DID introduce some breaking changes, see the documentation site for details!
+**Current Version:** `v4.1.1`, which fixed a a few bugs (see [here](https://moss-xyz.github.io/matplotlib-map-utils/package/#release-notes) for details!)
 
 ---
 
