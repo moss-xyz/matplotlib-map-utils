@@ -35,13 +35,13 @@ from ..validation.shared import _del_keys
 class ScaleBar(matplotlib.artist.Artist):
     
     ## INITIALIZATION ##
-    def __init__(self, size: str=None, style: Literal["ticks","boxes"]="boxes",
-                       location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="upper right",
-                       bar: None | bool | dict=None,
-                       units: None | bool | dict=None,
-                       labels: None | bool | dict=None,
-                       text: None | bool | dict=None,
-                       aob: None | bool | dict=None,
+    def __init__(self, size: str=None, style: sbt.ScaleBarStyle="boxes",
+                       location: sbt.Location="upper right",
+                       bar: None | bool | sbt.ScaleBarBarDict=None,
+                       units: None | bool | sbt.ScaleBarUnitsDict=None,
+                       labels: None | bool | sbt.ScaleBarLabelsDict=None,
+                       text: None | bool | sbt.ScaleBarTextDict=None,
+                       aob: None | bool | sbt.ScaleBarAobDict=None,
                        zorder: int=99,
                        ):
         # Starting up the object with the base properties of a matplotlib Artist
@@ -220,13 +220,13 @@ class ScaleBar(matplotlib.artist.Artist):
 
 ### DRAWING FUNCTIONS ###
 
-def scale_bar(ax, draw=True, size: str=None, style: Literal["ticks","boxes"]="boxes",
-                  location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="upper right",
-                  bar: None | bool | dict=None,
-                  units: None | bool | dict=None,
-                  labels: None | bool | dict=None,
-                  text: None | bool | dict=None,
-                  aob: None | bool | dict=None,
+def scale_bar(ax, draw=True, size: str=None, style: sbt.ScaleBarStyle="boxes",
+                  location: sbt.Location="upper right",
+                  bar: None | bool | sbt.ScaleBarBarDict=None,
+                  units: None | bool | sbt.ScaleBarUnitsDict=None,
+                  labels: None | bool | sbt.ScaleBarLabelsDict=None,
+                  text: None | bool | sbt.ScaleBarTextDict=None,
+                  aob: None | bool | sbt.ScaleBarAobDict=None,
                   zorder: int=99,
                   return_aob: bool=True,):
     # For the default function mode, dispatch to the Artist class so final
@@ -516,14 +516,14 @@ def scale_bar(ax, draw=True, size: str=None, style: Literal["ticks","boxes"]="bo
 # This is a convenience function for creating two scale bars, with different units, aligned with each other
 # The bars should be identical except for the units and the divisions
 # NOTE: still under development, will tidy up if there is usage of it
-def dual_bars(ax, draw=True, size: str=None, style: Literal["ticks","boxes"]="boxes",
-                  location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="upper right",
+def dual_bars(ax, draw=True, size: str=None, style: sbt.ScaleBarStyle="boxes",
+                  location: sbt.Location="upper right",
                   units_dual=["mi","km"], bar_maxes=[None,None], bar_lengths=[None,None], major_divs=[None, None], minor_divs=[None, None],
-                  bar: None | bool | dict=None,
-                  units: None | bool | dict=None,
-                  labels: None | bool | dict=None,
-                  text: None | bool | dict=None,
-                  aob: None | bool | dict=None,
+                  bar: None | bool | sbt.ScaleBarBarDict=None,
+                  units: None | bool | sbt.ScaleBarUnitsDict=None,
+                  labels: None | bool | sbt.ScaleBarLabelsDict=None,
+                  text: None | bool | sbt.ScaleBarTextDict=None,
+                  aob: None | bool | sbt.ScaleBarAobDict=None,
                   zorder: int=99,
                   pad=0, sep=0,
                   return_aob: bool=True

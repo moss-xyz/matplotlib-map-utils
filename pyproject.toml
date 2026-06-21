@@ -29,6 +29,7 @@ exclude = ["matplotlib_map_utils.scratch*", "site*", "docs*"]
 
 [tool.setuptools.package-data]
 "matplotlib_map_utils.utils" = ["*.json"]
+"matplotlib_map_utils" = ["py.typed"]
 
 [dependency-groups]
 dev = [
