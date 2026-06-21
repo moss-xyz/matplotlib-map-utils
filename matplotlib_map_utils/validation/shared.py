@@ -6,8 +6,43 @@
 import numpy
 import pyproj
 import matplotlib.rcsetup
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 from pydantic import BeforeValidator
+
+### SHARED LITERAL ALIASES ###
+# These name the enumerated value-sets used across the validation models.
+# They are referenced by BOTH the pydantic models (for runtime validation) and
+# the TypedDicts (for editor intellisense), so the allowed values can never drift
+# between the two representations.
+
+# Shared across components
+Location = Literal["upper right", "upper left", "lower left", "lower right",
+                   "center left", "center right", "lower center", "upper center", "center"]
+FontFamily = Literal["serif", "sans-serif", "cursive", "fantasy", "monospace"]
+FontStyle = Literal["normal", "italic", "oblique"]
+FontWeight = Literal["normal", "bold", "heavy", "light", "ultrabold", "ultralight"]
+RotationMode = Literal["anchor", "default"]
+
+# scale_bar-specific
+ScaleBarStyle = Literal["ticks", "boxes"]
+BarUnit = Literal["m", "km", "ft", "yd", "mi", "nmi"]
+MinorType = Literal["all", "first", "none"]
+TickLoc = Literal["above", "below", "middle"]
+LabelStyle = Literal["major", "first_last", "last_only", "minor_all", "minor_first"]
+LabelsLoc = Literal["above", "below"]
+UnitsLoc = Literal["bar", "text", "opposite"]
+
+# north_arrow-specific
+LabelPosition = Literal["top", "bottom", "left", "right"]
+HAlign = Literal["left", "center", "right"]
+VAlign = Literal["baseline", "bottom", "center", "center_baseline", "top"]
+PackAlign = Literal["top", "bottom", "left", "right", "center", "baseline"]
+PackMode = Literal["fixed", "expand", "equal"]
+RotationReference = Literal["axis", "data", "center"]
+
+# inset_map-specific
+ExtentReturn = Literal["shape", "patch", "fig", "ax"]
+DetailReturn = Literal["connectors", "lines"]
 
 def _validate_color(v):
     if v is None:

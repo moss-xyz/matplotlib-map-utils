@@ -35,13 +35,13 @@ from ..validation.shared import _del_keys
 class ScaleBar(matplotlib.artist.Artist):
     
     ## INITIALIZATION ##
-    def __init__(self, size: str=None, style: Literal["ticks","boxes"]="boxes",
-                       location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="upper right",
-                       bar: None | bool | dict=None,
-                       units: None | bool | dict=None,
-                       labels: None | bool | dict=None,
-                       text: None | bool | dict=None,
-                       aob: None | bool | dict=None,
+    def __init__(self, size: str=None, style: sbt.ScaleBarStyle="boxes",
+                       location: sbt.Location="upper right",
+                       bar: None | bool | sbt.ScaleBarBarDict=None,
+                       units: None | bool | sbt.ScaleBarUnitsDict=None,
+                       labels: None | bool | sbt.ScaleBarLabelsDict=None,
+                       text: None | bool | sbt.ScaleBarTextDict=None,
+                       aob: None | bool | sbt.ScaleBarAobDict=None,
                        zorder: int=99,
                        ):
         # Starting up the object with the base properties of a matplotlib Artist
@@ -220,13 +220,13 @@ class ScaleBar(matplotlib.artist.Artist):
 
 ### DRAWING FUNCTIONS ###
 
-def scale_bar(ax, draw=True, size: str=None, style: Literal["ticks","boxes"]="boxes",
-                  location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="upper right",
-                  bar: None | bool | dict=None,
-                  units: None | bool | dict=None,
-                  labels: None | bool | dict=None,
-                  text: None | bool | dict=None,
-                  aob: None | bool | dict=None,
+def scale_bar(ax, draw=True, size: str=None, style: sbt.ScaleBarStyle="boxes",
+                  location: sbt.Location="upper right",
+                  bar: None | bool | sbt.ScaleBarBarDict=None,
+                  units: None | bool | sbt.ScaleBarUnitsDict=None,
+                  labels: None | bool | sbt.ScaleBarLabelsDict=None,
+                  text: None | bool | sbt.ScaleBarTextDict=None,
+                  aob: None | bool | sbt.ScaleBarAobDict=None,
                   zorder: int=99,
                   return_aob: bool=True,):
     # For the default function mode, dispatch to the Artist class so final
@@ -301,7 +301,7 @@ def scale_bar(ax, draw=True, size: str=None, style: Literal["ticks","boxes"]="bo
     segments = _config_seg(bar_max, bar_length/major_div, major_div, minor_div, 
                            _bar["minor_type"], _labels["style"],
                            _labels["labels"], _labels["format"], _labels["format_int"])
-
+    
     # Also setting the segment gap to be either the edgewidth or the tickwidth
     gap_width = _bar.get("edgewidth", _bar.get("edgewidth", 0))
 
@@ -320,7 +320,7 @@ def scale_bar(ax, draw=True, size: str=None, style: Literal["ticks","boxes"]="bo
     major_height = _bar["height"]*72
 
     # Initializing the bar with an invisible spacer, to align it with the text later
-    # if all of these conditions are met, we do not need a spcer
+    # if all of these conditions are met, we do not need a spacer
     if _labels["style"] == "last_only" and major_div==1 and (minor_div==1 or minor_div==0):
         bar_artists = []
     # If we have minor divs, it will be equal to half the minor width
@@ -516,14 +516,14 @@ def scale_bar(ax, draw=True, size: str=None, style: Literal["ticks","boxes"]="bo
 # This is a convenience function for creating two scale bars, with different units, aligned with each other
 # The bars should be identical except for the units and the divisions
 # NOTE: still under development, will tidy up if there is usage of it
-def dual_bars(ax, draw=True, size: str=None, style: Literal["ticks","boxes"]="boxes",
-                  location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="upper right",
+def dual_bars(ax, draw=True, size: str=None, style: sbt.ScaleBarStyle="boxes",
+                  location: sbt.Location="upper right",
                   units_dual=["mi","km"], bar_maxes=[None,None], bar_lengths=[None,None], major_divs=[None, None], minor_divs=[None, None],
-                  bar: None | bool | dict=None,
-                  units: None | bool | dict=None,
-                  labels: None | bool | dict=None,
-                  text: None | bool | dict=None,
-                  aob: None | bool | dict=None,
+                  bar: None | bool | sbt.ScaleBarBarDict=None,
+                  units: None | bool | sbt.ScaleBarUnitsDict=None,
+                  labels: None | bool | sbt.ScaleBarLabelsDict=None,
+                  text: None | bool | sbt.ScaleBarTextDict=None,
+                  aob: None | bool | sbt.ScaleBarAobDict=None,
                   zorder: int=99,
                   pad=0, sep=0,
                   return_aob: bool=True
@@ -643,7 +643,13 @@ def _config_bar(ax, bar):
     # We've done most of the work here - just need to see if we want a minor div or not
     # If one is provided, override what we calculated above
     if bar["minor_div"] is not None:
-        bar_minor_div = bar["minor_div"] 
+        if bar["minor_div"] <= 1:
+          bar_minor_div = 1
+        else: 
+          bar_minor_div = bar["minor_div"] 
+    # Alternatively, if minor_type is "none", then we need to set to 1
+    if bar["minor_type"] == "none":
+        bar_minor_div = 1
     
     # Returning everything
     return bar_max, bar_length, units_label, bar_major_div, bar_minor_div

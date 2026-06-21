@@ -35,12 +35,12 @@ class InsetMap(matplotlib.artist.Artist):
     ## INITIALIZATION ##
     def __init__(self,
                  size: str=None,
-                 location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="lower left", 
+                 location: imt.Location="lower left",
                  imsize: Any=None,
                  pad: Any=None,
                  coords: Any=None,
                  transform=None,
-                 to_plot=None,
+                 to_plot: None | list[imt.InsetMapPlotDict]=None,
                  zorder: int=99,
                  **kwargs):
         # Starting up the object with the base properties of a matplotlib Artist
@@ -199,7 +199,7 @@ class ExtentIndicator(matplotlib.artist.Artist):
     
     ## INITIALIZATION ##
     def __init__(self,
-                 to_return: Any=None,
+                 to_return: None | imt.ExtentReturn=None,
                  straighten: bool=True,
                  pad: Any=0.05,
                  plot: bool=True,
@@ -358,7 +358,7 @@ class DetailIndicator(matplotlib.artist.Artist):
     
     ## INITIALIZATION ##
     def __init__(self,
-                 to_return: Any=None,
+                 to_return: None | imt.DetailReturn=None,
                  straighten: bool=True,
                  pad: Any=0.05,
                  plot: bool=True,
@@ -544,9 +544,9 @@ class DetailIndicator(matplotlib.artist.Artist):
 
 # Function for creating an inset map, independent of the InsetMap object model
 # It is intended to be an easier-to-use API than the default inset_axes
-def inset_map(ax, 
+def inset_map(ax,
               size: str=None,
-              location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="upper right", 
+              location: imt.Location="upper right",
               imsize: Any=None,
               pad: Any=None,
               coords: Any=None,
@@ -670,7 +670,7 @@ def indicate_extent(pax: matplotlib.axes.Axes,
                     bax: matplotlib.axes.Axes,
                     pcrs: Any,
                     bcrs: Any,
-                    to_return: Any=None,
+                    to_return: None | imt.ExtentReturn=None,
                     straighten: bool=True,
                     pad: Any=0.05,
                     plot: bool=True,
@@ -755,11 +755,11 @@ def indicate_extent(pax: matplotlib.axes.Axes,
 # This will also, call extent_indicator too, as the two are linked
 # here, PAX means "parent axis" (where the indicator is plotted) 
 # and IAX means "inset axis" (which contains the detail/zoomed-in section)
-def indicate_detail(pax: matplotlib.axes.Axes, 
-                    iax: matplotlib.axes.Axes, 
-                    pcrs: Any, 
+def indicate_detail(pax: matplotlib.axes.Axes,
+                    iax: matplotlib.axes.Axes,
+                    pcrs: Any,
                     icrs: Any,
-                    to_return: Any=None,
+                    to_return: None | imt.DetailReturn=None,
                     straighten: bool=True,
                     pad: Any=0.05,
                     plot: bool=True,

@@ -34,11 +34,11 @@ from ..validation.shared import _del_keys
 class NorthArrow(matplotlib.artist.Artist):
     
     ## INITIALIZATION ##
-    def __init__(self, size: str=None, location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="upper right",
+    def __init__(self, size: str=None, location: nat.Location="upper right",
                        scale: None | float | int=None,
-                       base: None | bool | dict = None, fancy: None | bool | dict = None, 
-                       label: None | bool | dict = None, shadow: None | bool | dict = None, 
-                       pack: None | dict = None, aob: None | dict = None, rotation: None | dict = None,
+                       base: None | bool | nat.NorthArrowBaseDict = None, fancy: None | bool | nat.NorthArrowFancyDict = None,
+                       label: None | bool | nat.NorthArrowLabelDict = None, shadow: None | bool | nat.NorthArrowShadowDict = None,
+                       pack: None | nat.NorthArrowPackDict = None, aob: None | nat.NorthArrowAobDict = None, rotation: None | nat.NorthArrowRotationDict = None,
                        zorder: int=99,):
         # Starting up the object with the base properties of a matplotlib Artist
         matplotlib.artist.Artist.__init__(self)
@@ -231,15 +231,15 @@ class NorthArrow(matplotlib.artist.Artist):
 
 # This function presents a way to draw the north arrow independent of the NorthArrow object model
 # and is actually used by the object model when draw() is called anyways
-def north_arrow(ax, draw=True, size: str=None, location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]="upper right",
+def north_arrow(ax, draw=True, size: str=None, location: nat.Location="upper right",
                 scale: None | float | int=None,
-                base: None | bool | dict=None, 
-                fancy: None | bool | dict=None,
-                label: None | bool | dict=None, 
-                shadow: None | bool | dict=None,
-                pack: None | dict=None, 
-                aob: None | dict=None, 
-                rotation: None | dict=None,
+                base: None | bool | nat.NorthArrowBaseDict=None,
+                fancy: None | bool | nat.NorthArrowFancyDict=None,
+                label: None | bool | nat.NorthArrowLabelDict=None,
+                shadow: None | bool | nat.NorthArrowShadowDict=None,
+                pack: None | nat.NorthArrowPackDict=None,
+                aob: None | nat.NorthArrowAobDict=None,
+                rotation: None | nat.NorthArrowRotationDict=None,
                 zorder: int=99,):
     
     if draw==True:

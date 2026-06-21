@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "matplotlib-map-utils"
-version = "4.1.0"
+version = "4.1.1"
 authors = [
   { name="David Moss", email="davidmoss1221@gmail.com" },
 ]
@@ -29,6 +29,7 @@ exclude = ["matplotlib_map_utils.scratch*", "site*", "docs*"]
 
 [tool.setuptools.package-data]
 "matplotlib_map_utils.utils" = ["*.json"]
+"matplotlib_map_utils" = ["py.typed"]
 
 [dependency-groups]
 dev = [
@@ -37,6 +38,7 @@ dev = [
     "ipykernel>=6.30.1",
     "jupyter>=1.1.1",
     "mapclassify>=2.8.1",
+    "marimo>=0.23.10",
     "matplotlib>=3.10.7",
     "notebook>=7.4.7",
     "pip>=25.2",

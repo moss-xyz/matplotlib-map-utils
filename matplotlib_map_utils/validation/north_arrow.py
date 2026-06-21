@@ -8,24 +8,28 @@
 # Default packages
 import warnings
 # The types we use in this script
-from typing import Annotated, Union, Tuple, Optional, Literal, Any
+from typing import Annotated, Union, Tuple, Optional, Literal, Any, TypedDict
 # Pydantic type validation
 from pydantic import ConfigDict, BaseModel, Field, BeforeValidator, model_validator
-from .shared import MatplotlibColor, Numpy2DArray, MatplotlibFontsize, CRSInput, _get_size_key
+from .shared import (MatplotlibColor, Numpy2DArray, MatplotlibFontsize, CRSInput, _get_size_key,
+                     Location, LabelPosition, HAlign, VAlign, FontFamily, FontStyle, FontWeight,
+                     PackAlign, PackMode, RotationReference)
 from .. import config
 from ..defaults import north_arrow as nad
 
 ### ALL ###
 # This code tells other packages what to import if not explicitly stated
 __all__ = [
-    "NorthArrowPrimaryModel", "NorthArrowBaseModel", "NorthArrowFancyModel", 
-    "NorthArrowLabelModel", "NorthArrowShadowModel", "NorthArrowPackModel", 
-    "NorthArrowAobModel", "NorthArrowRotationModel"
+    "NorthArrowPrimaryModel", "NorthArrowBaseModel", "NorthArrowFancyModel",
+    "NorthArrowLabelModel", "NorthArrowShadowModel", "NorthArrowPackModel",
+    "NorthArrowAobModel", "NorthArrowRotationModel",
+    "NorthArrowBaseDict", "NorthArrowFancyDict", "NorthArrowLabelDict", "NorthArrowShadowDict",
+    "NorthArrowPackDict", "NorthArrowAobDict", "NorthArrowRotationDict"
 ]
 
 ### COMPONENT MODELS ###
 class NorthArrowPrimaryModel(BaseModel):
-    location: Literal["upper right", "upper left", "lower left", "lower right", "center left", "center right", "lower center", "upper center", "center"]
+    location: Location
     scale: Annotated[Optional[Union[float, int]], Field(ge=0)] = None
     zorder: int
 
@@ -74,14 +78,14 @@ class NorthArrowFancyModel(BaseModel):
 class NorthArrowLabelModel(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     text: str
-    position: Literal["top", "bottom", "left", "right"]
-    ha: Literal["left", "center", "right"]
-    va: Literal["baseline", "bottom", "center", "center_baseline", "top"]
+    position: LabelPosition
+    ha: HAlign
+    va: VAlign
     fontsize: MatplotlibFontsize
-    fontfamily: Literal["serif", "sans-serif", "cursive", "fantasy", "monospace"]
-    fontstyle: Literal["normal", "italic", "oblique"]
+    fontfamily: FontFamily
+    fontstyle: FontStyle
     color: MatplotlibColor
-    fontweight: Literal["normal", "bold", "heavy", "light", "ultrabold", "ultralight"]
+    fontweight: FontWeight
     stroke_width: Annotated[Union[float, int], Field(ge=0)]
     stroke_color: MatplotlibColor
     rotation: Annotated[Union[float, int], Field(ge=-360, le=360)]
@@ -112,11 +116,11 @@ class NorthArrowShadowModel(BaseModel):
 
 class NorthArrowPackModel(BaseModel):
     sep: Annotated[Union[float, int], Field(ge=0)]
-    align: Literal["top", "bottom", "left", "right", "center", "baseline"]
+    align: PackAlign
     pad: Annotated[Union[float, int], Field(ge=0)]
     width: Annotated[Optional[Union[float, int]], Field(ge=0)] = None
     height: Annotated[Optional[Union[float, int]], Field(ge=0)] = None
-    mode: Literal["fixed", "expand", "equal"]
+    mode: PackMode
 
     @model_validator(mode='before')
     @classmethod
@@ -151,7 +155,7 @@ class NorthArrowRotationModel(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     degrees: Annotated[Optional[Union[float, int]], Field(ge=-360, le=360)] = None
     crs: Optional[CRSInput] = None
-    reference: Optional[Literal["axis", "data", "center"]] = None
+    reference: Optional[RotationReference] = None
     coords: Optional[Tuple[Union[float, int], Union[float, int]]] = None
 
     @model_validator(mode='before')
@@ -175,3 +179,68 @@ class NorthArrowRotationModel(BaseModel):
         elif isinstance(self.degrees, (int, float)) and (self.crs is not None or self.reference is not None or self.coords is not None):
             warnings.warn("A value for degrees was supplied; values for crs, reference, and coords will be ignored")
         return self
+
+### TYPED DICTS ###
+# These mirror the user-facing fields of the models above, purely for editor
+# intellisense (key + value autocomplete inside dict literals). They are never
+# instantiated or validated at runtime - the plain dicts users pass still flow
+# through the pydantic models above. total=False marks every key optional, since
+# users supply partial configs. Literal-typed fields reuse the shared aliases so
+# their allowed values stay in lockstep with the models.
+
+class NorthArrowBaseDict(TypedDict, total=False):
+    coords: Any
+    facecolor: Any
+    edgecolor: Any
+    linewidth: float | int
+    zorder: int
+
+class NorthArrowFancyDict(TypedDict, total=False):
+    coords: Any
+    facecolor: Any
+    zorder: int
+
+class NorthArrowLabelDict(TypedDict, total=False):
+    text: str
+    position: LabelPosition
+    ha: HAlign
+    va: VAlign
+    fontsize: float | int | str
+    fontfamily: FontFamily
+    fontstyle: FontStyle
+    color: Any
+    fontweight: FontWeight
+    stroke_width: float | int
+    stroke_color: Any
+    rotation: float | int
+    zorder: int
+
+class NorthArrowShadowDict(TypedDict, total=False):
+    offset: tuple
+    alpha: float | int
+    shadow_rgbFace: Any
+
+class NorthArrowPackDict(TypedDict, total=False):
+    sep: float | int
+    align: PackAlign
+    pad: float | int
+    width: float | int
+    height: float | int
+    mode: PackMode
+
+class NorthArrowAobDict(TypedDict, total=False):
+    facecolor: Any
+    edgecolor: Any
+    alpha: float | int
+    pad: float | int
+    borderpad: float | int
+    prop: float | int | str
+    frameon: bool
+    bbox_to_anchor: Any
+    bbox_transform: Any
+
+class NorthArrowRotationDict(TypedDict, total=False):
+    degrees: float | int
+    crs: Any
+    reference: RotationReference
+    coords: Any
