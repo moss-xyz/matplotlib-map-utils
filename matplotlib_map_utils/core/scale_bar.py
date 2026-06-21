@@ -301,7 +301,7 @@ def scale_bar(ax, draw=True, size: str=None, style: Literal["ticks","boxes"]="bo
     segments = _config_seg(bar_max, bar_length/major_div, major_div, minor_div, 
                            _bar["minor_type"], _labels["style"],
                            _labels["labels"], _labels["format"], _labels["format_int"])
-
+    
     # Also setting the segment gap to be either the edgewidth or the tickwidth
     gap_width = _bar.get("edgewidth", _bar.get("edgewidth", 0))
 
@@ -320,7 +320,7 @@ def scale_bar(ax, draw=True, size: str=None, style: Literal["ticks","boxes"]="bo
     major_height = _bar["height"]*72
 
     # Initializing the bar with an invisible spacer, to align it with the text later
-    # if all of these conditions are met, we do not need a spcer
+    # if all of these conditions are met, we do not need a spacer
     if _labels["style"] == "last_only" and major_div==1 and (minor_div==1 or minor_div==0):
         bar_artists = []
     # If we have minor divs, it will be equal to half the minor width
@@ -643,7 +643,13 @@ def _config_bar(ax, bar):
     # We've done most of the work here - just need to see if we want a minor div or not
     # If one is provided, override what we calculated above
     if bar["minor_div"] is not None:
-        bar_minor_div = bar["minor_div"] 
+        if bar["minor_div"] <= 1:
+          bar_minor_div = 1
+        else: 
+          bar_minor_div = bar["minor_div"] 
+    # Alternatively, if minor_type is "none", then we need to set to 1
+    if bar["minor_type"] == "none":
+        bar_minor_div = 1
     
     # Returning everything
     return bar_max, bar_length, units_label, bar_major_div, bar_minor_div
