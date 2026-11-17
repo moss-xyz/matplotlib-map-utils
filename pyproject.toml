@@ -48,5 +48,7 @@ dev = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/moss-xyz/matplotlib-map-utils/"
-"Bug Tracker" = "https://github.com/moss-xyz/matplotlib-map-utils/issues"
+"Homepage" = "https://github.com/moss-xyz/matplotlib-map-utils"
+"Documentation" = "https://moss-xyz.github.io/matplotlib-map-utils/"
+"Source" = "https://github.com/moss-xyz/matplotlib-map-utils"
+"Issues" = "https://github.com/moss-xyz/matplotlib-map-utils/issues"

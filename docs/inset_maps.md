@@ -1,5 +1,6 @@
 ---
 title: Inset Maps
+description: Create inset maps in matplotlib, including detail and extent-indicator insets, through a simpler interface than matplotlib's inset_axes.
 icon: lucide/picture-in-picture-2
 ---
 

@@ -1,5 +1,6 @@
 ---
 title: Utilities
+description: Use the USA utility in matplotlib_map_utils to filter US states and territories and enrich map data with abbreviations, regions, and divisions.
 icon: lucide/wrench
 ---
 

@@ -1,5 +1,6 @@
 ---
 title: Scale Bars
+description: Add a scale bar to a matplotlib map in Python, with several styles, automatic unit conversion, and full control over labels and placement.
 icon: lucide/ruler
 ---
 

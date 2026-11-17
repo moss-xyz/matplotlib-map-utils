@@ -1,12 +1,12 @@
 [project]
 
 site_name = "matplotlib_map_utils"
-site_description = "Documentation for using matplotlib_map_utils to generate maps in Python"
-site_author = "@moss_xyz"
-site_url = "https://moss_xyz.github.io/matplotlib_map_utils"
+site_description = "North arrows, scale bars, and inset maps for matplotlib maps in Python: documentation and tutorials for matplotlib_map_utils"
+site_author = "@moss-xyz"
+site_url = "https://moss-xyz.github.io/matplotlib-map-utils/"
 
-repo_url = "https://github.com/moss_xyz/matplotlib_map_utils"
-repo_name = "moss_xyz/matplotlib_map_utils"
+repo_url = "https://github.com/moss-xyz/matplotlib-map-utils"
+repo_name = "moss-xyz/matplotlib-map-utils"
 
 copyright = """
 Copyright &copy; 2026 @moss_xyz
@@ -88,7 +88,7 @@ code = "Jetbrains Mono"
 # ----------------------------------------------------------------------------
 [[project.extra.social]]
 icon = "fontawesome/brands/github"
-link = "https://github.com/moss_xyz/matplotlib_map_utils"
+link = "https://github.com/moss-xyz/matplotlib-map-utils"
 
 # ----------------------------------------------------------------------------
 # You can configure your own logo to be shown in the header using the "logo"

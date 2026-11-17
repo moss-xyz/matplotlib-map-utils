@@ -1,5 +1,6 @@
 ---
 title: North Arrows
+description: Add a north arrow that points to true north on any matplotlib map in Python, with options for placement, size, rotation, and styling.
 icon: lucide/mouse-pointer-2
 ---
 

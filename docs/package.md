@@ -1,5 +1,6 @@
 ---
 title: Package Information
+description: Release notes, credits, development history, and package structure for matplotlib_map_utils, a Python package for map elements in matplotlib.
 icon: lucide/package
 ---
 

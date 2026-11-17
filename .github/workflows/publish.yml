@@ -1,0 +1,48 @@
+name: Publish to PyPI
+# Runs when a GitHub Release is published, so a release on GitHub and a release
+# on PyPI are always the same thing.
+on:
+  release:
+    types: [published]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: 3.x
+      # A tag that disagrees with pyproject.toml would publish the wrong version
+      # number (or fail on PyPI as a duplicate), so stop before building.
+      - name: Check tag matches pyproject version
+        run: |
+          version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          tag="${GITHUB_REF_NAME#v}"
+          if [ "$version" != "$tag" ]; then
+            echo "::error::Release tag '$GITHUB_REF_NAME' does not match pyproject.toml version '$version'. Bump the version or retag."
+            exit 1
+          fi
+      - run: pip install build
+      - run: python -m build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    # Must match the environment name entered in PyPI's trusted publisher form.
+    environment:
+      name: pypi
+      url: https://pypi.org/p/matplotlib-map-utils
+    permissions:
+      # Lets GitHub prove its identity to PyPI (trusted publishing) - no API token stored.
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

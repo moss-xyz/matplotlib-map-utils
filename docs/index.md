@@ -1,5 +1,6 @@
 ---
 title: Documentation Home
+description: matplotlib_map_utils adds north arrows, scale bars, and inset maps to matplotlib maps in Python, with minimal code and sensible defaults.
 icon: lucide/book
 ---
 

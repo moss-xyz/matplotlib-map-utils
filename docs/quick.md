@@ -1,5 +1,6 @@
 ---
 title: Quick Start
+description: "Quick start for matplotlib_map_utils: import the package and add a north arrow, scale bar, or inset map to a matplotlib map in a few lines of Python."
 icon: lucide/compass
 ---
 

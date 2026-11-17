@@ -60,16 +60,16 @@ The requirements for this package are:
 
 ### Quick Start and Usage Guides
 
-For a primer on how to import the package and use the primary functions and methods to create elements, see the [Quick Start guide](https://moss_xyz.github.io/matplotlib_map_utils/quick).
+For a primer on how to import the package and use the primary functions and methods to create elements, see the [Quick Start guide](https://moss-xyz.github.io/matplotlib-map-utils/quick/).
 
 Each part of the package also has a dedicated page that lays out usage and customisation options in more detail:
 
-- 🧭  [__North Arrows__](https://moss_xyz.github.io/matplotlib_map_utils/north_arrows)
-- 📏  [__Scale Bars__](https://moss_xyz.github.io/matplotlib_map_utils/scale_bars)
-- 🗺️  [__Inset Maps__](https://moss_xyz.github.io/matplotlib_map_utils/inset_maps)
-- 🛠️  [__Utilities__](https://moss_xyz.github.io/matplotlib_map_utils/utilities)
+- 🧭  [__North Arrows__](https://moss-xyz.github.io/matplotlib-map-utils/north_arrows/)
+- 📏  [__Scale Bars__](https://moss-xyz.github.io/matplotlib-map-utils/scale_bars/)
+- 🗺️  [__Inset Maps__](https://moss-xyz.github.io/matplotlib-map-utils/inset_maps/)
+- 🛠️  [__Utilities__](https://moss-xyz.github.io/matplotlib-map-utils/utilities/)
 
-Finally, the [Package Information page](https://moss_xyz.github.io/matplotlib_map_utils/package) provides additional context around the development of and overall structure of the package.
+Finally, the [Package Information page](https://moss-xyz.github.io/matplotlib-map-utils/package/) provides additional context around the development of and overall structure of the package.
 
 ---
 
